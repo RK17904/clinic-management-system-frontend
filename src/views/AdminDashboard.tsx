@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { ViewMode } from '../types/types.ts'; 
-import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, ListIcon } from '../components/Icons.tsx';
+import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, ListIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
 
 interface AdminDashboardProps {
   setViewMode: Dispatch<SetStateAction<ViewMode>>;
 }
 
- /* ---Component for the main admin dashboard layout--- */
+ /* --the main admin dashboard layout--- */
 const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
   
   const handleLogout = () => {
@@ -15,17 +15,41 @@ const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
   };
 
   // manage the active sidebar tab
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'doctors'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'doctors' | 'patients' | 'appointments'>('dashboard');
   
   // manage the sub-section in the "Doctors" tab
   const [doctorSubTab, setDoctorSubTab] = useState<'view' | 'add'>('view');
 
-  // Mock Data for the table
+  // Mock Data for the table 📍 API CALL: Fetch Doctors
   const doctorsList = [
     { id: 'D001', name: 'Dr. Nimal', clinic: 'Cardiology', contact: '077-1234567', email: 'nimal@gmail.com'},
     { id: 'D002', name: 'Dr. Mihiri', clinic: 'Neurology', contact: '071-1234567', email: 'mihiri@gmail.com'},
     { id: 'D003', name: 'Dr. Saman', clinic: 'Pediatrics', contact: '075-1234567', email: 'saman@gmail.com'},
   ];
+   const patientsList = [ // 📍 API CALL: Fetch Patients
+    { id: 'P001', name: 'Kasun Tharanga', disease: 'Flu', clinic: 'General', doctor: 'Dr. Nimal', email: 'Kasun@gmail.com', contact: '077-1111111' },
+    { id: 'P002', name: 'Dinithi Sadamali', disease: 'Migraine', clinic: 'Neurology', doctor: 'Dr. Mihiri', email: 'dinithi@gmail.com', contact: '071-222222' },
+    { id: 'P003', name: 'Maheshi Parami', disease: 'Fracture', clinic: 'Orthopedics', doctor: 'Dr. Saman', email: 'parami@gmail.com', contact: '074-333333' },
+  ];
+
+  const appointmentsList = [ // 📍 API CALL: Fetch Appointments
+    { pName: 'Uditha Bhanuka', pId: 'P001', docName: 'Dr. Saman', docId: 'D001', clinic: 'General', date: '2025-11-25', time: '10:00 AM' },
+    { pName: 'Suhith Chamindu', pId: 'P002', docName: 'Dr. Mihiri', docId: 'D002', clinic: 'Neurology', date: '2025-11-21', time: '02:30 PM' },
+    { pName: 'Dulan Tharaka', pId: 'P003', docName: 'Dr. Saman', docId: 'D003', clinic: 'Orthopedics', date: '2025-12-02', time: '09:15 AM' },
+  ];
+
+  
+
+  // get the header title
+  const getTitle = () => {
+    switch(activeTab) {
+      case 'dashboard': return 'Welcome, Admin!';
+      case 'doctors': return 'Manage Doctors';
+      case 'patients': return 'Patient Details';
+      case 'appointments': return 'Appointment Details';
+      default: return '';
+    }
+  };
 
 
   return (
@@ -52,6 +76,22 @@ const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
             <DoctorIcon />
             <span>Manage Doctors</span>
           </button>
+
+          <button 
+            onClick={() => setActiveTab('patients')} 
+            className={`nav-item ${activeTab === 'patients' ? 'active' : ''}`}
+          >
+            <UsersIcon />
+            <span>Patient Details</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('appointments')} 
+            className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`}
+          >
+            <CalendarIcon />
+            <span>Appointments</span>
+          </button>
         </nav>
 
         <div className="dashboard-logout">
@@ -65,7 +105,7 @@ const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
       {/* --- Main Content Area --- */}
       <main className="dashboard-main">
         <header className="dashboard-header">
-          <h1>{activeTab === 'dashboard' ? 'Welcome, Admin!' : 'Manage Doctors'}</h1>
+          <h1>{getTitle()}</h1>
         </header>
 
         <div className="dashboard-content-wrapper">
@@ -95,8 +135,6 @@ const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
           {/* --- VIEW 2: MANAGE DOCTORS --- */}
           {activeTab === 'doctors' && (
             <section className="doctors-section">
-              
-              {/* Action Buttons */}
               <div className="action-buttons-container">
                 <button 
                   className={`action-btn ${doctorSubTab === 'view' ? 'active' : ''}`}
@@ -114,12 +152,9 @@ const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
                 </button>
               </div>
 
-              {/* --- VIEWPORT --- */}
               <div className="slider-viewport">
-                {/* The track slides left/right based on the class 'slide-left' */}
                 <div className={`slider-track ${doctorSubTab === 'add' ? 'slide-left' : ''}`}>
-                  
-                  {/* Table - View Doctors */}
+                  {/* SLIDE 1: Table */}
                   <div className="slider-slide">
                     <div className="table-container">
                       <table className="data-table">
@@ -147,7 +182,7 @@ const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
                     </div>
                   </div>
 
-                  {/* SLIDE 2: Form (Add Doctor) */}
+                  {/* SLIDE 2: Form */}
                   <div className="slider-slide">
                     <div className="form-container">
                       <h3>Enter Doctor Details</h3>
@@ -180,14 +215,79 @@ const AdminDashboard = ({ setViewMode }: AdminDashboardProps) => {
                       </form>
                     </div>
                   </div>
-
                 </div>
               </div>
-              {/* --- END SLIDING VIEWPORT --- */}
-
             </section>
           )}
-          
+
+          {/* --- VIEW 3: PATIENT DETAILS --- */}
+          {activeTab === 'patients' && (
+            <section className="doctors-section"> 
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Patient ID</th>
+                      <th>Name</th>
+                      <th>Disease</th>
+                      <th>Clinic</th>
+                      <th>Doctor</th>
+                      <th>Email</th>
+                      <th>Contact</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {patientsList.map((p) => (
+                      <tr key={p.id}>
+                        <td>{p.id}</td>
+                        <td>{p.name}</td>
+                        <td>{p.disease}</td>
+                        <td>{p.clinic}</td>
+                        <td>{p.doctor}</td>
+                        <td>{p.email}</td>
+                        <td>{p.contact}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* --- VIEW 4: APPOINTMENT DETAILS --- */}
+          {activeTab === 'appointments' && (
+            <section className="doctors-section"> 
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Patient Name</th>
+                      <th>Patient ID</th>
+                      <th>Doctor Name</th>
+                      <th>Doctor ID</th>
+                      <th>Clinic</th>
+                      <th>Date</th>
+                      <th>Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointmentsList.map((app, index) => (
+                      <tr key={index}>
+                        <td>{app.pName}</td>
+                        <td>{app.pId}</td>
+                        <td>{app.docName}</td>
+                        <td>{app.docId}</td>
+                        <td>{app.clinic}</td>
+                        <td>{app.date}</td>
+                        <td>{app.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
         </div>
       </main>
     </div>

@@ -292,7 +292,7 @@
 }
 .nav-item:hover {
   background: white;
-  color:red;
+  color:blueviolet;
 }
 .nav-item.active {
   background: rgba(255, 255, 255, 0.2);

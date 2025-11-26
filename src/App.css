@@ -178,6 +178,8 @@
   background: white;
   font-size: 1rem;
   box-sizing: border-box; 
+  color: #00c6ff;
+  border-color: #00c6ff
 }
 
 .form-button {

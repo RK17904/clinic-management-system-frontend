@@ -1,0 +1,123 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import './App.css';
+
+// Import Types
+import type { ViewMode } from './types/types.ts';
+
+// Import Sidebar Icons
+import { SignInIcon, SignUpIcon, DoctorIcon } from './components/Icons.tsx';
+
+// Import View Components
+import PatientSignIn from './views/PatientSignIn.tsx';
+import PatientSignUp from './views/PatientSignUp.tsx';
+import PatientDashboard from './views/PatientDashboard.tsx';
+import DoctorLogin from './views/DoctorLogin.tsx';
+import DoctorDashboard from './views/DoctorDashboard.tsx';
+import AdminLogin from './views/AdminLogIn.tsx';
+import AdminDashboard from './views/AdminDashboard.tsx';
+
+// --- Auth Layout Wrapper ---
+const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, activeTab: string }) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="auth-background">
+      <div className="app-wrapper">
+        
+        {/* --- SIDEBAR --- */}
+        <div className="sidebar">
+          
+          {/* 1. Patient Sign In */}
+          <div
+            className={`sidebar-icon ${activeTab === 'patientSignIn' ? 'active' : ''}`}
+            onClick={() => navigate('/patient-login')}
+          >
+            <SignInIcon />
+            <span>Sign In</span>
+          </div>
+
+          {/* 2. Patient Sign Up */}
+          <div
+            className={`sidebar-icon ${activeTab === 'patientSignUp' ? 'active' : ''}`}
+            onClick={() => navigate('/patient-signup')}
+          >
+            <SignUpIcon />
+            <span>Sign Up</span>
+          </div>
+
+          {/* 3. Doctor Log In */}
+          <div
+            className={`sidebar-icon ${activeTab === 'doctorLogin' ? 'active' : ''}`}
+            onClick={() => navigate('/doctor-login')}
+          >
+            <DoctorIcon />
+            <span>Doctor</span>
+          </div>
+
+          {/* 4. Admin Log In */}
+          <div
+            className={`sidebar-icon ${activeTab === 'adminLogin' ? 'active' : ''}`}
+            onClick={() => navigate('/admin-login')}
+            style={{ marginTop: 'auto', marginBottom: '20px' }} 
+          >
+            <DoctorIcon />
+            <span>Admin</span>
+          </div>
+
+        </div>
+
+        {/* --- MAIN CONTENT --- */}
+        <div className={`main-container ${activeTab !== 'patientSignUp' ? 'sign-in-mode' : ''}`}>
+           {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main App Component ---
+function App() {
+  
+  // Navigation Helper
+  const AuthRoute = ({ component: Component, mode }: { component: any, mode: ViewMode }) => {
+      const navigate = useNavigate();
+      
+      const handleSetViewMode = (newMode: ViewMode) => {
+          if (newMode === 'patientSignIn') navigate('/patient-login');
+          if (newMode === 'patientSignUp') navigate('/patient-signup');
+          if (newMode === 'doctorLogin') navigate('/doctor-login');
+          if (newMode === 'adminLogin') navigate('/admin-login');
+      };
+
+      return (
+          <AuthLayout activeTab={mode}>
+              <Component setViewMode={handleSetViewMode} />
+          </AuthLayout>
+      );
+  };
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* --- AUTH ROUTES  --- */}
+        <Route path="/patient-login" element={<AuthRoute component={PatientSignIn} mode="patientSignIn" />} />
+        <Route path="/patient-signup" element={<AuthRoute component={PatientSignUp} mode="patientSignUp" />} />
+        <Route path="/doctor-login" element={<AuthRoute component={DoctorLogin} mode="doctorLogin" />} />
+        <Route path="/admin-login" element={<AuthRoute component={AdminLogin} mode="adminLogin" />} />
+
+        {/* --- DASHBOARD ROUTES --- */}
+        <Route path="/patient-dashboard" element={<PatientDashboard />} />
+        <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+
+        {/* --- DEFAULT --- */}
+        {/*  /patient-login Route  */}
+        <Route path="/" element={<Navigate to="/patient-login" />} />
+        <Route path="*" element={<Navigate to="/patient-login" />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;

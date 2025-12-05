@@ -1,0 +1,569 @@
+/* =========================================
+   1. GLOBAL VARIABLES & FONTS (From Code 2)
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #020080; /* Dark Blue */
+  --secondary-color: #f0f2f5; /* Background Grey */
+  --text-color: #121111;
+  --text-light: #060202;
+  --sidebar-bg: #fff;
+  --card-bg: #fff;
+  --error-color: #d9534f;
+  --error-bg: #f2dede;
+  --transition-speed: 0.3s;
+}
+
+/* =========================================
+   2. LOGIN / SIGNUP (PRESERVED FROM CODE 1)
+   ========================================= */
+
+/* ---Background for Login/Signup Screens --- */
+.auth-background {
+  background: url(/loginimage.jpg);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-size: cover;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Segoe UI', sans-serif; /* Kept original font for Login */
+}
+
+/* --- Main Layout --- */
+.app-wrapper {
+  align-items: center;
+  display: flex;
+  width: 100%;
+  max-width: 1100px;
+  margin: 2rem;
+  transform: scale(0.9);
+}
+
+/* --- Far Left Sidebar (Login Specific) --- */
+.sidebar {
+  width: 80px;
+  background: rgb(253, 253, 253);
+  color: rgb(189, 194, 194);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 3rem;
+  border-radius: 15px 0 0 15px;
+  box-shadow: 0 10px 20px rgba(18, 15, 204, 0.1);
+}
+
+.sidebar-icon {
+  cursor: pointer;
+  margin-bottom: 3rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.75rem;
+  transition: color 0.3s ease;
+}
+
+.sidebar-icon span {
+  margin-top: 1.0rem;
+  margin-bottom: 1.0rem;
+}
+
+.sidebar-icon:hover {
+  color: whitesmoke;
+  background: blueviolet;
+  border-radius: 10px;
+  width: 100px;
+}
+
+.sidebar-icon.active {
+  color: #ffffff;
+  background: rgb(6, 60, 168);
+  border-radius: 10px;
+  width: 100px;
+  padding: 8px 0;
+}
+
+/* --- Main Login/Signup Card --- */
+.main-container {
+  display: flex;
+  width: 1000px;
+  max-height: 650px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  border-radius: 0 15px 15px 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out;
+  background: white;
+}
+
+.main-container.doctor-mode,
+.main-container.admin-mode {
+  transition: none;
+  max-height: 575px;
+}
+
+.form-panel {
+  flex: 1;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Blue Left Panel --- */
+.blue-panel {
+  background: rgb(6, 60, 168);
+  color: white;
+  text-align: left;
+  justify-content: center;
+}
+
+.blue-panel h1 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.blue-panel p {
+  font-size: 1rem;
+  color: #C9C9C9;
+}
+
+.panel-image {
+  width: 100%;
+  max-width: 250px;
+  margin-top: 3rem;
+  align-self: center;
+  -webkit-mask-image: radial-gradient(ellipse at center, black 50%, transparent 80%);
+  mask-image: radial-gradient(ellipse at center, black 50%, transparent 80%);
+}
+
+/* --- White Right Panel (Form) --- */
+.white-panel {
+  background: #F2E9E4;
+}
+
+.white-panel-header {
+  text-align: right;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.white-panel-header span {
+  color: #4A4E69;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.white-panel-header .toggle-link {
+  color: #4A4E69;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 5px;
+  display: inline-block;
+}
+
+.form-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.form-title {
+  color: #22223B;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.input-group .icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #888;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 1rem 1rem 1rem 3rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.form-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: rgb(6, 60, 168);
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background 0.4s ease;
+}
+
+.form-button:hover {
+  background: blueviolet
+}
+
+.footer-text {
+  text-align: center;
+  margin-top: 2rem;
+  color: #888;
+  font-size: 0.8rem;
+  max-width: 300px;
+  align-self: center;
+  line-height: 1.4;
+}
+
+.username-input {
+  max-height: 100px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 1.0s ease-in-out,
+    opacity 1.0s ease-in-out,
+    margin-bottom 1.0s ease-in-out;
+}
+
+.main-container.sign-in-mode .username-input {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+}
+
+.main-container.sign-in-mode {
+  max-height: 600px;
+}
+
+.signin,
+.signup {
+  display: inline;
+}
+
+/* =========================================
+   3. ADMIN & DOCTOR DASHBOARD (UPDATED WITH CODE 2 STYLES)
+   ========================================= */
+
+.dashboard-layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  font-family: 'Poppins', sans-serif; /* Updated to Code 2 Font */
+  background: var(--secondary-color); /* Updated to Code 2 Variable */
+}
+
+/* --- Dashboard Sidebar (Refreshed Style) --- */
+.dashboard-sidebar {
+  width: 260px;
+  background: var(--sidebar-bg); /* White bg from Code 2 */
+  color:var(--text-color); /* Dark text */
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-logo {
+  display: flex;
+  align-items: center;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(243, 8, 8, 0.1);
+}
+
+.dashboard-logo h2 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.dashboard-nav {
+  flex-grow: 1;
+  margin-top: 1.5rem;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text-light);
+  margin-bottom: 0.5rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font-weight: 500;
+}
+
+.nav-item svg {
+  margin-right: 0.75rem;
+  width: 20px;
+  height: 20px;
+}
+
+/* Hover and Active states updated to match Code 2 style */
+.nav-item:hover {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
+}
+
+.nav-item.active {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 86, 179, 0.3);
+}
+
+.dashboard-logout {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 1rem;
+}
+
+/* --- Dashboard Main Content --- */
+.dashboard-main {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dashboard-header {
+  padding: 1.5rem 2rem;
+  background: white;
+  border-bottom: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.dashboard-content {
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+/* --- Status Cards (Updated Colors) ---*/
+.stat-card {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 15px; /* Softer radius like Code 2 */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+  transition: transform 0.3s ease;
+}
+
+.stat-card h3 {
+  font-size: 1rem;
+  color: var(--text-light);
+  margin: 0 0 0.5rem 0;
+}
+
+.stat-card p {
+  font-size: 2.25rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 86, 179, 0.15);
+  border-color: var(--primary-color);
+}
+
+/* --- Doctors Section Styles --- */
+.dashboard-content-wrapper {
+  padding: 2rem;
+}
+
+.doctors-section {
+  background: var(--card-bg);
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  min-height: 500px;
+}
+
+/* Action Buttons */
+.action-buttons-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 1px solid #e0e0e0;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--text-light);
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.action-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: translateY(-2px);
+}
+
+.action-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+/* Data Table Styles */
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.data-table th {
+  background-color: #f8f9fa;
+  color: var(--text-color);
+  font-weight: 600;
+}
+
+.data-table tr:hover {
+  background-color: #f1f5ff;
+}
+
+/* Form Styles for Dashboard */
+.form-container h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+}
+
+.admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 600px;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-light);
+}
+
+.form-group input {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px; /* Updated radius */
+  font-size: 1rem;
+  font-family: 'Poppins', sans-serif;
+}
+
+.form-group input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+}
+
+.save-btn {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+  width: 200px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.save-btn:hover {
+  background: #004494;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 86, 179, 0.2);
+}
+
+/* --- Swipe Animation Containers --- */
+.slider-viewport {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.slider-track {
+  display: flex;
+  width: 200%;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.slider-slide {
+  width: 50%;
+  padding: 0.5rem;
+}
+
+.slider-track.slide-left {
+  transform: translateX(-50%);
+}
+
+.table-container,
+.form-container {
+  width: 100%;
+  max-width: 100%;
+}

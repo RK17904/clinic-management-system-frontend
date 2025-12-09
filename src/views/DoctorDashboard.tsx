@@ -500,7 +500,7 @@ const DoctorDashboard = () => {
                             <div className="form-container">
                                 <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>
                                 <form className="admin-form">
-                                    <div className="form-group"><label>Appt ID</label><input type="number" value={newBill.appointmentId} onChange={e=>setNewBill({...newBill, appointmentId: e.target.value})}/></div>
+                                    <div className="form-group"><label>Appointment ID</label><input type="number" value={newBill.appointmentId} onChange={e=>setNewBill({...newBill, appointmentId: e.target.value})}/></div>
                                     <div className="form-group"><label>Amount</label><input type="number" value={newBill.amount} onChange={e=>setNewBill({...newBill, amount: e.target.value})}/></div>
                                     <div className="form-group"><label>Status</label><input type="text" value={newBill.status} onChange={e=>setNewBill({...newBill, status: e.target.value})}/></div>
                                     <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update' : 'Generate Bill'}</button>

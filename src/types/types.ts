@@ -1,1 +1,1 @@
-export type ViewMode = 'patientSignIn' | 'patientSignUp' | 'doctorLogin' | 'adminLogin' | 'adminDashboard';
+export type ViewMode = 'patientSignIn' | 'patientSignUp' | 'doctorLogin' | 'adminLogin' | 'adminDashboard'| 'doctorDashboard';

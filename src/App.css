@@ -519,3 +519,51 @@
   width: 100%;
   max-width: 100%; 
 }
+/* -- Doctor Dash Board --*/
+/* The viewport is the "window" we look through */
+.main-slider-viewport {
+  width: 100%;
+  overflow-x: hidden; /* Prevent horizontal scrollbar */
+  position: relative;
+  color: #0072ff;
+}
+
+/* The track holds all 4 views side-by-side */
+.main-slider-track {
+  display: flex;
+  width: 400%; /* 4 Tabs = 400% Width */
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); /* Smooth animation */
+  align-items: flex-start; /* Align tops of slides */
+}
+
+/* Each slide takes up 1/4th of the track */
+.main-slider-slide {
+  width: 25%; /* 100% / 4 = 25% */
+  padding: 0.5rem; /* Small padding */
+  box-sizing: border-box;
+}
+
+/* Positions for the track based on active tab */
+.main-slider-track.pos-dashboard { transform: translateX(0%); }
+.main-slider-track.pos-doctors { transform: translateX(-25%); }
+.main-slider-track.pos-patients { transform: translateX(-50%); }
+.main-slider-track.pos-appointments { transform: translateX(-75%); }
+
+/* --- DOCTOR DASHBOARD SLIDER (5 Tabs) --- */
+
+/* Override width for 5 tabs (100% * 5 = 500%) */
+.main-slider-track.doctor-track {
+  width: 500%; 
+}
+
+/* Each slide takes 1/5th (20%) */
+.main-slider-track.doctor-track .main-slider-slide {
+  width: 20%;
+}
+
+/* Doctor Specific Positions (Steps of 20%) */
+.main-slider-track.doctor-track.pos-dashboard { transform: translateX(0%); }
+.main-slider-track.doctor-track.pos-patients { transform: translateX(-20%); }
+.main-slider-track.doctor-track.pos-appointments { transform: translateX(-40%); }
+.main-slider-track.doctor-track.pos-records { transform: translateX(-60%); }
+.main-slider-track.doctor-track.pos-billing { transform: translateX(-80%); }

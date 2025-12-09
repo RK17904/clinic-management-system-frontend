@@ -95,7 +95,7 @@ const PatientDashboard = () => {
       {/* --- SIDEBAR --- */}
       <div className="dashboard-sidebar" style={{ background: sidebarColor, color: '#333', borderRight: '1px solid #eee' }}>
         <div className="dashboard-logo" style={{borderBottom:'1px solid #eee'}}>
-          <h2 style={{color: '#0056b3'}}>My Health</h2>
+          <h2 style={{color: '#0056b3'}}>Health Care+</h2>
         </div>
         
         <nav className="dashboard-nav">

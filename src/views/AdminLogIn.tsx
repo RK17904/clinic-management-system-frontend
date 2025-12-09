@@ -1,92 +1,79 @@
-import { useState } from 'react'; // <-- IMPORT
-import type { Dispatch, SetStateAction, FormEvent } from 'react'; // <-- IMPORT FormEvent
-import type { ViewMode } from '../types/types.ts';
-import { UserIcon, LockIcon } from '../components/Icons.tsx';
-import adminIllustration from '../assets/admin.jpg';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../api/axiosConfig';
+import { LockIcon, UserIcon } from '../components/Icons';
+import signInIllustration from '../assets/admin.jpg'; 
 
-interface AdminLoginProps {
-  setViewMode: Dispatch<SetStateAction<ViewMode>>;
-}
-
-const AdminLogin = ({ setViewMode }: AdminLoginProps) => {
-  const [username, setUsername] = useState('');
+const AdminLogin = () => {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  
+  const navigate = useNavigate();
 
-  /*
-   Handles the form submission
-   */
-  const handleLogin = (e: FormEvent) => {
-    e.preventDefault(); // Stop the page from reloading
-    setError(''); // Clear any previous errors
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
-    // --- log for testing ---
-    console.log('Login attempt with:', { username, password });
+    try {
+      const response = await api.post('/admins/login', {
+        email: email,
+        password: password
+      });
 
-    // ---  where  would call an API ---
-    // For now, use mock credentials
-    if (username === 'admin' && password === 'admin') {
-      // Success! Change the view to the dashboard
-      setViewMode('adminDashboard');
-    } else {
-      // Failed login
-      setError('Invalid username or password.');
+      if (response.status === 200) {
+        console.log("Admin Login Success!");
+        localStorage.setItem('adminData', JSON.stringify(response.data));
+        navigate('/admin-dashboard'); 
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Invalid Email or Password. Please Check Database.");
     }
   };
 
   return (
     <>
-      {/* --- BLUE LEFT PANEL (No change) --- */}
+      {/* - (Blue Panel) --- */}
       <div className="form-panel blue-panel">
-        <div className="logo-container"> 
-          <h1>HealthCare +</h1>
-        </div> 
-        <h1>Admin Portal</h1>
-        <p><i>Please enter your admin credentials.</i></p>
-        <img src={adminIllustration} alt="Admin" className="panel-image" />
+        <h1>HealthCare +</h1>
+        <h2>Admin Portal</h2>
+        <p><i>System administration and management dashboard...</i></p>
+        <img src={signInIllustration} alt="Admin Login" className="panel-image" />
       </div>
 
-      {/* --- WHITE RIGHT PANEL (Updated) --- */}
+      {/* ---  (Form) --- */}
       <div className="form-panel white-panel">
-        <div className="white-panel-header">
-          <p>
-            Are you a Patient?
-            <span onClick={() => setViewMode('patientSignIn')} className="toggle-link">Patient Login</span>
-          </p>
-        </div>
-
         <div className="form-content">
-          <h2 className="form-title">Admin Log In</h2>
+          <h1 className="form-title" style={{color: '#d9534f'}}>Admin Login</h1>
           
-          {/* --- UPDATED FORM --- */}
           <form onSubmit={handleLogin}>
-            {/* Admin "User Name" field */}
             <div className="input-group">
               <span className="icon"><UserIcon /></span>
               <input 
-                type="text" 
-                placeholder="User Name"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email" 
+                placeholder="Admin Email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
             
-            {/* Password field */}
             <div className="input-group">
               <span className="icon"><LockIcon /></span>
               <input 
                 type="password" 
-                placeholder="Password"
+                placeholder="Password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
-            
-            {/* --- NEW: Error Message Display --- */}
-            {error && <p className="form-error">{error}</p>}
-            
-            <button type="submit" className="form-button">
-              SIGN IN
+
+            {error && <p style={{color: 'red', textAlign: 'center', fontSize: '0.9rem'}}>{error}</p>}
+
+            <button type="submit" className="form-button" style={{background: '#d9534f'}}>
+              LOGIN
             </button>
           </form>
           <p className="footer-text">

@@ -1,86 +1,122 @@
-import { useState } from 'react';
+import React from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import './App.css';
 
 // Import Types
-import type { ViewMode } from './types/types.ts'; 
+import type { ViewMode } from './types/types.ts';
 
 // Import Sidebar Icons
-import { SignInIcon, SignUpIcon, DoctorIcon } from './components/Icons.tsx'; 
+import { SignInIcon, SignUpIcon, DoctorIcon } from './components/Icons.tsx';
 
 // Import View Components
-import PatientSignIn from './views/PatientSignIn.tsx'; 
-import PatientSignUp from './views/PatientSignUp.tsx'; 
-import DoctorLogin from './views/DoctorLogin.tsx'; 
-import AdminLogin from './views/AdminLogIn.tsx'; 
-import AdminDashboard from './views/AdminDashboard.tsx'; 
+import PatientSignIn from './views/PatientSignIn.tsx';
+import PatientSignUp from './views/PatientSignUp.tsx';
+import PatientDashboard from './views/PatientDashboard.tsx';
+import DoctorLogin from './views/DoctorLogin.tsx';
+import DoctorDashboard from './views/DoctorDashboard.tsx';
+import AdminLogin from './views/AdminLogIn.tsx';
+import AdminDashboard from './views/AdminDashboard.tsx';
 
-function App() {
-  const [viewMode, setViewMode] = useState<ViewMode>('patientSignIn');
+// --- Auth Layout Wrapper ---
+const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, activeTab: string }) => {
+  const navigate = useNavigate();
 
-  // The sign-up/sign-in animation
-  const isSignInMode = viewMode !== 'patientSignUp';
-
-  // Render the login/signup views
-  const renderLoginViews = () => {
-    switch (viewMode) {
-      case 'patientSignIn':
-        return <PatientSignIn setViewMode={setViewMode} />;
-      case 'patientSignUp':
-        return <PatientSignUp setViewMode={setViewMode} />;
-      case 'doctorLogin':
-        return <DoctorLogin setViewMode={setViewMode} />;
-      case 'adminLogin':
-        return <AdminLogin setViewMode={setViewMode} />;
-      default:
-        return <PatientSignIn setViewMode={setViewMode} />;
-    }
-  };
-
-  if (viewMode === 'adminDashboard') {
-    return <AdminDashboard setViewMode={setViewMode} />;
-  }
-
-  // --- Default: Render the Login/Signup layout ---
   return (
-    <div className="auth-background"> 
+    <div className="auth-background">
       <div className="app-wrapper">
         
-        {/* --- FAR LEFT SIDEBAR --- */}
+        {/* --- SIDEBAR --- */}
         <div className="sidebar">
-          <div 
-            className={`sidebar-icon ${viewMode === 'patientSignIn' ? 'active' : ''}`}
-            onClick={() => setViewMode('patientSignIn')}
+          
+          {/* 1. Patient Sign In */}
+          <div
+            className={`sidebar-icon ${activeTab === 'patientSignIn' ? 'active' : ''}`}
+            onClick={() => navigate('/patient-login')}
           >
             <SignInIcon />
             <span>Sign In</span>
           </div>
-          
-          <div 
-            className={`sidebar-icon ${viewMode === 'patientSignUp' ? 'active' : ''}`}
-            onClick={() => setViewMode('patientSignUp')}
+
+          {/* 2. Patient Sign Up */}
+          <div
+            className={`sidebar-icon ${activeTab === 'patientSignUp' ? 'active' : ''}`}
+            onClick={() => navigate('/patient-signup')}
           >
             <SignUpIcon />
             <span>Sign Up</span>
           </div>
 
-          <div 
-            className={`sidebar-icon ${viewMode === 'doctorLogin' || viewMode === 'adminLogin' ? 'active' : ''}`}
-            onClick={() => setViewMode('doctorLogin')}
+          {/* 3. Doctor Log In */}
+          <div
+            className={`sidebar-icon ${activeTab === 'doctorLogin' ? 'active' : ''}`}
+            onClick={() => navigate('/doctor-login')}
           >
             <DoctorIcon />
-            <span>Doctor log In</span>
+            <span>Doctor</span>
           </div>
+
+          {/* 4. Admin Log In */}
+          <div
+            className={`sidebar-icon ${activeTab === 'adminLogin' ? 'active' : ''}`}
+            onClick={() => navigate('/admin-login')}
+            style={{ marginTop: 'auto', marginBottom: '20px' }} 
+          >
+            <DoctorIcon />
+            <span>Admin</span>
+          </div>
+
         </div>
 
-        {/* --- MAIN CONTENT AREA --- */}
-        <div className={`main-container ${isSignInMode ? 'sign-in-mode' : ''}`}>
-          
-          {/* Render the active login/signup view component */}
-          {renderLoginViews()}
-
+        {/* --- MAIN CONTENT --- */}
+        <div className={`main-container ${activeTab !== 'patientSignUp' ? 'sign-in-mode' : ''}`}>
+           {children}
         </div>
       </div>
-    </div> 
+    </div>
+  );
+};
+
+// --- Main App Component ---
+function App() {
+  
+  // Navigation Helper
+  const AuthRoute = ({ component: Component, mode }: { component: any, mode: ViewMode }) => {
+      const navigate = useNavigate();
+      
+      const handleSetViewMode = (newMode: ViewMode) => {
+          if (newMode === 'patientSignIn') navigate('/patient-login');
+          if (newMode === 'patientSignUp') navigate('/patient-signup');
+          if (newMode === 'doctorLogin') navigate('/doctor-login');
+          if (newMode === 'adminLogin') navigate('/admin-login');
+      };
+
+      return (
+          <AuthLayout activeTab={mode}>
+              <Component setViewMode={handleSetViewMode} />
+          </AuthLayout>
+      );
+  };
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* --- AUTH ROUTES  --- */}
+        <Route path="/patient-login" element={<AuthRoute component={PatientSignIn} mode="patientSignIn" />} />
+        <Route path="/patient-signup" element={<AuthRoute component={PatientSignUp} mode="patientSignUp" />} />
+        <Route path="/doctor-login" element={<AuthRoute component={DoctorLogin} mode="doctorLogin" />} />
+        <Route path="/admin-login" element={<AuthRoute component={AdminLogin} mode="adminLogin" />} />
+
+        {/* --- DASHBOARD ROUTES --- */}
+        <Route path="/patient-dashboard" element={<PatientDashboard />} />
+        <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
+        <Route path="/admin-dashboard" element={<AdminDashboard />} />
+
+        {/* --- DEFAULT --- */}
+        {/*  /patient-login Route  */}
+        <Route path="/" element={<Navigate to="/patient-login" />} />
+        <Route path="*" element={<Navigate to="/patient-login" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

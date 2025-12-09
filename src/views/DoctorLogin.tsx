@@ -1,54 +1,81 @@
-import type { Dispatch, SetStateAction } from 'react';
-import type {ViewMode} from '../types/types';
-import { UserIcon, LockIcon } from '../components/Icons';
-import logInIllustration from '../assets/doctor.jpg';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; 
+import api from '../api/axiosConfig'; 
+import { LockIcon, UserIcon } from '../components/Icons'; 
+import signInIllustration from '../assets/doctor.jpg'; 
 
-interface DoctorLoginProps {
-  setViewMode: Dispatch<SetStateAction<ViewMode>>;
-}
+const DoctorLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  
+  const navigate = useNavigate();
 
-const DoctorLogin = ({ setViewMode }: DoctorLoginProps) => {    
-return(
-<>
-      {/* --- BLUE LEFT PANEL --- */}
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const response = await api.post('/doctors/login', {
+        email: email,
+        password: password
+      });
+
+      if (response.status === 200) {
+        console.log("Doctor Login Success!");
+        localStorage.setItem('doctorData', JSON.stringify(response.data));
+        navigate('/doctor-dashboard'); 
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Invalid Email or Password");
+    }
+  };
+
+  return (
+    <>
+      {/*  (Blue Panel) --- */}
       <div className="form-panel blue-panel">
         <h1>HealthCare +</h1>
-        <h2>Welcome to Doctor Portal</h2>
-        <p><i>Access your digital clinic and manage with ease...</i></p>
-        <img src={logInIllustration} alt="Doctor" className="panel-image" />
+        <h2>Doctor Portal</h2>
+        <p><i>Access your digital clinic and manage patients with ease...</i></p>
+        <img src={signInIllustration} alt="Doctor Login" className="panel-image" />
       </div>
 
-      {/* --- WHITE RIGHT PANEL --- */}
+      {/* - (Form) --- */}
       <div className="form-panel white-panel">
-        <div className="white-panel-header">
-          <p>
-            Are you an Admin?
-            <span onClick={() => setViewMode('adminLogin')} className="toggle-link admin-link">Admin Login</span>
-          </p>
-        </div>
-
         <div className="form-content">
           <h1 className="form-title">Doctor Log In</h1>
-          <form>
-            {/* Doctor "User name" field */}
+          
+          <form onSubmit={handleLogin}>
             <div className="input-group">
               <span className="icon"><UserIcon /></span>
-              <input type="text" placeholder="User name" />
+              <input 
+                type="email" 
+                placeholder="Email" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             
-            {/* Password field */}
             <div className="input-group">
               <span className="icon"><LockIcon /></span>
-              <input type="password" placeholder="Password" />
+              <input 
+                type="password" 
+                placeholder="Password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
-            
+
+            {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
+
             <button type="submit" className="form-button">
               SIGN IN
             </button>
           </form>
-          <p className="footer-text">
-            Access is restricted to authorized users.
-          </p>
         </div>
       </div>
     </>

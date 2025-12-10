@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; 
-import api from '../api/axiosConfig'; 
+import api from '../api/axios.Config'; 
 import { LockIcon, UserIcon } from '../components/Icons'; 
 import signInIllustration from '../assets/doctor.jpg'; 
 

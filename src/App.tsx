@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import './App.css';
 
 // Import Types
@@ -16,6 +16,7 @@ import DoctorLogin from './views/DoctorLogin.tsx';
 import DoctorDashboard from './views/DoctorDashboard.tsx';
 import AdminLogin from './views/AdminLogIn.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
+import Home from './views/Home.tsx'; 
 
 // --- Auth Layout Wrapper ---
 const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, activeTab: string }) => {
@@ -24,16 +25,14 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
   return (
     <div className="auth-background">
       <div className="app-wrapper">
-        
         {/* --- SIDEBAR --- */}
         <div className="sidebar">
-          
           {/* 1. Patient Sign In */}
           <div
             className={`sidebar-icon ${activeTab === 'patientSignIn' ? 'active' : ''}`}
             onClick={() => navigate('/patient-login')}
           >
-            <SignInIcon />
+            <SignInIcon /> {/* <-- Restored */}
             <span>Sign In</span>
           </div>
 
@@ -42,7 +41,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
             className={`sidebar-icon ${activeTab === 'patientSignUp' ? 'active' : ''}`}
             onClick={() => navigate('/patient-signup')}
           >
-            <SignUpIcon />
+            <SignUpIcon /> {/* <-- Restored */}
             <span>Sign Up</span>
           </div>
 
@@ -51,7 +50,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
             className={`sidebar-icon ${activeTab === 'doctorLogin' ? 'active' : ''}`}
             onClick={() => navigate('/doctor-login')}
           >
-            <DoctorIcon />
+            <DoctorIcon /> {/* <-- Restored */}
             <span>Doctor</span>
           </div>
 
@@ -61,10 +60,9 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
             onClick={() => navigate('/admin-login')}
             style={{ marginTop: 'auto', marginBottom: '20px' }} 
           >
-            <DoctorIcon />
+            <DoctorIcon /> {/* <-- Restored (Reusing Doctor Icon for Admin) */}
             <span>Admin</span>
           </div>
-
         </div>
 
         {/* --- MAIN CONTENT --- */}
@@ -100,6 +98,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* --- HOME ROUTE --- */}
+        <Route path="/home" element={<Home />} />
+        
         {/* --- AUTH ROUTES  --- */}
         <Route path="/patient-login" element={<AuthRoute component={PatientSignIn} mode="patientSignIn" />} />
         <Route path="/patient-signup" element={<AuthRoute component={PatientSignUp} mode="patientSignUp" />} />
@@ -112,9 +113,8 @@ function App() {
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
         {/* --- DEFAULT --- */}
-        {/*  /patient-login Route  */}
-        <Route path="/" element={<Navigate to="/patient-login" />} />
-        <Route path="*" element={<Navigate to="/patient-login" />} />
+        <Route path="/" element={<Navigate to="/home" />} />
+        <Route path="*" element={<Navigate to="/home" />} />
       </Routes>
     </BrowserRouter>
   );

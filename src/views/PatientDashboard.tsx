@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axiosConfig'; 
-import { UserIcon, SignInIcon, ListIcon, CalendarIcon } from '../components/Icons.tsx';
+import api from '../api/axios.Config.ts'; 
+import { UserIcon, SignInIcon, ListIcon, CalendarIcon, HomeIcon } from '../components/Icons.tsx';
 
 // --- Interfaces ---
 interface Patient {
@@ -20,7 +20,6 @@ interface Appointment {
   time: string;
   status: string;
   patient: Patient;
-  // Doctor 
 }
 
 interface MedicalRecord {
@@ -41,11 +40,23 @@ const PatientDashboard = () => {
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [myRecords, setMyRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // --- Animation State ---
+  const [isExiting, setIsExiting] = useState(false);
 
   // --- Logout Function ---
   const handleLogout = () => {
     localStorage.removeItem('patientData');
     navigate('/patient-login');
+  };
+
+  // --- Go Home with Animation ---
+  const handleGoHome = () => {
+    setIsExiting(true); // Trigger CSS animation
+    // Wait for animation (500ms) before navigating
+    setTimeout(() => {
+      navigate('/home');
+    }, 500);
   };
 
   // --- Data Fetching ---
@@ -87,10 +98,11 @@ const PatientDashboard = () => {
 
   // --- Sidebar Styles ---
   const sidebarColor = 'white'; 
-  const activeTextColor = '#0056b3'; // Blue for active tab
+  const activeTextColor = '#0056b3'; 
 
   return (
-    <div className="dashboard-layout">
+    // Add class based on isExiting state
+    <div className={`dashboard-layout ${isExiting ? 'page-exit-active' : ''}`}>
       
       {/* --- SIDEBAR --- */}
       <div className="dashboard-sidebar" style={{ background: sidebarColor, color: '#333', borderRight: '1px solid #eee' }}>
@@ -122,6 +134,15 @@ const PatientDashboard = () => {
           >
             <ListIcon /> <span>Medical Records</span>
           </button>
+
+          {/* --- HOME BUTTON WITH ANIMATION --- */}
+          <button 
+            onClick={handleGoHome} 
+            className="nav-item"
+            style={{ color: '#555', marginTop: '10px', borderTop: '1px solid #eee' }}
+          >
+            <HomeIcon /> <span>Go to Home</span>
+          </button>
         </nav>
 
         <div className="dashboard-logout" style={{borderTop:'1px solid #eee'}}>
@@ -137,103 +158,112 @@ const PatientDashboard = () => {
           <h1>Welcome, {patient.firstName} {patient.lastName} 👋</h1>
         </header>
 
-        <div className="dashboard-content-wrapper">
+        {/* Removed default padding here so vertical slider fits 100% height */}
+        <div className="dashboard-content-wrapper" style={{padding: 0, overflow: 'hidden'}}>
           
-          {/* 1. DASHBOARD OVERVIEW */}
-          {activeTab === 'dashboard' && (
-            <div className="dashboard-content">
-              {/* Profile Card */}
-              <div className="stat-card" style={{borderLeft: '5px solid #0056b3'}}>
-                <h3>My Profile</h3>
-                <div style={{fontSize: '0.95rem', color: '#555', marginTop: '10px', lineHeight: '1.6'}}>
-                  <p><strong>Email:</strong> {patient.email}</p>
-                  <p><strong>Phone:</strong> {patient.phone}</p>
-                  <p><strong>Age:</strong> {patient.age}</p>
-                  <p><strong>Address:</strong> {patient.address}</p>
+          {/* --- VERTICAL SLIDER VIEWPORT --- */}
+          <div className="patient-slider-viewport">
+            <div className={`patient-slider-track v-pos-${activeTab}`}>
+
+              {/* 1. DASHBOARD OVERVIEW (Top Slide) */}
+              <div className="patient-slider-slide">
+                <div className="dashboard-content">
+                  {/* Profile Card */}
+                  <div className="stat-card" style={{borderLeft: '5px solid #0056b3'}}>
+                    <h3>My Profile</h3>
+                    <div style={{fontSize: '0.95rem', color: '#555', marginTop: '10px', lineHeight: '1.6'}}>
+                      <p><strong>Email:</strong> {patient.email}</p>
+                      <p><strong>Phone:</strong> {patient.phone}</p>
+                      <p><strong>Age:</strong> {patient.age}</p>
+                      <p><strong>Address:</strong> {patient.address}</p>
+                    </div>
+                  </div>
+
+                  {/* Stats Card */}
+                  <div className="stat-card">
+                    <h3>Upcoming Appointments</h3>
+                    <p style={{color: '#0056b3'}}>{myAppointments.length}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Stats Card */}
-              <div className="stat-card">
-                <h3>Upcoming Appointments</h3>
-                <p style={{color: '#0056b3'}}>{myAppointments.length}</p>
+              {/* 2. APPOINTMENTS TAB (Middle Slide) */}
+              <div className="patient-slider-slide">
+                <section className="doctors-section">
+                  <h3>My Appointments History</h3>
+                  <div className="table-container">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {myAppointments.length === 0 ? (
+                          <tr><td colSpan={3} style={{textAlign:'center', padding:'20px'}}>No Appointments Found</td></tr>
+                        ) : (
+                          myAppointments.map(appt => (
+                            <tr key={appt.id}>
+                              <td>{appt.date}</td>
+                              <td>{appt.time}</td>
+                              <td>
+                                <span style={{
+                                    padding: '5px 10px', 
+                                    borderRadius: '15px', 
+                                    background: appt.status === 'SCHEDULED' ? '#FFF3CD' : '#D1E7DD',
+                                    color: appt.status === 'SCHEDULED' ? '#856404' : '#0F5132',
+                                    fontSize: '0.8rem', fontWeight: 'bold'
+                                }}>
+                                    {appt.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
               </div>
+
+              {/* 3. MEDICAL RECORDS TAB (Bottom Slide) */}
+              <div className="patient-slider-slide">
+                <section className="doctors-section">
+                  <h3>My Medical Records</h3>
+                  <div className="table-container">
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Diagnosis</th>
+                          <th>Treatment</th>
+                          <th>Notes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {myRecords.length === 0 ? (
+                          <tr><td colSpan={4} style={{textAlign:'center', padding:'20px'}}>No Medical Records Found</td></tr>
+                        ) : (
+                          myRecords.map(rec => (
+                            <tr key={rec.id}>
+                              <td>{rec.recordDate}</td>
+                              <td>{rec.diagnosis}</td>
+                              <td>{rec.treatment}</td>
+                              <td style={{maxWidth: '300px'}}>{rec.notes}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+
             </div>
-          )}
-
-          {/* 2. APPOINTMENTS TAB */}
-          {activeTab === 'appointments' && (
-            <section className="doctors-section">
-              <h3>My Appointments History</h3>
-              <div className="table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Time</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myAppointments.length === 0 ? (
-                      <tr><td colSpan={3} style={{textAlign:'center', padding:'20px'}}>No Appointments Found</td></tr>
-                    ) : (
-                      myAppointments.map(appt => (
-                        <tr key={appt.id}>
-                          <td>{appt.date}</td>
-                          <td>{appt.time}</td>
-                          <td>
-                            <span style={{
-                                padding: '5px 10px', 
-                                borderRadius: '15px', 
-                                background: appt.status === 'SCHEDULED' ? '#FFF3CD' : '#D1E7DD',
-                                color: appt.status === 'SCHEDULED' ? '#856404' : '#0F5132',
-                                fontSize: '0.8rem', fontWeight: 'bold'
-                            }}>
-                                {appt.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
-
-          {/* 3. MEDICAL RECORDS TAB */}
-          {activeTab === 'records' && (
-            <section className="doctors-section">
-              <h3>My Medical Records</h3>
-              <div className="table-container">
-                <table className="data-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Diagnosis</th>
-                      <th>Treatment</th>
-                      <th>Notes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myRecords.length === 0 ? (
-                      <tr><td colSpan={4} style={{textAlign:'center', padding:'20px'}}>No Medical Records Found</td></tr>
-                    ) : (
-                      myRecords.map(rec => (
-                        <tr key={rec.id}>
-                          <td>{rec.recordDate}</td>
-                          <td>{rec.diagnosis}</td>
-                          <td>{rec.treatment}</td>
-                          <td style={{maxWidth: '300px'}}>{rec.notes}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
+          </div>
+          {/* --- END VERTICAL SLIDER --- */}
 
         </div>
       </main>

@@ -4,7 +4,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { ViewMode } from '../types/types';
 import { UserIcon, MailIcon, LockIcon } from '../components/Icons'; 
 import signUpIllustration from '../assets/signup.jpg';
-import api from '../api/axiosConfig';
+import api from '../api/axios.Config';
 
 interface PatientSignUpProps {
   setViewMode: Dispatch<SetStateAction<ViewMode>>;
@@ -69,7 +69,7 @@ const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
         <img src={signUpIllustration} alt="Sign up" className="panel-image" />
       </div>
 
-      {/* --- WHITE RIGHT PANEL (Scrollable Form) --- */}
+      {/* WHITE RIGHT PANEL */}
       <div className="form-panel white-panel">
         <div className="white-panel-header">
           <p>

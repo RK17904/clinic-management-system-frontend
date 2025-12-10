@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, ListIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
-import api from '../api/axiosConfig';
+import api from '../api/axios.Config.ts';
 import logo from '../assets/logo.png';
 
 // --- Types ---

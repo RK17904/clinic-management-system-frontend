@@ -151,7 +151,7 @@ const Home = () => {
         <div className="hero-overlay">
           <div className="hero-content">
             <h1>Your Health, Our Priority</h1>
-            <p>Experience seamless healthcare with HealthCare+. Get quality medicines, expert consultations, and reliable services delivered to your life.</p>
+            <p>Experience seamless healthcare with Health Care+. Get quality medicines, expert consultations, and reliable services delivered to your life.</p>
             <div className="hero-buttons">
               <button className="primary-btn" onClick={handleMyHealthClick}>Book Appointment</button>
               <button className="secondary-btn" onClick={() => scrollToSection('about')}>Learn More</button>

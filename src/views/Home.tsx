@@ -257,7 +257,7 @@ const Home = () => {
             </div>
             <div className="contact-item">
               <h4>Address</h4>
-              <p style={{color: '#9ca3af'}}>123 Wellness Ave, Colombo</p>
+              <p style={{color: '#9ca3af'}}>Kandy Road, Dalugama, Kelaniya</p>
             </div>
           </div>
           <div className="footer-copy">

@@ -1,5 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 
+/* --- GLOBAL LAYOUT --- */
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f7fa; 
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
 /* ---Background for Login/Signup Screens --- */
 .auth-background {
   background: url(/loginimage.jpg); 
@@ -26,18 +44,22 @@
 /* --- Far Left Sidebar --- */
 .sidebar {
   width: 80px;
-  background: rgb(253, 253, 253); 
-  color:rgb(189, 194, 194); 
+  background: rgba(255, 255, 255, 0.65); 
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  
+  color: rgb(189, 194, 194); 
   display: flex;
   flex-direction: column;
   align-items: center;
   padding-top: 3rem;
   border-radius: 15px 0 0 15px;
   box-shadow: 0 10px 20px rgba(18, 15, 204, 0.1);
-  
 }
 
 .sidebar-icon {
+  color: #22223B;
   cursor: pointer;
   margin-bottom: 3rem;
   text-align: center;
@@ -45,18 +67,14 @@
   flex-direction: column;
   align-items: center;
   font-size: 0.75rem;
-  transition: color 0.3s ease;
-}
-
-.sidebar-icon span {
-  margin-top: 1.0rem;
-  margin-bottom: 1.0rem ;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)
 }
 
 .sidebar-icon:hover {
   color:whitesmoke;
   background:blueviolet; 
   border-radius:10px; 
+  padding: 10px;;
   width: 100px;
 }
 
@@ -65,7 +83,7 @@
   background: rgb(6, 60, 168); 
   border-radius: 10px;
   width: 100px; 
-  padding: 8px 0;
+  padding: 10px 0;
 }
 
 
@@ -78,8 +96,14 @@
   border-radius: 0 15px 15px 0;
   overflow: hidden;
   transition: max-height 0.4s ease-in-out; 
+  background: transparent;
   
 }
+
+.main-container.sign-in-mode {
+  max-height: 600px; 
+}
+
 .main-container.doctor-mode,
 .main-container.admin-mode {
   transition: none; 
@@ -91,15 +115,36 @@
   padding: 3rem;
   display: flex;
   flex-direction: column;
+
+}
+
+/* --- NEW: Keyframes for Slide Up Effect --- */
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* --- Blue Left Panel --- */
 .blue-panel {
-  background: rgb(6, 60, 168); 
+  /* Glassmorphism for Blue Panel */
+  background: rgba(6, 60, 168, 0.85); 
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
   color: white;
   text-align: left;
-  justify-content: center;
+  padding-top: 3rem;
+  
+  /* Animation Delay: Appears first */
+  animation-delay: 0ms;
 }
+
 
 .blue-panel h1 {
   font-size: 2.5rem;
@@ -121,8 +166,15 @@
 
 /* --- White Right Panel (Form) --- */
 .white-panel {
-  background: #F2E9E4; 
+  /* Glassmorphism for White Panel */
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  
+  /* Animation Delay: Appears slightly after the blue panel for a "staggered" effect */
+  animation-delay: 100ms;
 }
+
 
 .white-panel-header {
   text-align: right;
@@ -613,7 +665,7 @@
   overflow-x: hidden;
 }
 
-/* 1. Sticky Header */
+/* Sticky Header */
 .home-header {
   position: fixed;
   top: 0;
@@ -623,7 +675,7 @@
   /* Glassmorphism Effect for Header */
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.9));
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px); /* Safari support */
+  -webkit-backdrop-filter: blur(12px); 
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
   
@@ -924,8 +976,7 @@
   height: 100%;
   object-fit: cover; 
   z-index: 0; 
-  
-  /* --- Added Effects --- */
+
   filter: blur(4px); 
   transform: scale(1.05); 
   opacity: 0; 

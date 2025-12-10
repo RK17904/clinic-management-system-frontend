@@ -19,7 +19,7 @@ interface Appointment {
   date: string;
   time: string;
   status: string;
-  patient: Patient;
+ 
 }
 
 interface MedicalRecord {

@@ -2,7 +2,7 @@ import { useState } from 'react';
 //  Types  import 
 import type { Dispatch, SetStateAction } from 'react'; 
 import type { ViewMode } from '../types/types';
-import { UserIcon, MailIcon, LockIcon } from '../components/Icons.tsx'; 
+import { MailIcon, LockIcon } from '../components/Icons.tsx'; 
 import signUpIllustration from '../assets/signup.jpg';
 import api from '../api/axios.Config';
 

@@ -746,7 +746,7 @@ code {
 }
 
 .header-nav button:hover {
-  color: #f60d34;
+  color: #f60d0d;
 }
 
 /* User Profile / Sign In */
@@ -767,7 +767,7 @@ code {
 }
 
 .header-signin-btn:hover {
-  background: #003d82;
+  background: blueviolet;
 }
 
 .user-profile-badge {

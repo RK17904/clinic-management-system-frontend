@@ -680,10 +680,10 @@ code {
   width: 100%;
   overflow-x: hidden;
 }
-/* --- SCROLL ANIMATION (POP IN) --- */
+/* SCROLL ANIMATION (POP IN) */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(30px) scale(0.98); /* Moved up slightly and scaled down */
+  transform: translateY(30px) scale(0.98); 
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
@@ -746,7 +746,7 @@ code {
 }
 
 .header-nav button:hover {
-  color: #0056b3;
+  color: #f60d34;
 }
 
 /* User Profile / Sign In */

@@ -85,6 +85,32 @@ const Home = () => {
     };
     fetchHomeData();
   }, [userRole, userId]); 
+  
+  // SCROLL ANIMATION OBSERVER
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+        } else {
+          entry.target.classList.remove('is-visible'); // view to re-trigger animation
+        }
+      });
+    }, { 
+      threshold: 0.1 // element is visible
+    });
+
+    const timeoutId = setTimeout(() => {
+      const hiddenElements = document.querySelectorAll('.reveal-on-scroll');
+      hiddenElements.forEach((el) => observer.observe(el));
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      observer.disconnect();
+    };
+  }, [doctors, myAppointments, isLoading]); 
+
 
   // Handlers
   const scrollToSection = (id: string) => {
@@ -149,9 +175,10 @@ const Home = () => {
         </video>
 
         <div className="hero-overlay">
-          <div className="hero-content">
+          {/* ANIMATION APPLIED HERE */}
+          <div className="hero-content reveal-on-scroll">
             <h1>Your Health, Our Priority</h1>
-            <p>Experience seamless healthcare with HealthCare+. Get quality medicines, expert consultations, and reliable services delivered to your life.</p>
+            <p>Experience seamless healthcare with Health Care+. Get quality medicines, expert consultations, and reliable services delivered to your life.</p>
             <div className="hero-buttons">
               <button className="primary-btn" onClick={handleMyHealthClick}>Book Appointment</button>
               <button className="secondary-btn" onClick={() => scrollToSection('about')}>Learn More</button>
@@ -163,7 +190,8 @@ const Home = () => {
       {/* --- APPOINTMENTS SECTION --- */}
       <section id="appointments" className="bg-section" style={{backgroundImage: 'url(/home2.jpg)'}}> 
         <div className="bg-overlay">
-          <div className="section-container">
+          {/* ANIMATION APPLIED HERE */}
+          <div className="section-container reveal-on-scroll">
             <h2>{userRole === 'patient' && myAppointments.length > 0 ? 'Your Upcoming Appointments' : 'Easy Appointments'}</h2>
             <p>{userRole === 'patient' && myAppointments.length > 0 ? 'Here is a quick look at your scheduled visits.' : 'Book your consultation with top specialists in just a few clicks.'}</p>
 
@@ -203,7 +231,8 @@ const Home = () => {
       {/* --- DOCTORS SECTION --- */}
       <section id="doctors" className="bg-section" style={{backgroundImage: 'url(/home3.jpg)'}}>
         <div className="bg-overlay">
-          <div className="section-container">
+          {/* ANIMATION APPLIED HERE */}
+          <div className="section-container reveal-on-scroll">
             <h2>Our Specialists</h2>
             <p>Meet our team of experienced medical professionals ready to assist you.</p>
             
@@ -230,11 +259,12 @@ const Home = () => {
 
       {/* --- ABOUT SECTION --- */}
       <section id="about" className="content-section">
-        <div className="section-container">
-          <h2>About Health Care+</h2>
+        {/* ANIMATION APPLIED HERE */}
+        <div className="section-container reveal-on-scroll">
+          <h2>About HealthCare+</h2>
           <div className="about-content" style={{maxWidth: '800px', margin: '0 auto'}}>
             <p>
-              Health Care+ is dedicated to providing accessible, high-quality medical services to everyone. 
+              HealthCare+ is dedicated to providing accessible, high-quality medical services to everyone. 
               Founded in 2025, we bridge the gap between patients and doctors through technology.
               Our platform simplifies the process of finding specialists, booking appointments, and managing medical records securely.
             </p>
@@ -244,7 +274,8 @@ const Home = () => {
 
       {/* --- CONTACT SECTION --- */}
       <section id="contact" className="content-section footer-section">
-        <div className="section-container">
+        {/* ANIMATION APPLIED HERE */}
+        <div className="section-container reveal-on-scroll">
           <h2 style={{color: 'white'}}>Contact Us</h2>
           <div className="contact-grid">
             <div className="contact-item">
@@ -253,11 +284,11 @@ const Home = () => {
             </div>
             <div className="contact-item">
               <h4>Phone</h4>
-              <p style={{color: '#9ca3af'}}>+94 11 234 5678</p>
+              <p style={{color: '#9ca3af'}}>+94 11 234567</p>
             </div>
             <div className="contact-item">
               <h4>Address</h4>
-              <p style={{color: '#9ca3af'}}>Kandy Road, Dalugama, Kelaniya</p>
+              <p style={{color: '#9ca3af'}}>Kany Road, Dalugama, Kelaniya.</p>
             </div>
           </div>
           <div className="footer-copy">

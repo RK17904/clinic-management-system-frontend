@@ -47,7 +47,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
 
         {/* SIDEBAR */}
         <div className="sidebar">
-          {/* NEW: Go Home Button */}
+          {/* Go Home Button */}
           <div
             className="sidebar-icon"
             onClick={() => navigate('/home')}

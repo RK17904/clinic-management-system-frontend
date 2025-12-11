@@ -81,7 +81,7 @@ const PatientSignIn = ({setViewMode}: PatientSignInProps) => {
         </div>
 
         <div className="form-content">
-          <h1 className="form-title">Sign In</h1>
+          <h1 className="form-title">Patient Sign In</h1>
           
           <form onSubmit={handleLogin}>
             <div className="input-group">

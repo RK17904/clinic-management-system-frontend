@@ -31,6 +31,22 @@ code {
   align-items: center;
 }
 
+/* Breath Animation Keyframes */
+@keyframes breathEntry {
+  0% {
+    opacity: 0;
+    transform: scale(0.92); /* Start slightly smaller */
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.01); /* Slight expansion (breath in) */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1); /* Settle at normal size */
+  }
+}
+
 /* Main Layout */
 .app-wrapper {
   align-items:center;

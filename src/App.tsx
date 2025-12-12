@@ -1,13 +1,12 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import './App.css';
-import './components/Icons.tsx'
 
 // Import Types
 import type { ViewMode } from './types/types.ts';
 
 // Import Sidebar Icons
-import { SignInIcon, SignUpIcon, DoctorIcon, StethoscopeIcon, HomeIcon} from './components/Icons.tsx';
+import { SignInIcon, SignUpIcon, DoctorIcon, StethoscopeIcon, HomeIcon } from './components/Icons.tsx';
 
 // Import View Components
 import PatientSignIn from './views/PatientSignIn.tsx';
@@ -19,18 +18,17 @@ import AdminLogin from './views/AdminLogIn.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
 import Home from './views/Home.tsx'; 
 
-// Auth Layout Wrapper
+// Auth Layout Wrapper 
 const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, activeTab: string }) => {
   const navigate = useNavigate();
-
   // State for animation
   const [isExiting, setIsExiting] = useState(false);
 
   // Handler for Go Home
   const handleGoHome = () => {
-    setIsExiting(true);
+    setIsExiting(true); // Start animation
     setTimeout(() => {
-      navigate('/home');
+      navigate('/home'); // Navigate 
     }, 500); 
   };
 
@@ -38,24 +36,26 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
     <div className="auth-background">
       <div 
         className="app-wrapper"
+        // Apply animation styles 
         style={{
           transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
           transform: isExiting ? 'translateX(-100vw)' : 'none',
           opacity: isExiting ? 0.5 : 1
         }}
       >
-
-        {/* SIDEBAR */}
+        {/* --- SIDEBAR --- */}
         <div className="sidebar">
-          {/* Go Home Button */}
+          
+          {/* ---Home Button --- */}
           <div
             className="sidebar-icon"
-            onClick={() => navigate('/home')}
+            onClick={handleGoHome} 
             title="Go to Home Page"
           >
             <HomeIcon />
             <span>Home</span>
           </div>
+
           {/* 1. Patient Sign In */}
           <div
             className={`sidebar-icon ${activeTab === 'patientSignIn' ? 'active' : ''}`}
@@ -94,7 +94,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
           </div>
         </div>
 
-        {/* MAIN CONTENT */}
+        {/* --- MAIN CONTENT --- */}
         <div className={`main-container ${activeTab !== 'patientSignUp' ? 'sign-in-mode' : ''}`}>
            {children}
         </div>
@@ -103,10 +103,10 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
   );
 };
 
-// Main App Component
+// Main App Component 
 function App() {
   
-  // Navigation Helper
+  // Navigation
   const AuthRoute = ({ component: Component, mode }: { component: any, mode: ViewMode }) => {
       const navigate = useNavigate();
       
@@ -127,21 +127,21 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* HOME ROUTE */}
+        {/* --- HOME ROUTE --- */}
         <Route path="/home" element={<Home />} />
         
-        {/* AUTH ROUTES */}
+        {/* --- AUTH ROUTES  --- */}
         <Route path="/patient-login" element={<AuthRoute component={PatientSignIn} mode="patientSignIn" />} />
         <Route path="/patient-signup" element={<AuthRoute component={PatientSignUp} mode="patientSignUp" />} />
         <Route path="/doctor-login" element={<AuthRoute component={DoctorLogin} mode="doctorLogin" />} />
         <Route path="/admin-login" element={<AuthRoute component={AdminLogin} mode="adminLogin" />} />
 
-        {/* DASHBOARD ROUTES */}
+        {/* --- DASHBOARD ROUTES --- */}
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
-        {/* DEFAULT */}
+        {/* --- DEFAULT --- */}
         <Route path="/" element={<Navigate to="/home" />} />
         <Route path="*" element={<Navigate to="/home" />} />
       </Routes>

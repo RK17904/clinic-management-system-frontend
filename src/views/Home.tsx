@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserIcon, SignInIcon } from '../components/Icons.tsx';
+import { UserIcon, SignInIcon, BellIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts'; 
 import logo from '../assets/logo.png';
 
@@ -34,6 +34,10 @@ const Home = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  //notification section
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // CALENDAR STATE 
   const [currentDate, setCurrentDate] = useState(new Date()); 
@@ -99,7 +103,42 @@ const Home = () => {
       setIsLoading(false);
     };
     fetchHomeData();
-  }, [userRole, userId]); 
+  }, [userRole, userId]);  
+
+  // --- 3. GENERATE NOTIFICATIONS (Logic) ---
+  useEffect(() => {
+    if (userRole === 'patient') {
+       const newNotifs: string[] = [];
+
+       // 1. Rejected Appointments
+       myAppointments.forEach(a => {
+           if (a.status === 'REJECTED') {
+               newNotifs.push(`⚠️ Your appointment with Dr. ${a.doctor?.name || 'Unknown'} on ${a.date} was rejected.`);
+           }
+       });
+
+       // 2. Upcoming Appointments (Within 3 days)
+       const today = new Date();
+       const threeDaysLater = new Date();
+       threeDaysLater.setDate(today.getDate() + 3);
+
+       myAppointments.forEach(a => {
+           const apptDate = new Date(a.date);
+           if (a.status !== 'REJECTED' && apptDate >= today && apptDate <= threeDaysLater) {
+               newNotifs.push(`📅 Reminder: You have an appointment with Dr. ${a.doctor?.name || 'Assigned'} on ${a.date} at ${a.time}.`);
+           }
+       });
+
+       // 3. New Doctor Added (Mock: Show last doctor in list if available)
+       if (doctors.length > 0) {
+           const newestDoc = doctors[doctors.length - 1]; 
+           newNotifs.push(`👨‍⚕️ New Doctor Available: Dr. ${newestDoc.name} (${newestDoc.specialization}) has joined the clinic!`);
+       }
+
+       setNotifications(newNotifs);
+    }
+  }, [userRole, myAppointments, doctors]);
+
 
   // CALENDAR LOGIC
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -225,7 +264,7 @@ const Home = () => {
         </div>
         <nav className="header-nav">
           <button onClick={() => scrollToSection('hero')} style={getNavStyle('hero')}>Home</button>
-          <button onClick={handleMyHealthClick}>My Health</button>
+          <button onClick={handleMyHealthClick} style={{fontWeight: 'bold', color: '#0056b3'}}>My Health</button>
           <button onClick={() => scrollToSection('appointments')} style={getNavStyle('appointments')}>Appointments</button>
           <button onClick={() => scrollToSection('doctors')} style={getNavStyle('doctors')}>Doctors</button>
           <button onClick={() => scrollToSection('about')} style={getNavStyle('about')}>About Us</button>
@@ -234,6 +273,31 @@ const Home = () => {
         <div className="header-user">
           {userName ? (
             <div className="user-profile-badge">
+              
+              {/* --- NOTIFICATION BELL ( for Patients) --- */}
+              {userRole === 'patient' && (
+                  <div className="notification-container" onClick={() => setShowNotifications(!showNotifications)}>
+                      <BellIcon />
+                      {notifications.length > 0 && <span className="notification-badge">{notifications.length}</span>}
+                      
+                      {/* DROPDOWN */}
+                      {showNotifications && (
+                          <div className="notification-dropdown">
+                              <div className="notification-header">Notifications</div>
+                              <div className="notification-list">
+                                  {notifications.length > 0 ? (
+                                      notifications.map((note, index) => (
+                                          <div key={index} className="notification-item">{note}</div>
+                                      ))
+                                  ) : (
+                                      <div className="notification-empty">No new notifications</div>
+                                  )}
+                              </div>
+                          </div>
+                      )}
+                  </div>
+              )}
+
               <span className="welcome-text">Hi, {userName}</span>
               <div className="avatar-circle" onClick={handleMyHealthClick} title="Go to Dashboard"><UserIcon /></div>
               <button onClick={handleLogout} className="logout-link" title="Logout"><SignInIcon /></button>
@@ -243,6 +307,7 @@ const Home = () => {
           )}
         </div>
       </header>
+
 
       {/* --- HERO SECTION --- */}
       <section id="hero" className="hero-section">

@@ -34,7 +34,7 @@ const DoctorLogin = () => {
 
   return (
     <>
-      {/*  (Blue Panel) --- */}
+      {/* Blue Panel */}
       <div className="form-panel blue-panel">
         <h1>HealthCare +</h1>
         <h2>Doctor Portal</h2>
@@ -42,7 +42,7 @@ const DoctorLogin = () => {
         <img src={signInIllustration} alt="Doctor Login" className="panel-image" />
       </div>
 
-      {/* - (Form) --- */}
+      {/* Form*/}
       <div className="form-panel white-panel">
         <div className="form-content">
           <h1 className="form-title">Doctor Log In</h1>

@@ -35,7 +35,7 @@ const Home = () => {
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- CALENDAR STATE (This was missing or misplaced) ---
+  // CALENDAR STATE 
   const [currentDate, setCurrentDate] = useState(new Date()); 
   const [selectedDate, setSelectedDate] = useState<string | null>(null); 
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -221,7 +221,7 @@ const Home = () => {
       <header className="home-header">
         <div className="header-logo">
           <img src={logo} alt="Logo" className="header-logo-img" />
-          <h1>Health Care+</h1>
+          <h1><b>Health Care+</b></h1>
         </div>
         <nav className="header-nav">
           <button onClick={() => scrollToSection('hero')} style={getNavStyle('hero')}>Home</button>

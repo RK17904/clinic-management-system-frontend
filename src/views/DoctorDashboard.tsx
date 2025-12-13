@@ -69,7 +69,7 @@ const DoctorDashboard = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Forms State
-  // [UPDATED] newPatient state එකට password field එක එකතු කළා
+  // [UPDATED] newPatient state password field 
   const [newPatient, setNewPatient] = useState<Patient>({ 
       firstName: '', lastName: '', email: '', phone: '', 
       address: '', age: '', gender: '', password: '' 
@@ -138,7 +138,7 @@ const DoctorDashboard = () => {
   // --- ACTIONS: PATIENTS (Add, Update, Delete) ---
   const handleSavePatient = async () => {
     try {
-        // [ADDED] අලුතින් Patient කෙනෙක් හදනකොට Password එක අනිවාර්ය කළා
+        // [ADDED]  Patient  Password 
         if (!isEditing && !newPatient.password) {
             alert("Please enter a password for the new patient!");
             return;
@@ -170,7 +170,7 @@ const DoctorDashboard = () => {
   };
 
   const startEditPatient = (p: Patient) => {
-      // [UPDATED] Edit කරනකොට පරණ Password එක පෙන්නන්නේ නෑ (Empty තියනවා)
+      // [UPDATED] Edit  Password (Empty )
       setNewPatient({ ...p, password: '' }); 
       setIsEditing(true);
       setEditingId(p.id!);

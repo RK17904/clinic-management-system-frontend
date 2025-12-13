@@ -1,3 +1,14 @@
+
+export type ViewMode = 
+  | 'patientSignIn' 
+  | 'patientSignUp' 
+  | 'doctorLogin' 
+  | 'adminLogin' 
+  | 'adminDashboard'
+  | 'doctorDashboard';
+
+// --- 2. Interfaces ---
+
 export interface Patient {
   id: number;
   firstName: string;
@@ -21,7 +32,7 @@ export interface Appointment {
   time: string;
   status: string;
   patient?: Patient;
-  doctor?: Doctor; // Doctor කෙනෙක් ඉන්න ඕනෙ
+  doctor?: Doctor; 
   notes?: string;
 }
 
@@ -34,11 +45,10 @@ export interface MedicalRecord {
   patient: Patient;
 }
 
-// Backend එකේ DTO එකට ගැලපෙන විදියට
 export interface AppointmentRequest {
   patientId: number;
   doctorId: number;
   date: string;
-  time: string; // HH:mm:ss format
+  time: string; 
   notes: string;
 }

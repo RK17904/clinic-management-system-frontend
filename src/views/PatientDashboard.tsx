@@ -59,7 +59,7 @@ const PatientDashboard = () => {
       notes: ''
   });
 
-  // --- NEW: Helper to Generate 15-min Time Slots ---
+  // --- NEW: Helper to Generate 15-min Time Slots ----
   const generateTimeSlots = () => {
       const slots:string[] = [];
       // Helper function time adding slots
@@ -143,7 +143,7 @@ const PatientDashboard = () => {
               patientId: patient.id,
               doctorId: parseInt(newBooking.doctorId),
               date: newBooking.date,
-              time: newBooking.time + ":00", // Seconds එකතු කිරීම
+              time: newBooking.time + ":00", 
               notes: newBooking.notes
           };
 

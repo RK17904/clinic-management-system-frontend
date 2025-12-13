@@ -34,7 +34,7 @@ const PatientSignIn = ({setViewMode}: PatientSignInProps) => {
         console.log("Patient Login Success!");
         localStorage.setItem('patientData', JSON.stringify(response.data));
         
-        // --- FLOW CHANGE: Redirect to Dashboard ---
+        // Redirect to Dashboard
         navigate('/patient-dashboard'); 
       }
     } catch (err) {

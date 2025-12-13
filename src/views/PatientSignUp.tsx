@@ -83,7 +83,7 @@ const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
           
           <form onSubmit={handleSignup} style={{width: '100%'}}>
             
-            {/* Row 1: Name */}
+            {/* Name row */}
             <div style={{display: 'flex', gap: '10px'}}>
                 <div className="input-group">
                     <input type="text" name="firstName" placeholder="First Name" value={formData.firstName} onChange={handleChange} required />
@@ -93,7 +93,7 @@ const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
                 </div>
             </div>
 
-            {/* Row 2: Email & Phone */}
+            {/* Email & Phone rows */}
             <div className="input-group">
               <span className="icon"><MailIcon /></span>
               <input type="email" name="email" placeholder="Email Address" value={formData.email} onChange={handleChange} required />
@@ -103,7 +103,7 @@ const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
               <input type="text" name="phone" placeholder="Phone Number" value={formData.phone} onChange={handleChange} required />
             </div>
 
-            {/* Row 3: Age & Gender */}
+            {/* Age & Gender rows */}
             <div style={{display: 'flex', gap: '10px'}}>
                 <div className="input-group">
                     <input type="number" name="age" placeholder="Age" value={formData.age} onChange={handleChange} required />
@@ -121,12 +121,12 @@ const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
                 </div>
             </div>
 
-            {/* Row 4: Address */}
+            {/* Address rows */}
             <div className="input-group">
                 <input type="text" name="address" placeholder="Address" value={formData.address} onChange={handleChange} required />
             </div>
             
-            {/* Row 5: Password */}
+            {/* Password row */}
             <div className="input-group">
               <span className="icon"><LockIcon /></span>
               <input type="password" name="password" placeholder="Password" value={formData.password} onChange={handleChange} required />

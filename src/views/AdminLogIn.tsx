@@ -34,7 +34,7 @@ const AdminLogin = () => {
 
   return (
     <>
-      {/* - (Blue Panel) --- */}
+      {/* - Blue Panel --- */}
       <div className="form-panel blue-panel">
         <h1>HealthCare +</h1>
         <h2>Admin Portal</h2>
@@ -42,7 +42,7 @@ const AdminLogin = () => {
         <img src={signInIllustration} alt="Admin Login" className="panel-image" />
       </div>
 
-      {/* ---  (Form) --- */}
+      {/* ---  form --- */}
       <div className="form-panel white-panel">
         <div className="form-content">
           <h1 className="form-title" style={{color: '#d9534f'}}>Admin Login</h1>

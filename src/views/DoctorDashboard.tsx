@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios.Config.ts'; 
 import { UserIcon, SignInIcon, ListIcon, PlusIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
-import logo from '../assets/logo.png'; // Added logo import for consistency
-
+import logo from '../assets/logo.png'; 
 // --- Interfaces ---
 interface Patient {
   id?: number;
@@ -51,7 +50,7 @@ const DoctorDashboard = () => {
   // --- States ---
   const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'appointments' | 'records' | 'billing'>('dashboard');
   
-  // --- NEW: Doctor Name State ---
+  // --- Doctor Name State ---
   const [doctorName, setDoctorName] = useState('');
 
   // Sub Tabs (View vs Add)
@@ -82,15 +81,13 @@ const DoctorDashboard = () => {
     navigate('/doctor-login');
   };
 
-  // --- NEW: Load Doctor Name on Mount ---
+  // --- Load Doctor Name on Mount ---
   useEffect(() => {
     const storedData = localStorage.getItem('doctorData');
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData);
-        // Assuming your backend sends a 'name' field like "Chamath Ravindu"
         if (parsedData.name) {
-          // Removes 'Dr.' if present and takes the first word
           const firstName = parsedData.name.replace(/^Dr\.?\s*/i, '').split(' ')[0];
           setDoctorName(firstName);
         }
@@ -124,7 +121,7 @@ const DoctorDashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]);
+  }, [activeTab]); // Re-fetch when switching tabs to ensure fresh data
 
   // --- Helper: Reset Forms ---
   const resetForms = () => {
@@ -302,6 +299,7 @@ const DoctorDashboard = () => {
     }
   };
 
+  // --- Helper: Get Title ---
   const getTitle = () => {
     switch(activeTab) {
       case 'dashboard': return 'Doctor Dashboard';
@@ -313,35 +311,33 @@ const DoctorDashboard = () => {
     }
   };
 
+  // Button styles for the table actions
   const btnStyle = {
       padding: '5px 10px', margin: '0 5px', border: 'none', borderRadius: '5px', cursor: 'pointer', color: 'white'
   };
 
-  // --- Render ---
   return (
     <div className="dashboard-layout">
+      {/* --- SIDEBAR --- */}
       <div className="dashboard-sidebar" style={{ backgroundColor: '#063ca8' }}>
         <div className="dashboard-logo">
-            {/* Added Logo here for consistency */}
             <img src={logo} alt="Logo" className="dashboard-logo-img" style={{height:'2rem', width:'auto', marginRight:'0.9rem'}} />
             <h2 style={{margin:0}}>Doctor Portal</h2>
         </div>
         <nav className="dashboard-nav">
-          <button onClick={() => setActiveTab('dashboard')} className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`} style={activeTab === 'dashboard' ? { color: '#fafffaff' } : {}}><UserIcon /> <span>Dashboard</span></button>
-          <button onClick={() => setActiveTab('patients')} className={`nav-item ${activeTab === 'patients' ? 'active' : ''}`} style={activeTab === 'patients' ? { color: '#ffffffff' } : {}}><UsersIcon /> <span>Patients</span></button>
-          <button onClick={() => setActiveTab('appointments')} className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`} style={activeTab === 'appointments' ? { color: '#f8f8f8ff' } : {}}><CalendarIcon /> <span>Appointments</span></button>
-          <button onClick={() => setActiveTab('records')} className={`nav-item ${activeTab === 'records' ? 'active' : ''}`} style={activeTab === 'records' ? { color: '#feffffff' } : {}}><ListIcon /> <span>Records</span></button>
-          <button onClick={() => setActiveTab('billing')} className={`nav-item ${activeTab === 'billing' ? 'active' : ''}`} style={activeTab === 'billing' ? { color: '#ffffffff' } : {}}><ListIcon /> <span>Billing</span></button>
+          <button onClick={() => setActiveTab('dashboard')} className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}><UserIcon /> <span>Dashboard</span></button>
+          <button onClick={() => setActiveTab('patients')} className={`nav-item ${activeTab === 'patients' ? 'active' : ''}`}><UsersIcon /> <span>Patients</span></button>
+          <button onClick={() => setActiveTab('appointments')} className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`}><CalendarIcon /> <span>Appointments</span></button>
+          <button onClick={() => setActiveTab('records')} className={`nav-item ${activeTab === 'records' ? 'active' : ''}`}><ListIcon /> <span>Records</span></button>
+          <button onClick={() => setActiveTab('billing')} className={`nav-item ${activeTab === 'billing' ? 'active' : ''}`}><ListIcon /> <span>Billing</span></button>
         </nav>
         <div className="dashboard-logout"><button onClick={handleLogout} className="nav-item"><SignInIcon /> <span>Logout</span></button></div>
       </div>
 
+      {/* --- MAIN CONTENT --- */}
       <main className="dashboard-main">
-        {/* --- UPDATED HEADER WITH DOCTOR NAME --- */}
         <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h1 style={{margin: 0}}>{getTitle()}</h1>
-            
-            {/* Right Side: Doctor Profile */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div style={{textAlign: 'right', lineHeight: '1.2'}}>
                     <span style={{display: 'block', fontSize: '0.8rem', color: '#888'}}>Welcome,</span>
@@ -353,12 +349,12 @@ const DoctorDashboard = () => {
                     width: '40px', 
                     height: '40px', 
                     borderRadius: '50%', 
-                    background: '#E8F5E9', 
+                    background: '#f4f7fa', 
                     color: '#063ca8',
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'center',
-                    border: '1px solid #C8E6C9'
+                    border: '1px solid #e0e0e0'
                 }}>
                     <UserIcon />
                 </div>
@@ -366,10 +362,12 @@ const DoctorDashboard = () => {
         </header>
 
         <div className="dashboard-content-wrapper">
+          {/* --- MAIN SLIDER CONTAINER --- */}
           <div className="main-slider-viewport">
+            {/* The track moves based on the activeTab class (using doctor-track specific classes) */}
             <div className={`main-slider-track doctor-track pos-${activeTab}`}>
 
-              {/* 1. DASHBOARD */}
+              {/* 1. DASHBOARD OVERVIEW */}
               <div className="main-slider-slide">
                 <section className="dashboard-content">
                   <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Total Patients</h3><p style={{color: '#2E7D32', fontSize: '2.5rem'}}>{patientsList.length}</p></div>
@@ -378,20 +376,35 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* 2. PATIENTS */}
+              {/* 2. PATIENTS TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
                     <button className={`action-btn ${patientSubTab === 'view' ? 'active' : ''}`} onClick={() => {setPatientSubTab('view'); resetForms();}}><ListIcon /> View List</button>
                     <button className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} onClick={() => {setPatientSubTab('add'); resetForms();}}><PlusIcon /> Add Patient</button>
                   </div>
+
+                  {/* Inner Slider for Patients */}
                   <div className="slider-viewport">
                     <div className={`slider-track ${patientSubTab === 'add' ? 'slide-left' : ''}`}>
                         <div className="slider-slide">
                             <div className="table-container">
                                 <table className="data-table">
                                     <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead>
-                                    <tbody>{patientsList.map(p => (<tr key={p.id}><td>{p.id}</td><td>{p.firstName} {p.lastName}</td><td>{p.email}</td><td>{p.phone}</td><td><button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button><button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button></td></tr>))}</tbody>
+                                    <tbody>
+                                        {patientsList.map(p => (
+                                            <tr key={p.id}>
+                                                <td>{p.id}</td>
+                                                <td>{p.firstName} {p.lastName}</td>
+                                                <td>{p.email}</td>
+                                                <td>{p.phone}</td>
+                                                <td>
+                                                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditPatient(p)}>Edit</button>
+                                                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -412,20 +425,34 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* 3. APPOINTMENTS */}
+              {/* 3. APPOINTMENTS TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
                     <button className={`action-btn ${appointmentSubTab === 'view' ? 'active' : ''}`} onClick={() => {setAppointmentSubTab('view'); resetForms();}}><ListIcon /> View List</button>
                     <button className={`action-btn ${appointmentSubTab === 'add' ? 'active' : ''}`} onClick={() => {setAppointmentSubTab('add'); resetForms();}}><PlusIcon /> Book Appointment</button>
                   </div>
+
                   <div className="slider-viewport">
                     <div className={`slider-track ${appointmentSubTab === 'add' ? 'slide-left' : ''}`}>
                         <div className="slider-slide">
                             <div className="table-container">
                                 <table className="data-table">
                                     <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
-                                    <tbody>{appointmentsList.map(a => (<tr key={a.id}><td>{a.id}</td><td>{a.date}</td><td>{a.time}</td><td>{a.status}</td><td><button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditAppointment(a)}>Edit</button><button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteAppointment(a.id)}>Delete</button></td></tr>))}</tbody>
+                                    <tbody>
+                                        {appointmentsList.map(a => (
+                                            <tr key={a.id}>
+                                                <td>{a.id}</td>
+                                                <td>{a.date}</td>
+                                                <td>{a.time}</td>
+                                                <td>{a.status}</td>
+                                                <td>
+                                                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditAppointment(a)}>Edit</button>
+                                                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteAppointment(a.id)}>Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -445,20 +472,34 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* 4. RECORDS */}
+              {/* 4. RECORDS TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
                     <button className={`action-btn ${recordSubTab === 'view' ? 'active' : ''}`} onClick={() => {setRecordSubTab('view'); resetForms();}}>View List</button>
                     <button className={`action-btn ${recordSubTab === 'add' ? 'active' : ''}`} onClick={() => {setRecordSubTab('add'); resetForms();}}>Add Record</button>
                   </div>
+                  
                   <div className="slider-viewport">
                     <div className={`slider-track ${recordSubTab === 'add' ? 'slide-left' : ''}`}>
                         <div className="slider-slide">
                             <div className="table-container">
                                 <table className="data-table">
                                     <thead><tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Treatment</th><th>Actions</th></tr></thead>
-                                    <tbody>{recordsList.map(r => (<tr key={r.id}><td>{r.recordDate}</td><td>{r.patient ? r.patient.firstName : 'N/A'}</td><td>{r.diagnosis}</td><td>{r.treatment}</td><td><button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditRecord(r)}>Edit</button><button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteRecord(r.id)}>Delete</button></td></tr>))}</tbody>
+                                    <tbody>
+                                        {recordsList.map(r => (
+                                            <tr key={r.id}>
+                                                <td>{r.recordDate}</td>
+                                                <td>{r.patient ? r.patient.firstName : 'N/A'}</td>
+                                                <td>{r.diagnosis}</td>
+                                                <td>{r.treatment}</td>
+                                                <td>
+                                                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditRecord(r)}>Edit</button>
+                                                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteRecord(r.id)}>Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -479,20 +520,35 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* 5. BILLING */}
+              {/* 5. BILLING TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
                     <button className={`action-btn ${billingSubTab === 'view' ? 'active' : ''}`} onClick={() => {setBillingSubTab('view'); resetForms();}}>View</button>
                     <button className={`action-btn ${billingSubTab === 'add' ? 'active' : ''}`} onClick={() => {setBillingSubTab('add'); resetForms();}}>Create Bill</button>
                   </div>
+                  
                   <div className="slider-viewport">
                     <div className={`slider-track ${billingSubTab === 'add' ? 'slide-left' : ''}`}>
                         <div className="slider-slide">
                             <div className="table-container">
                                 <table className="data-table">
                                     <thead><tr><th>Bill ID</th><th>Appt ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-                                    <tbody>{billingsList.map(b => (<tr key={b.billId}><td>{b.billId}</td><td>{b.appointment ? b.appointment.id : 'N/A'}</td><td>Rs. {b.amount}</td><td>{b.status}</td><td><button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button><button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditBill(b)}>Edit</button><button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteBill(b.billId)}>Delete</button></td></tr>))}</tbody>
+                                    <tbody>
+                                        {billingsList.map(b => (
+                                            <tr key={b.billId}>
+                                                <td>{b.billId}</td>
+                                                <td>{b.appointment ? b.appointment.id : 'N/A'}</td>
+                                                <td>Rs. {b.amount}</td>
+                                                <td>{b.status}</td>
+                                                <td>
+                                                    <button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button>
+                                                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditBill(b)}>Edit</button>
+                                                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
                                 </table>
                             </div>
                         </div>
@@ -500,7 +556,7 @@ const DoctorDashboard = () => {
                             <div className="form-container">
                                 <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>
                                 <form className="admin-form">
-                                    <div className="form-group"><label>Appointment ID</label><input type="number" value={newBill.appointmentId} onChange={e=>setNewBill({...newBill, appointmentId: e.target.value})}/></div>
+                                    <div className="form-group"><label>Appt ID</label><input type="number" value={newBill.appointmentId} onChange={e=>setNewBill({...newBill, appointmentId: e.target.value})}/></div>
                                     <div className="form-group"><label>Amount</label><input type="number" value={newBill.amount} onChange={e=>setNewBill({...newBill, amount: e.target.value})}/></div>
                                     <div className="form-group"><label>Status</label><input type="text" value={newBill.status} onChange={e=>setNewBill({...newBill, status: e.target.value})}/></div>
                                     <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update' : 'Generate Bill'}</button>
@@ -514,6 +570,7 @@ const DoctorDashboard = () => {
 
             </div>
           </div>
+          {/* --- END MAIN SLIDER --- */}
         </div>
       </main>
     </div>

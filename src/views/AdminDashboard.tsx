@@ -4,7 +4,7 @@ import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, ListIcon, UsersIcon, Calend
 import api from '../api/axios.Config.ts';
 import logo from '../assets/logo.png';
 
-// --- Types ---
+// Types 
 interface Doctor {
   id?: number;
   name: string;
@@ -33,19 +33,19 @@ interface Appointment {
 const AdminDashboard = () => {
   const navigate = useNavigate();
 
-  // --- States ---
+  // states
   const [activeTab, setActiveTab] = useState<'dashboard' | 'doctors' | 'patients' | 'appointments'>('dashboard');
   const [doctorSubTab, setDoctorSubTab] = useState<'view' | 'add'>('view');
   
-  // --- Admin Name State ---
+  // Admin Name State
   const [adminName, setAdminName] = useState('');
 
-  // --- Data State ---
+  // Data State 
   const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
   const [patientsList, setPatientsList] = useState<Patient[]>([]);
   const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
 
-  // --- New Doctor Form State ---
+  // Doctor Form State 
   const [newDoctor, setNewDoctor] = useState<Doctor>({
     name: '', specialization: '', email: '', phone: '', experience: '', password: ''
   });
@@ -55,7 +55,7 @@ const AdminDashboard = () => {
     navigate('/admin-login');
   };
 
-  // --- Load Admin Name on Mount ---
+  // Load Admin Name 
   useEffect(() => {
     const storedData = localStorage.getItem('adminData');
     if (storedData) {
@@ -75,7 +75,7 @@ const AdminDashboard = () => {
     }
   }, []);
 
-  // --- API Calls ---
+  // api call
   const fetchDoctors = async () => {
     try { const res = await api.get('/doctors'); setDoctorsList(res.data); } catch (err) { console.error(err); }
   };
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
     try { const res = await api.get('/appointments'); setAppointmentsList(res.data); } catch (err) { console.error(err); }
   };
 
-  // ADD DOCTOR FUNCTION
+  // Add doctor function
   const handleAddDoctor = async () => {
     try {
       if(!newDoctor.name || !newDoctor.email || !newDoctor.password) {
@@ -111,7 +111,7 @@ const AdminDashboard = () => {
     }
   };
 
-  // Fetch data on load
+  // Fetch data (on load)
   useEffect(() => {
     fetchDoctors();
     fetchPatients();
@@ -181,11 +181,10 @@ const AdminDashboard = () => {
 
       {/* --- MAIN CONTENT AREA --- */}
       <main className="dashboard-main">
-        {/* --- UPDATED HEADER WITH ADMIN NAME --- */}
         <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{margin: 0}}>{getTitle()}</h1>
           
-          {/* Right Side: Admin Profile */}
+          {/* Right side admin profile */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{textAlign: 'right', lineHeight: '1.2'}}>
                   <span style={{display: 'block', fontSize: '0.8rem', color: '#888'}}>Welcome,</span>
@@ -213,10 +212,9 @@ const AdminDashboard = () => {
           
           {/* --- MAIN SLIDER CONTAINER --- */}
           <div className="main-slider-viewport">
-            {/* The track moves based on the activeTab class */}
             <div className={`main-slider-track pos-${activeTab}`}>
               
-              {/* --- SLIDE 1: DASHBOARD --- */}
+              {/* --- DASHBOARD --- */}
               <div className="main-slider-slide">
                 <section className="dashboard-content">
                   <div className="stat-card">
@@ -234,7 +232,7 @@ const AdminDashboard = () => {
                 </section>
               </div>
 
-              {/* --- SLIDE 2: MANAGE DOCTORS --- */}
+              {/* --- MANAGE DOCTORS --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
@@ -258,7 +256,7 @@ const AdminDashboard = () => {
                   <div className="slider-viewport">
                     <div className={`slider-track ${doctorSubTab === 'add' ? 'slide-left' : ''}`}>
                       
-                      {/* Inner Slide 1: List */}
+                      {/* List */}
                       <div className="slider-slide">
                         <div className="table-container">
                           <table className="data-table">
@@ -286,7 +284,7 @@ const AdminDashboard = () => {
                         </div>
                       </div>
 
-                      {/* Inner Slide 2: Add Form */}
+                      {/* Add Form */}
                       <div className="slider-slide">
                         <div className="form-container">
                           <h3>Register New Doctor</h3>
@@ -332,7 +330,7 @@ const AdminDashboard = () => {
                 </section>
               </div>
 
-              {/* --- SLIDE 3: PATIENT DIRECTORY --- */}
+              {/* --- PATIENT DIRECTORY --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="table-container">
@@ -358,7 +356,7 @@ const AdminDashboard = () => {
                 </section>
               </div>
 
-              {/* --- SLIDE 4: ALL APPOINTMENTS --- */}
+              {/* --- ALL APPOINTMENTS --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section"> 
                   <div className="table-container">
@@ -388,8 +386,7 @@ const AdminDashboard = () => {
 
             </div>
           </div>
-          {/* --- END MAIN SLIDER --- */}
-
+          
         </div>
       </main>
     </div>

@@ -56,7 +56,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
             <span>Home</span>
           </div>
 
-          {/* 1. Patient Sign In */}
+          {/* Patient Sign In */}
           <div
             className={`sidebar-icon ${activeTab === 'patientSignIn' ? 'active' : ''}`}
             onClick={() => navigate('/patient-login')}
@@ -65,7 +65,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
             <span>Sign In</span>
           </div>
 
-          {/* 2. Patient Sign Up */}
+          {/* Patient Sign Up */}
           <div
             className={`sidebar-icon ${activeTab === 'patientSignUp' ? 'active' : ''}`}
             onClick={() => navigate('/patient-signup')}
@@ -74,7 +74,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
             <span>Sign Up</span>
           </div>
 
-          {/* 3. Doctor Log In */}
+          {/* Doctor Log In */}
           <div
             className={`sidebar-icon ${activeTab === 'doctorLogin' ? 'active' : ''}`}
             onClick={() => navigate('/doctor-login')}
@@ -83,7 +83,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
             <span>Doctor</span>
           </div>
 
-          {/* 4. Admin Log In */}
+          {/* Admin Log In */}
           <div
             className={`sidebar-icon ${activeTab === 'adminLogin' ? 'active' : ''}`}
             onClick={() => navigate('/admin-login')}

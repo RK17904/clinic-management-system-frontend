@@ -13,6 +13,7 @@ interface Patient {
   address: string;
   age: string;
   gender: string;
+  password?: string;
 }
 
 interface Appointment {
@@ -68,7 +69,12 @@ const DoctorDashboard = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Forms State
-  const [newPatient, setNewPatient] = useState<Patient>({ firstName: '', lastName: '', email: '', phone: '', address: '', age: '', gender: '' });
+  // [UPDATED] newPatient state එකට password field එක එකතු කළා
+  const [newPatient, setNewPatient] = useState<Patient>({ 
+      firstName: '', lastName: '', email: '', phone: '', 
+      address: '', age: '', gender: '', password: '' 
+  });
+  
   const [newAppointment, setNewAppointment] = useState({ patientId: '', doctorId: '', date: '', time: '', notes: '' });
   const [newRecord, setNewRecord] = useState({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
   const [newBill, setNewBill] = useState({ appointmentId: '', amount: '', paymentMethod: 'CASH', status: 'PAID' });
@@ -84,7 +90,7 @@ const DoctorDashboard = () => {
         const pRes = await api.get('/patients');
         setPatientsList(pRes.data);
 
-        const aRes = await api.get('/appointments');
+        const aRes = await api.get('/appointments'); 
         setAppointmentsList(aRes.data);
 
         const rRes = await api.get('/medical-records');
@@ -108,26 +114,50 @@ const DoctorDashboard = () => {
   const resetForms = () => {
       setIsEditing(false);
       setEditingId(null);
-      setNewPatient({ firstName: '', lastName: '', email: '', phone: '', address: '', age: '', gender: '' });
+      // [UPDATED] Reset password field too
+      setNewPatient({ firstName: '', lastName: '', email: '', phone: '', address: '', age: '', gender: '', password: '' });
       setNewAppointment({ patientId: '', doctorId: '', date: '', time: '', notes: '' });
       setNewRecord({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
       setNewBill({ appointmentId: '', amount: '', paymentMethod: 'CASH', status: 'PAID' });
   };
 
+  // --- NEW: Handle Status Update (Accept/Reject) ---
+  const handleStatusUpdate = async (id: number, status: string) => {
+    if(!window.confirm(`Are you sure you want to ${status} this appointment?`)) return;
+
+    try {
+        await api.put(`/appointments/${id}/status?status=${status}`);
+        alert(`Appointment ${status} Successfully!`);
+        fetchData(); 
+    } catch (error) {
+        console.error(error);
+        alert("Update Failed!");
+    }
+  };
+
   // --- ACTIONS: PATIENTS (Add, Update, Delete) ---
   const handleSavePatient = async () => {
     try {
+        // [ADDED] අලුතින් Patient කෙනෙක් හදනකොට Password එක අනිවාර්ය කළා
+        if (!isEditing && !newPatient.password) {
+            alert("Please enter a password for the new patient!");
+            return;
+        }
+
         if (isEditing && editingId) {
             await api.put(`/patients/${editingId}`, newPatient);
             alert("Patient Updated!");
         } else {
             await api.post('/patients', newPatient);
-            alert("Patient Added!");
+            alert("Patient Added Successfully!");
         }
         resetForms();
         fetchData();
         setPatientSubTab('view');
-    } catch { alert("Error Saving Patient!"); }
+    } catch (error) { 
+        console.error(error);
+        alert("Error Saving Patient! (Check if Email is duplicate)"); 
+    }
   };
 
   const handleDeletePatient = async (id: number) => {
@@ -140,7 +170,8 @@ const DoctorDashboard = () => {
   };
 
   const startEditPatient = (p: Patient) => {
-      setNewPatient(p);
+      // [UPDATED] Edit කරනකොට පරණ Password එක පෙන්නන්නේ නෑ (Empty තියනවා)
+      setNewPatient({ ...p, password: '' }); 
       setIsEditing(true);
       setEditingId(p.id!);
       setPatientSubTab('add');
@@ -176,7 +207,7 @@ const DoctorDashboard = () => {
   const startEditAppointment = (a: Appointment) => {
       setNewAppointment({
           patientId: a.patient?.id?.toString() || '',
-          doctorId: '1', // Default or from context
+          doctorId: '1', 
           date: a.date,
           time: a.time,
           notes: ''
@@ -213,7 +244,6 @@ const DoctorDashboard = () => {
   };
 
   const startEditRecord = (r: MedicalRecord) => {
-      //  Convert full Patient object to patientId string for the form
       setNewRecord({
           patientId: r.patient?.id?.toString() || '',
           doctorId: '1', 
@@ -353,11 +383,7 @@ const DoctorDashboard = () => {
   // --- Styles ---
   const sidebarColor = '#2E7D32'; 
   const activeTextColor = '#2E7D32'; 
-
-  // CSS for Action Buttons
-  const btnStyle = {
-      padding: '5px 10px', margin: '0 5px', border: 'none', borderRadius: '5px', cursor: 'pointer', color: 'white'
-  };
+  const btnStyle = { padding: '5px 10px', margin: '0 5px', border: 'none', borderRadius: '5px', cursor: 'pointer', color: 'white' };
 
   return (
     <div className="dashboard-layout">
@@ -433,6 +459,19 @@ const DoctorDashboard = () => {
                               <div className="form-group"><label>Gender</label><input value={newPatient.gender} onChange={e => setNewPatient({...newPatient, gender: e.target.value})}/></div>
                           </div>
                           <div className="form-group"><label>Address</label><input value={newPatient.address} onChange={e => setNewPatient({...newPatient, address: e.target.value})}/></div>
+                          
+                          {/* --- [ADDED] PASSWORD FIELD --- */}
+                          <div className="form-group">
+                              <label>Password</label>
+                              <input 
+                                  type="text" 
+                                  placeholder={isEditing ? "Leave blank to keep current" : "Set Password"} 
+                                  value={newPatient.password || ''} 
+                                  onChange={e => setNewPatient({...newPatient, password: e.target.value})}
+                              />
+                          </div>
+                          {/* ----------------------------- */}
+
                           <button type="button" className="save-btn" onClick={handleSavePatient}>{isEditing ? 'Update Patient' : 'Save Patient'}</button>
                       </form>
                   </div>
@@ -451,15 +490,26 @@ const DoctorDashboard = () => {
               {appointmentSubTab === 'view' ? (
                   <div className="table-container">
                     <table className="data-table">
-                        <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+                        <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                         <tbody>
                             {appointmentsList.map(a => (
                                 <tr key={a.id}>
                                     <td>{a.id}</td>
                                     <td>{a.date}</td>
                                     <td>{a.time}</td>
-                                    <td>{a.status}</td>
+                                    <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
                                     <td>
+                                        <span style={{fontWeight:'bold', color: a.status === 'PENDING' ? 'orange' : a.status === 'APPROVED' ? 'green' : 'red'}}>
+                                            {a.status}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {a.status === 'PENDING' && (
+                                            <>
+                                                <button style={{...btnStyle, background:'#28a745'}} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
+                                                <button style={{...btnStyle, background:'#dc3545'}} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
+                                            </>
+                                        )}
                                         <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditAppointment(a)}>Edit</button>
                                         <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteAppointment(a.id)}>Delete</button>
                                     </td>
@@ -488,7 +538,7 @@ const DoctorDashboard = () => {
             </section>
           )}
 
-          {/* 4. RECORDS TAB */}
+          {/* 4. RECORDS & 5. BILLING (Existing code) */}
           {activeTab === 'records' && (
             <section className="doctors-section">
                <div className="action-buttons-container">
@@ -524,7 +574,6 @@ const DoctorDashboard = () => {
                            <div className="form-group"><label>Doctor ID</label><input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({...newRecord, doctorId: e.target.value})} /></div>
                            <div className="form-group"><label>Diagnosis</label><input value={newRecord.diagnosis} onChange={e => setNewRecord({...newRecord, diagnosis: e.target.value})} /></div>
                            <div className="form-group"><label>Treatment</label><input value={newRecord.treatment} onChange={e => setNewRecord({...newRecord, treatment: e.target.value})} /></div>
-                           
                            <button type="button" className="save-btn" style={{background:'#2E7D32'}} onClick={handleSaveRecord}>{isEditing ? 'Update Record' : 'Save Record'}</button>
                        </form>
                    </div>
@@ -532,7 +581,6 @@ const DoctorDashboard = () => {
             </section>
           )}
 
-          {/* 5. BILLING TAB */}
           {activeTab === 'billing' && (
             <section className="doctors-section">
                 <div className="action-buttons-container">

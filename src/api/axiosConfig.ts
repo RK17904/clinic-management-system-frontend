@@ -1,45 +1,45 @@
 import axios from 'axios';
 
-// 1. Backend URL 
 const api = axios.create({
-    baseURL: 'http://localhost:8083/api', 
+  baseURL: 'http://localhost:8083/api', // Make sure this matches your backend port
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// 2.  Request  (Interceptor)
+// --- INTERCEPTOR: Attach Token to Requests ---
 api.interceptors.request.use(
-    (config) => {
-        // Browser Doctor Data 
-        const doctorData = localStorage.getItem('doctorData');
-        const adminData = localStorage.getItem('adminData');
-        const patientData = localStorage.getItem('patientData');
+  (config) => {
+    // Check for any stored user data
+    const adminData = localStorage.getItem('adminData');
+    const doctorData = localStorage.getItem('doctorData');
+    const patientData = localStorage.getItem('patientData');
 
-        let token = null;
+    let token = null;
 
-        //  Token 
-        if (doctorData) {
-            const parsed = JSON.parse(doctorData);
-            
-            token = parsed.token || parsed.accessToken; 
-        } 
-        else if (adminData) {
-            const parsed = JSON.parse(adminData);
-            token = parsed.token;
-        }
-        else if (patientData) {
-             const parsed = JSON.parse(patientData);
-             token = parsed.token;
-        }
-
-        
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+    // Logic to find the active token
+    if (adminData) {
+      const parsed = JSON.parse(adminData);
+      token = parsed.token || parsed.id; // Adjust based on what your backend sends
+    } else if (doctorData) {
+      const parsed = JSON.parse(doctorData);
+      token = parsed.token || parsed.id;
+    } else if (patientData) {
+      const parsed = JSON.parse(patientData);
+      token = parsed.token || parsed.id;
     }
+
+    if (token) {
+      // Attach token to Authorization header (Bearer standard)
+      // config.headers.Authorization = `Bearer ${token}`;
+      
+      // OR if your backend just expects the ID or a custom header:
+      // config.headers['x-auth-token'] = token;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
 );
 
 export default api;

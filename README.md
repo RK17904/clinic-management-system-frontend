@@ -172,6 +172,6 @@ git commit -m "Add AmazingFeature"
 git push origin feature/AmazingFeature
 ```
 ---
-## Developed by Health Care+ Team
+## Developed by ❤️ Health Care+ Team
 ---
 

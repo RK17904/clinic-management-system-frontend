@@ -1352,3 +1352,32 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   padding: 0.5rem 1rem;
   border-radius: 20px;
 }
+
+
+/* --- SCROLLING DOCTORS BANNER --- */
+.scrolling-wrapper {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  padding: 1rem 0;
+  /* Fade the edges so cards don't just disappear abruptly */
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.scrolling-track {
+  display: flex;
+  gap: 2rem;
+  width: max-content; /* Ensure container is as wide as the cards */
+  animation: scrollDoctors 30s linear infinite; /* Smooth continuous loop */
+}
+
+/* Pause animation on hover so users can click 'View Profile' */
+.scrolling-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollDoctors {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); } /* -50% because we duplicated the list */
+}

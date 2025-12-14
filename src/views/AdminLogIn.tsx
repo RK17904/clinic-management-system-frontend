@@ -22,13 +22,25 @@ const AdminLogin = () => {
       });
 
       if (response.status === 200) {
-        console.log("Admin Login Success!");
-        localStorage.setItem('adminData', JSON.stringify(response.data));
-        navigate('/admin-dashboard'); 
+        // verify the role is actually admin
+        
+        if (response.data.role === 'ADMIN') {
+            console.log("Admin Login Success!");
+            localStorage.setItem('adminData', JSON.stringify(response.data));
+            navigate('/admin-dashboard'); 
+        } else {
+            // if credentials are valid but role is not admin
+            setError("Access Denied: You do not have administrator privileges.");
+            console.warn("Unauthorized login attempt by non-admin user:", response.data.email);
+        }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Invalid Email or Password. Please Check Database.");
+      if (err.response && err.response.status === 401) {
+          setError("Invalid Email or Password.");
+      } else {
+          setError("Login Failed. Please check your credentials or network.");
+      }
     }
   };
 
@@ -42,7 +54,7 @@ const AdminLogin = () => {
         <img src={signInIllustration} alt="Admin Login" className="panel-image" />
       </div>
 
-      {/* ---  form --- */}
+      {/* ---  Form --- */}
       <div className="form-panel white-panel">
         <div className="form-content">
           <h1 className="form-title" style={{color: '#d9534f'}}>Admin Login</h1>

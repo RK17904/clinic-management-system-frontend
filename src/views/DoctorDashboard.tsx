@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios.Config.ts'; 
 import { UserIcon, SignInIcon, ListIcon, PlusIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
 import logo from '../assets/logo.png'; 
-// --- Interfaces ---
+
+// Interfaces 
 interface Patient {
   id?: number;
   firstName: string;
@@ -47,10 +48,10 @@ interface Billing {
 const DoctorDashboard = () => {
   const navigate = useNavigate();
 
-  // --- States ---
+  // States 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'appointments' | 'records' | 'billing'>('dashboard');
   
-  // --- Doctor Name State ---
+  // Doctor Name State
   const [doctorName, setDoctorName] = useState('');
 
   // Sub Tabs (View vs Add)
@@ -81,7 +82,7 @@ const DoctorDashboard = () => {
     navigate('/doctor-login');
   };
 
-  // --- Load Doctor Name on Mount ---
+  // Load Doctor Name on Mount
   useEffect(() => {
     const storedData = localStorage.getItem('doctorData');
     if (storedData) {
@@ -97,7 +98,7 @@ const DoctorDashboard = () => {
     }
   }, []);
 
-  // --- API Calls (Fetch Data) ---
+  // API Calls (Fetch Data)
   const fetchData = async () => {
     try {
         const pRes = await api.get('/patients');
@@ -121,9 +122,9 @@ const DoctorDashboard = () => {
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]); // Re-fetch when switching tabs to ensure fresh data
+  }, [activeTab]);
 
-  // --- Helper: Reset Forms ---
+  // Reset Forms
   const resetForms = () => {
       setIsEditing(false);
       setEditingId(null);
@@ -203,6 +204,20 @@ const DoctorDashboard = () => {
       setIsEditing(true);
       setEditingId(a.id);
       setAppointmentSubTab('add');
+  };
+  
+  // --- Handle Status Update (Accept/Reject) ---
+  const handleStatusUpdate = async (id: number, status: string) => {
+    if(!window.confirm(`Are you sure you want to ${status} this appointment?`)) return;
+
+    try {
+        await api.put(`/appointments/${id}/status?status=${status}`);
+        alert(`Appointment ${status} Successfully!`);
+        fetchData(); 
+    } catch (error) {
+        console.error(error);
+        alert("Update Failed!");
+    }
   };
 
   // --- ACTIONS: RECORDS ---
@@ -289,17 +304,85 @@ const DoctorDashboard = () => {
       setBillingSubTab('add');
   };
 
+  // --- PRINT BILL FUNCTION ---
   const printBill = (bill: Billing) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (printWindow) {
       const patientName = bill.appointment.patient ? `${bill.appointment.patient.firstName} ${bill.appointment.patient.lastName}` : "Unknown Patient";
-      const invoiceHTML = `<html><body><h1>Invoice #${bill.billId}</h1><p>Patient: ${patientName}</p><p>Amount: ${bill.amount}</p><script>window.print();</script></body></html>`;
+      
+      const invoiceHTML = `
+        <html>
+          <head>
+            <title>Invoice #${bill.billId}</title>
+            <style>
+              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; }
+              .invoice-box { max-width: 800px; margin: auto; border: 1px solid #eee; padding: 30px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.15); }
+              .header { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+              .logo h1 { color: #2E7D32; margin: 0; }
+              .details { text-align: right; }
+              .info-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              .info-table th { background: #f9f9f9; padding: 10px; text-align: left; }
+              .info-table td { padding: 10px; border-bottom: 1px solid #eee; }
+              .total { margin-top: 30px; text-align: right; font-size: 1.5rem; font-weight: bold; color: #2E7D32; }
+              .footer { margin-top: 50px; text-align: center; font-size: 0.8rem; color: #777; }
+              @media print { .no-print { display: none; } }
+            </style>
+          </head>
+          <body>
+            <div class="invoice-box">
+              <div class="header">
+                <div class="logo">
+                  <h1>HealthCare+ Clinic</h1>
+                  <p>No 123, Wellness Road, Colombo</p>
+                </div>
+                <div class="details">
+                  <p><strong>Bill ID:</strong> #${bill.billId}</p>
+                  <p><strong>Date:</strong> ${new Date(bill.paymentDate).toLocaleDateString()}</p>
+                  <p><strong>Status:</strong> ${bill.status}</p>
+                </div>
+              </div>
+
+              <h3>Patient Information</h3>
+              <p><strong>Name:</strong> ${patientName}</p>
+              <p><strong>Appointment ID:</strong> ${bill.appointment.id}</p>
+
+              <table class="info-table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th style="text-align:right">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Medical Consultation & Services</td>
+                    <td style="text-align:right">Rs. ${bill.amount.toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="total">
+                Total: Rs. ${bill.amount.toFixed(2)}
+              </div>
+
+              <div class="footer">
+                <p>Thank you for choosing HealthCare+!</p>
+                <p>This is a computer-generated invoice.</p>
+              </div>
+            </div>
+            <script>
+              window.onload = function() { window.print(); }
+            </script>
+          </body>
+        </html>
+      `;
+      
       printWindow.document.write(invoiceHTML);
       printWindow.document.close();
     }
   };
 
-  // --- Helper: Get Title ---
+
   const getTitle = () => {
     switch(activeTab) {
       case 'dashboard': return 'Doctor Dashboard';
@@ -311,10 +394,10 @@ const DoctorDashboard = () => {
     }
   };
 
-  // Button styles for the table actions
   const btnStyle = {
       padding: '5px 10px', margin: '0 5px', border: 'none', borderRadius: '5px', cursor: 'pointer', color: 'white'
   };
+
 
   return (
     <div className="dashboard-layout">
@@ -364,7 +447,6 @@ const DoctorDashboard = () => {
         <div className="dashboard-content-wrapper">
           {/* --- MAIN SLIDER CONTAINER --- */}
           <div className="main-slider-viewport">
-            {/* The track moves based on the activeTab class (using doctor-track specific classes) */}
             <div className={`main-slider-track doctor-track pos-${activeTab}`}>
 
               {/* 1. DASHBOARD OVERVIEW */}
@@ -438,15 +520,26 @@ const DoctorDashboard = () => {
                         <div className="slider-slide">
                             <div className="table-container">
                                 <table className="data-table">
-                                    <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+                                    <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                                     <tbody>
                                         {appointmentsList.map(a => (
                                             <tr key={a.id}>
                                                 <td>{a.id}</td>
                                                 <td>{a.date}</td>
                                                 <td>{a.time}</td>
-                                                <td>{a.status}</td>
+                                                <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
                                                 <td>
+                                                  <span style={{fontWeight:'bold', color: a.status === 'PENDING' ? 'orange' : a.status === 'APPROVED' ? 'green' : 'red'}}>
+                                                    {a.status}
+                                                  </span>
+                                                </td>
+                                                <td>
+                                                    {a.status === 'PENDING' && (
+                                                      <>
+                                                        <button style={{...btnStyle, background:'#28a745'}} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
+                                                        <button style={{...btnStyle, background:'#dc3545'}} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
+                                                      </>
+                                                    )}
                                                     <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditAppointment(a)}>Edit</button>
                                                     <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteAppointment(a.id)}>Delete</button>
                                                 </td>
@@ -527,28 +620,13 @@ const DoctorDashboard = () => {
                     <button className={`action-btn ${billingSubTab === 'view' ? 'active' : ''}`} onClick={() => {setBillingSubTab('view'); resetForms();}}>View</button>
                     <button className={`action-btn ${billingSubTab === 'add' ? 'active' : ''}`} onClick={() => {setBillingSubTab('add'); resetForms();}}>Create Bill</button>
                   </div>
-                  
                   <div className="slider-viewport">
                     <div className={`slider-track ${billingSubTab === 'add' ? 'slide-left' : ''}`}>
                         <div className="slider-slide">
                             <div className="table-container">
                                 <table className="data-table">
                                     <thead><tr><th>Bill ID</th><th>Appt ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-                                    <tbody>
-                                        {billingsList.map(b => (
-                                            <tr key={b.billId}>
-                                                <td>{b.billId}</td>
-                                                <td>{b.appointment ? b.appointment.id : 'N/A'}</td>
-                                                <td>Rs. {b.amount}</td>
-                                                <td>{b.status}</td>
-                                                <td>
-                                                    <button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button>
-                                                    <button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditBill(b)}>Edit</button>
-                                                    <button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
+                                    <tbody>{billingsList.map(b => (<tr key={b.billId}><td>{b.billId}</td><td>{b.appointment ? b.appointment.id : 'N/A'}</td><td>Rs. {b.amount}</td><td>{b.status}</td><td><button style={{...btnStyle, background:'#007BFF'}} onClick={() => printBill(b)}>Print</button><button style={{...btnStyle, background:'#FFC107', color:'black'}} onClick={() => startEditBill(b)}>Edit</button><button style={{...btnStyle, background:'#F44336'}} onClick={() => handleDeleteBill(b.billId)}>Delete</button></td></tr>))}</tbody>
                                 </table>
                             </div>
                         </div>
@@ -570,7 +648,7 @@ const DoctorDashboard = () => {
 
             </div>
           </div>
-          {/* --- END MAIN SLIDER --- */}
+          
         </div>
       </main>
     </div>

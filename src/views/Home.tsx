@@ -4,7 +4,7 @@ import { UserIcon, SignInIcon, BellIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts'; 
 import logo from '../assets/logo.png';
 
-// Interfaces
+// --- Interfaces ---
 interface Doctor {
   id: number;
   name: string;
@@ -35,11 +35,7 @@ const Home = () => {
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  //notification section
-  const [notifications, setNotifications] = useState<string[]>([]);
-  const [showNotifications, setShowNotifications] = useState(false);
-
-  // CALENDAR STATE 
+  // --- CALENDAR STATE ---
   const [currentDate, setCurrentDate] = useState(new Date()); 
   const [selectedDate, setSelectedDate] = useState<string | null>(null); 
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -47,7 +43,11 @@ const Home = () => {
   // Navigation State
   const [activeSection, setActiveSection] = useState('hero');
 
-  // AUTH CHECK
+  // --- NOTIFICATION STATE ---
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // --- 1. INSTANT AUTH CHECK ---
   useEffect(() => {
     const checkAuth = () => {
       try {
@@ -77,22 +77,24 @@ const Home = () => {
     checkAuth();
   }, []);
 
-  // DATA FETCHING
+  // --- 2. DATA FETCHING ---
   useEffect(() => {
     const fetchHomeData = async () => {
       setIsLoading(true);
+      
+      // A. Fetch Doctors (Public Info)
       try {
         const doctorsRes = await api.get('/doctors');
-        setDoctors(doctorsRes.data.slice(0, 3)); 
+        setDoctors(doctorsRes.data); 
       } catch (e) { console.error("Could not fetch doctors."); }
 
+      // B. Fetch Appointments (Only if Patient is logged in)
       if (userRole === 'patient' && userId) {
         try {
           const appRes = await api.get('/appointments');
           const userApps = appRes.data.filter((a: any) => a.patient && a.patient.id === userId);
           setMyAppointments(userApps);
           
-          // Auto-select the first upcoming appointment if available
           if (userApps.length > 0) {
              const nextAppt = userApps[0]; 
              setSelectedDate(nextAppt.date);
@@ -103,7 +105,7 @@ const Home = () => {
       setIsLoading(false);
     };
     fetchHomeData();
-  }, [userRole, userId]);  
+  }, [userRole, userId]); 
 
   // --- 3. GENERATE NOTIFICATIONS (Logic) ---
   useEffect(() => {
@@ -129,9 +131,11 @@ const Home = () => {
            }
        });
 
-       // 3. New Doctor Added (Mock: Show last doctor in list if available)
+       // 3. New Doctor Added (Find newest by ID)
        if (doctors.length > 0) {
-           const newestDoc = doctors[doctors.length - 1]; 
+           // Sort a copy of the array by ID descending to find the newest
+           const sortedDocs = [...doctors].sort((a, b) => b.id - a.id);
+           const newestDoc = sortedDocs[0]; 
            newNotifs.push(`👨‍⚕️ New Doctor Available: Dr. ${newestDoc.name} (${newestDoc.specialization}) has joined the clinic!`);
        }
 
@@ -139,8 +143,7 @@ const Home = () => {
     }
   }, [userRole, myAppointments, doctors]);
 
-
-  // CALENDAR LOGIC
+  // --- CALENDAR LOGIC ---
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
@@ -190,7 +193,7 @@ const Home = () => {
     return days;
   };
 
-  // SCROLL ANIMATION 
+  // --- SCROLL ANIMATION OBSERVER ---
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -211,9 +214,9 @@ const Home = () => {
       clearTimeout(timeoutId);
       observer.disconnect();
     };
-  }, [doctors, myAppointments, isLoading]);
+  }, [doctors, myAppointments, isLoading]); 
 
-  // ACTIVE SECTION OBSERVER
+  // --- ACTIVE SECTION OBSERVER ---
   useEffect(() => {
     const sectionIds = ['hero', 'appointments', 'doctors', 'about', 'contact'];
     const sections = sectionIds.map(id => document.getElementById(id));
@@ -227,7 +230,7 @@ const Home = () => {
     return () => navObserver.disconnect();
   }, []);
 
-  // Handlers
+  // --- Handlers ---
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -253,6 +256,17 @@ const Home = () => {
 
   const getNavStyle = (sectionId: string) => activeSection === sectionId ? { fontWeight: 'bold', color: '#0056b3' } : {};
 
+  // --- Render Helper for Doctor Card ---
+  const renderDoctorCard = (doc: Doctor, key: string | number) => (
+    <div key={key} className="doctor-card" style={{minWidth: '300px'}}>
+      <div className="doc-avatar">👨‍⚕️</div>
+      <h3 style={{color: '#333 !important'}}>Dr. {doc.name}</h3>
+      <p style={{color: '#0056b3 !important', fontWeight: '500'}}>{doc.specialization}</p>
+      <p style={{fontSize: '0.9rem', color: '#666 !important'}}>{doc.email}</p>
+      <button onClick={handleMyHealthClick}>View Profile</button>
+    </div>
+  );
+
   return (
     <div className="home-container">
       
@@ -264,7 +278,7 @@ const Home = () => {
         </div>
         <nav className="header-nav">
           <button onClick={() => scrollToSection('hero')} style={getNavStyle('hero')}>Home</button>
-          <button onClick={handleMyHealthClick} style={{fontWeight: 'bold', color: '#0056b3'}}>My Health</button>
+          <button onClick={handleMyHealthClick}>My Health</button>
           <button onClick={() => scrollToSection('appointments')} style={getNavStyle('appointments')}>Appointments</button>
           <button onClick={() => scrollToSection('doctors')} style={getNavStyle('doctors')}>Doctors</button>
           <button onClick={() => scrollToSection('about')} style={getNavStyle('about')}>About Us</button>
@@ -274,13 +288,11 @@ const Home = () => {
           {userName ? (
             <div className="user-profile-badge">
               
-              {/* --- NOTIFICATION BELL ( for Patients) --- */}
+              {/* --- NOTIFICATION BELL --- */}
               {userRole === 'patient' && (
                   <div className="notification-container" onClick={() => setShowNotifications(!showNotifications)}>
                       <BellIcon />
                       {notifications.length > 0 && <span className="notification-badge">{notifications.length}</span>}
-                      
-                      {/* DROPDOWN */}
                       {showNotifications && (
                           <div className="notification-dropdown">
                               <div className="notification-header">Notifications</div>
@@ -307,7 +319,6 @@ const Home = () => {
           )}
         </div>
       </header>
-
 
       {/* --- HERO SECTION --- */}
       <section id="hero" className="hero-section">
@@ -399,19 +410,28 @@ const Home = () => {
           <div className="section-container reveal-on-scroll">
             <h2>Our Specialists</h2>
             <p>Meet our team of experienced medical professionals ready to assist you.</p>
-            <div className="cards-grid">
-              {isLoading && doctors.length === 0 ? <p>Loading Specialists...</p> : 
-                doctors.length > 0 ? doctors.map((doc) => (
-                  <div key={doc.id} className="doctor-card">
-                    <div className="doc-avatar">👨‍⚕️</div>
-                    <h3 style={{color: '#333 !important'}}>Dr. {doc.name}</h3>
-                    <p style={{color: '#0056b3 !important', fontWeight: '500'}}>{doc.specialization}</p>
-                    <p style={{fontSize: '0.9rem', color: '#666 !important'}}>{doc.email}</p>
-                    <button onClick={handleMyHealthClick}>View Profile</button>
-                  </div>
-                )) : <p>No doctors available at the moment.</p>
-              }
-            </div>
+            
+            {/* Logic for Scrolling vs Grid */}
+            {isLoading && doctors.length === 0 ? (
+                <p>Loading Specialists...</p>
+            ) : doctors.length > 3 ? (
+                // --- SCROLLING BANNER (>3 Doctors) ---
+                <div className="scrolling-wrapper">
+                    <div className="scrolling-track">
+                        {/* Duplicate list to create seamless loop */}
+                        {[...doctors, ...doctors].map((doc, index) => 
+                            renderDoctorCard(doc, `${doc.id}-scroll-${index}`)
+                        )}
+                    </div>
+                </div>
+            ) : (
+                // --- STATIC GRID (<=3 Doctors) ---
+                <div className="cards-grid">
+                    {doctors.length > 0 ? doctors.map((doc) => 
+                        renderDoctorCard(doc, doc.id)
+                    ) : <p>No doctors available at the moment.</p>}
+                </div>
+            )}
           </div>
         </div>
       </section>

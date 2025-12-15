@@ -98,7 +98,7 @@ const DoctorDashboard = () => {
     }
   }, []);
 
-  // API Calls (Fetch Data)
+  // API Calls 
   const fetchData = async () => {
     try {
         const pRes = await api.get('/patients');
@@ -134,7 +134,7 @@ const DoctorDashboard = () => {
       setNewBill({ appointmentId: '', amount: '', paymentMethod: 'CASH', status: 'PAID' });
   };
 
-  // --- ACTIONS: PATIENTS ---
+  // ACTIONS: PATIENTS 
   const handleSavePatient = async () => {
     try {
         if (isEditing && editingId) {
@@ -166,7 +166,7 @@ const DoctorDashboard = () => {
       setPatientSubTab('add');
   };
 
-  // --- ACTIONS: APPOINTMENTS ---
+  // ACTIONS: APPOINTMENTS 
   const handleSaveAppointment = async () => {
     try {
        const appointmentTime = `${newAppointment.date}T${newAppointment.time}:00`;
@@ -206,7 +206,7 @@ const DoctorDashboard = () => {
       setAppointmentSubTab('add');
   };
   
-  // --- Handle Status Update (Accept/Reject) ---
+  // Handle Status Update (Accept/Reject) 
   const handleStatusUpdate = async (id: number, status: string) => {
     if(!window.confirm(`Are you sure you want to ${status} this appointment?`)) return;
 
@@ -220,7 +220,7 @@ const DoctorDashboard = () => {
     }
   };
 
-  // --- ACTIONS: RECORDS ---
+  // ACTIONS: RECORDS 
   const handleSaveRecord = async () => {
     try { 
         if (isEditing && editingId) {
@@ -260,7 +260,7 @@ const DoctorDashboard = () => {
       setRecordSubTab('add');
   };
 
-  // --- ACTIONS: BILLING ---
+  // ACTIONS: BILLING 
   const handleSaveBill = async () => {
       try {
           const payload = { 
@@ -304,7 +304,7 @@ const DoctorDashboard = () => {
       setBillingSubTab('add');
   };
 
-  // --- PRINT BILL FUNCTION ---
+  // PRINT BILL FUNCTION 
   const printBill = (bill: Billing) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (printWindow) {
@@ -333,7 +333,7 @@ const DoctorDashboard = () => {
               <div class="header">
                 <div class="logo">
                   <h1>HealthCare+ Clinic</h1>
-                  <p>No 123, Wellness Road, Colombo</p>
+                  <p>Kandy Road, Dalugama, Kelaniya.</p>
                 </div>
                 <div class="details">
                   <p><strong>Bill ID:</strong> #${bill.billId}</p>
@@ -366,7 +366,7 @@ const DoctorDashboard = () => {
               </div>
 
               <div class="footer">
-                <p>Thank you for choosing HealthCare+!</p>
+                <p>Thank you for choosing Health Care+ ...!</p>
                 <p>This is a computer-generated invoice.</p>
               </div>
             </div>
@@ -425,7 +425,7 @@ const DoctorDashboard = () => {
                 <div style={{textAlign: 'right', lineHeight: '1.2'}}>
                     <span style={{display: 'block', fontSize: '0.8rem', color: '#888'}}>Welcome,</span>
                     <span style={{fontWeight: 'bold', color: '#063ca8', fontSize: '1.1rem'}}>
-                        Dr. {doctorName || 'Doctor'}
+                       {doctorName || 'Doctor'}
                     </span>
                 </div>
                 <div style={{
@@ -449,16 +449,16 @@ const DoctorDashboard = () => {
           <div className="main-slider-viewport">
             <div className={`main-slider-track doctor-track pos-${activeTab}`}>
 
-              {/* 1. DASHBOARD OVERVIEW */}
+              {/* DASHBOARD OVERVIEW */}
               <div className="main-slider-slide">
                 <section className="dashboard-content">
-                  <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Total Patients</h3><p style={{color: '#2E7D32', fontSize: '2.5rem'}}>{patientsList.length}</p></div>
-                  <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Appointments</h3><p style={{color: '#1565C0', fontSize: '2.5rem'}}>{appointmentsList.length}</p></div>
-                  <div className="stat-card" style={{backgroundColor: '#E8F5E9'}}><h3>Income</h3><p style={{color: '#2E7D32', fontSize: '2.5rem'}}>Rs. {income}</p></div>
+                  <div className="stat-card" style={{backgroundColor: '#ffffffff'}}><h3>Total Patients</h3><p style={{color: '#1565C0', fontSize: '2.5rem'}}>{patientsList.length}</p></div>
+                  <div className="stat-card" style={{backgroundColor: '#ffffffff'}}><h3>Appointments</h3><p style={{color: '#1565C0', fontSize: '2.5rem'}}>{appointmentsList.length}</p></div>
+                  <div className="stat-card" style={{backgroundColor: '#ffffffff'}}><h3>Income</h3><p style={{color: '#1565C0', fontSize: '2.5rem'}}>Rs. {income}</p></div>
                 </section>
               </div>
 
-              {/* 2. PATIENTS TAB */}
+              {/* PATIENTS TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
@@ -507,7 +507,7 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* 3. APPOINTMENTS TAB */}
+              {/* APPOINTMENTS TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
@@ -565,7 +565,7 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* 4. RECORDS TAB */}
+              {/* RECORDS TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
@@ -613,7 +613,7 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* 5. BILLING TAB */}
+              {/* BILLING TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">

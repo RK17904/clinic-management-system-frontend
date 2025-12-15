@@ -227,7 +227,7 @@ const PatientDashboard = () => {
                   <div className="dashboard-content p-4">
                     <div className="stat-card profile-card" style={{borderLeft: '5px solid #0056b3'}}>
                       <h3>My Profile</h3>
-                      <div style={{fontSize: '0.95rem', color: '#555', marginTop: '10px', lineHeight: '1.6'}}>
+                      <div style={{fontSize: '0.1rem', color: '#555', marginTop: '10px', lineHeight: '1.6'}}>
                         <p><strong>Email:</strong> {patient.email}</p>
                         <p><strong>Phone:</strong> {patient.phone}</p>
                         <p><strong>Age:</strong> {patient.age}</p>

@@ -22,31 +22,19 @@ const AdminLogin = () => {
       });
 
       if (response.status === 200) {
-        // verify the role is actually admin
-        
-        if (response.data.role === 'ADMIN') {
-            console.log("Admin Login Success!");
-            localStorage.setItem('adminData', JSON.stringify(response.data));
-            navigate('/admin-dashboard'); 
-        } else {
-            // if credentials are valid but role is not admin
-            setError("Access Denied: You do not have administrator privileges.");
-            console.warn("Unauthorized login attempt by non-admin user:", response.data.email);
-        }
+        console.log("Admin Login Success!");
+        localStorage.setItem('adminData', JSON.stringify(response.data));
+        navigate('/admin-dashboard'); 
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      if (err.response && err.response.status === 401) {
-          setError("Invalid Email or Password.");
-      } else {
-          setError("Login Failed. Please check your credentials or network.");
-      }
+      setError("Invalid Email or Password.");
     }
   };
 
   return (
     <>
-      {/* - Blue Panel --- */}
+      {/* - (Blue Panel) --- */}
       <div className="form-panel blue-panel">
         <h1>HealthCare +</h1>
         <h2>Admin Portal</h2>
@@ -54,7 +42,7 @@ const AdminLogin = () => {
         <img src={signInIllustration} alt="Admin Login" className="panel-image" />
       </div>
 
-      {/* ---  Form --- */}
+      {/* ---  (Form) --- */}
       <div className="form-panel white-panel">
         <div className="form-content">
           <h1 className="form-title" style={{color: '#d9534f'}}>Admin Login</h1>

@@ -2,9 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, ListIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts';
-import logo from '../assets/logo.png';
 
-// --- TYPES ---
+// types
 interface Doctor {
   id?: number;
   name: string;
@@ -31,11 +30,9 @@ interface Appointment {
   status: string; 
 }
 
-// --- ENHANCED CHART COMPONENTS ---
-
-// 1. Enhanced Bar Chart
+//  Bar Chart
 const EnhancedBarChart = ({ data, color }: { data: { label: string; value: number }[], color: string }) => {
-  const maxValue = Math.max(...data.map(d => d.value), 5); // Minimum scale of 5
+  const maxValue = Math.max(...data.map(d => d.value), 5); // minimum scale of 5
   const gridLines = [0, 0.25, 0.5, 0.75, 1]; 
 
   return (
@@ -107,7 +104,7 @@ const EnhancedBarChart = ({ data, color }: { data: { label: string; value: numbe
   );
 };
 
-// 2. Enhanced Donut Chart
+// Donut Chart
 const EnhancedDonutChart = ({ data }: { data: { label: string; value: number; color: string }[] }) => {
   const total = data.reduce((acc, curr) => acc + curr.value, 0);
   let cumulativePercent = 0;
@@ -174,7 +171,7 @@ const EnhancedDonutChart = ({ data }: { data: { label: string; value: number; co
   );
 };
 
-// 3. Enhanced Line Chart (Area Chart)
+// Line Chart 
 const EnhancedLineChart = ({ dataPoints, labels, color }: { dataPoints: number[], labels: string[], color: string }) => {
     const max = Math.max(...dataPoints, 5); 
     const hexColor = color.replace('#', '');
@@ -332,9 +329,8 @@ const AdminDashboard = () => {
     fetchAppointments();
   }, []);
 
-  // --- STATS CALCULATION ---
   
-  // 1. Doctor Specializations for Donut Chart
+  // Doctor Specializations for Donut Chart
   const specializationStats = useMemo(() => {
     const stats: Record<string, number> = {};
     doctorsList.forEach(doc => {
@@ -352,7 +348,7 @@ const AdminDashboard = () => {
     }));
   }, [doctorsList]);
 
-  // 2. Appointment Status for Bar Chart
+  // Appointment Status for Bar Chart
   const appointmentStats = useMemo(() => {
     let confirmed = 0;
     let pending = 0;
@@ -378,7 +374,7 @@ const AdminDashboard = () => {
     ];
   }, [appointmentsList]);
 
-  // 3. Patient Growth Stats for Line Chart
+  // Patient Growth Stats for Line Chart
   const patientGrowthStats = useMemo(() => {
       const months: string[] = [];
       const now = new Date();
@@ -422,7 +418,6 @@ const AdminDashboard = () => {
       {/* --- SIDEBAR --- */}
       <div className="dashboard-sidebar">
         <div className="dashboard-logo">
-          <img src={logo} alt="Logo" className="dashboard-logo-img" style={{height:'2rem', width:'auto', marginRight:'0.9rem'}} />
           <h2>HealthCare+</h2>
         </div>
         

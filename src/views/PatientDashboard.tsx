@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios.Config.ts';
-import { UserIcon, SignInIcon, ListIcon, CalendarIcon, HomeIcon } from '../components/Icons.tsx';
+import { UserIcon, SignInIcon, ListIcon, CalendarIcon, HomeIcon, PlusIcon } from '../components/Icons.tsx';
 import logo from "../assets/logo.png";
+import '../App.css';
 
 // Interfaces
 interface Patient {
@@ -29,6 +30,10 @@ interface Appointment {
   status: string;
   patient: Patient;
   doctor?: Doctor;
+  // Optional properties for updates
+  patientId?: number;
+  doctorId?: number;
+  doctorName?: string;
 }
 
 interface MedicalRecord {
@@ -61,30 +66,27 @@ const PatientDashboard = () => {
     notes: ''
   });
 
+  // Get Today's Date for min attribute (Prevent Past Dates)
+  const today = new Date().toISOString().split('T')[0];
+
   // Generate 15-min Time Slots (9:00 AM to 5:00 PM)
-  const generateTimeSlots = () => {
+  const timeSlots = useMemo(() => {
     const slots: string[] = [];
-    const addSlots = (startHour: number, endHour: number) => {
-      for (let hour = startHour; hour < endHour; hour++) {
-        for (let min = 0; min < 60; min += 15) {
-          const h = hour < 10 ? `0${hour}` : hour;
-          const m = min === 0 ? '00' : min;
-          slots.push(`${h}:${m}`);
-        }
+    for (let hour = 9; hour < 17; hour++) {
+      for (let min = 0; min < 60; min += 15) {
+        const h = hour < 10 ? `0${hour}` : hour;
+        const m = min === 0 ? '00' : min;
+        slots.push(`${h}:${m}`);
       }
-    };
-    addSlots(9, 17);
+    }
     return slots;
-  };
-  const timeSlots = generateTimeSlots();
+  }, []);
 
   // Logout Function
   const handleLogout = () => {
     localStorage.removeItem('patientData');
     navigate('/patient-login');
   };
-
-  const today = new Date().toISOString().split('T')[0];
 
   // Data Fetching 
   useEffect(() => {
@@ -143,6 +145,22 @@ const PatientDashboard = () => {
     });
   };
 
+  // --- SEPARATION LOGIC ---
+  
+  // Upcoming = Future Date (or Today) AND Active Status (Not Cancelled/Completed)
+  const upcomingAppointments = myAppointments.filter(appt => {
+    const isInactive = ['Cancelled', 'Rejected', 'REJECTED', 'COMPLETED'].includes(appt.status);
+    const isFuture = appt.date >= today;
+    return !isInactive && isFuture;
+  });
+
+  // History = Past Date OR Inactive Status
+  const historyAppointments = myAppointments.filter(appt => {
+    const isInactive = ['Cancelled', 'Rejected', 'REJECTED', 'COMPLETED'].includes(appt.status);
+    const isPast = appt.date < today;
+    return isInactive || isPast;
+  });
+
   // Handle Booking
   const handleBookAppointment = async () => {
     if (!patient || !newBooking.doctorId || !newBooking.date || !newBooking.time) {
@@ -151,8 +169,7 @@ const PatientDashboard = () => {
     }
 
     try {
-      // 1. Create the combined LocalDateTime string (Format: YYYY-MM-DDTHH:mm:ss)
-      // Example: "2026-02-14T10:30:00"
+      // Create the combined LocalDateTime string (Format: YYYY-MM-DDTHH:mm:ss)
       const combinedAppointmentTime = `${newBooking.date}T${newBooking.time}:00`;
 
       const payload = {
@@ -160,7 +177,7 @@ const PatientDashboard = () => {
         doctorId: newBooking.doctorId.toString(),
         date: newBooking.date,
         time: newBooking.time + ":00",
-        appointmentTime: combinedAppointmentTime, // <--- මේ පේළිය තමයි අලුතෙන් එකතු කළේ (Backend එකට මේක අනිවාර්යයි)
+        appointmentTime: combinedAppointmentTime, 
         notes: newBooking.notes,
         status: "Pending"
       };
@@ -191,24 +208,28 @@ const PatientDashboard = () => {
 
   if (!patient) return <div>Loading...</div>;
 
-  const sidebarColor = 'white';
-  const activeTextColor = '#0056b3';
+  // Helper for Status Color
+  const getStatusStyle = (status: string) => {
+    const s = status.toUpperCase();
+    if(s === 'PENDING') return { bg: '#FFF3CD', color: '#856404' };
+    if(s === 'APPROVED' || s === 'CONFIRMED' || s === 'SCHEDULED') return { bg: '#D1E7DD', color: '#0F5132' };
+    return { bg: '#F8D7DA', color: '#721C24' }; // Rejected/Cancelled
+  };
 
   return (
     <div className="dashboard-layout" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
 
       {/* --- SIDEBAR --- */}
-      <div className="dashboard-sidebar" style={{ background: sidebarColor, color: '#333', borderRight: '1px solid #eee', width: '250px', flexShrink: 0 }}>
-        <div className="dashboard-logo" style={{ borderBottom: '1px solid #eee' }}>
+      <div className="dashboard-sidebar">
+        <div className="dashboard-logo">
           <img src={logo} alt="Logo" className="dashboard-logo-img" style={{ height: '2rem', width: 'auto', marginRight: '0.9rem' }} />
-          <h2 style={{ color: '#0056b3' }}>My Health</h2>
+          <h2>My Health</h2>
         </div>
 
         <nav className="dashboard-nav">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
-            style={activeTab === 'dashboard' ? { color: activeTextColor, background: '#eef2ff' } : { color: '#555' }}
           >
             <UserIcon /> <span>Dashboard</span>
           </button>
@@ -216,7 +237,6 @@ const PatientDashboard = () => {
           <button
             onClick={() => setActiveTab('appointments')}
             className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`}
-            style={activeTab === 'appointments' ? { color: activeTextColor, background: '#eef2ff' } : { color: '#555' }}
           >
             <CalendarIcon /> <span>My Appointments</span>
           </button>
@@ -224,7 +244,6 @@ const PatientDashboard = () => {
           <button
             onClick={() => setActiveTab('records')}
             className={`nav-item ${activeTab === 'records' ? 'active' : ''}`}
-            style={activeTab === 'records' ? { color: activeTextColor, background: '#eef2ff' } : { color: '#555' }}
           >
             <ListIcon /> <span>Medical Records</span>
           </button>
@@ -232,14 +251,13 @@ const PatientDashboard = () => {
           <button
             onClick={() => navigate('/')}
             className="nav-item"
-            style={{ color: '#555', marginTop: '10px', borderTop: '1px solid #eee' }}
           >
             <HomeIcon /> <span>Go to Home</span>
           </button>
         </nav>
 
-        <div className="dashboard-logout" style={{ borderTop: '1px solid #eee' }}>
-          <button onClick={handleLogout} className="nav-item" style={{ color: '#d9534f' }}>
+        <div className="dashboard-logout">
+          <button onClick={handleLogout} className="nav-item" >
             <SignInIcon /> <span>Logout</span>
           </button>
         </div>
@@ -266,7 +284,7 @@ const PatientDashboard = () => {
                 <div className="dashboard-content p-4">
                   <div className="stat-card profile-card" style={{ borderLeft: '5px solid #0056b3' }}>
                     <h3>My Profile</h3>
-                    <div style={{ fontSize: '0.9rem', color: '#555', marginTop: '10px', lineHeight: '1.6' }}>
+                    <div>
                       <p><strong>Email:</strong> {patient.email}</p>
                       <p><strong>Phone:</strong> {patient.phone}</p>
                       <p><strong>Age:</strong> {patient.age}</p>
@@ -275,25 +293,26 @@ const PatientDashboard = () => {
                   </div>
                   <div className="stat-card">
                     <h3>Upcoming Appointments</h3>
-                    <p style={{ color: '#0056b3' }}>{myAppointments.length}</p>
+                    <p>{upcomingAppointments.length}</p>
                   </div>
                 </div>
               </div>
 
               {/* APPOINTMENTS TAB */}
               <div className="main-slider-slide">
-                <section className="doctors-section p-4" style={{ paddingBottom: '100px' }}>
+                <section className="doctors-section p-4">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <h3 className="m-0">My Appointments History</h3>
+                    <h3 className="m-0">Appointments</h3>
                     <button
                       className={`btn ${showBookingForm ? 'btn-danger' : 'btn-primary'}`}
                       onClick={() => setShowBookingForm(!showBookingForm)}
                       style={{
                         backgroundColor: showBookingForm ? '#dc3545' : '#0056b3',
-                        color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer'
+                        color: 'white', border: 'none', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', gap: '5px'
                       }}
                     >
-                      {showBookingForm ? 'Go Back' : '+ Book New Appointment'}
+                      {showBookingForm ? 'Go Back' : <><PlusIcon /> Book New Appointment</>}
                     </button>
                   </div>
 
@@ -311,7 +330,7 @@ const PatientDashboard = () => {
                               className="form-select"
                               value={newBooking.doctorId}
                               onChange={(e) => {
-                                setNewBooking({ ...newBooking, doctorId: e.target.value, time: '' }); // Reset time on doctor change
+                                setNewBooking({ ...newBooking, doctorId: e.target.value, time: '' }); 
                               }}
                               style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
                             >
@@ -322,20 +341,20 @@ const PatientDashboard = () => {
                             </select>
                           </div>
 
-                          {/* Date Picker */}
+                          {/* Date Picker (with min=today) */}
                           <div className="col-md-6" style={{ gridColumn: '1 / -1' }}>
                             <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
                             <input
                               type="date"
                               className="form-control"
-                              min={today}
+                              min={today} // Prevent past dates
                               value={newBooking.date}
-                              onChange={e => setNewBooking({ ...newBooking, date: e.target.value, time: '' })} // Reset time on date change
+                              onChange={e => setNewBooking({ ...newBooking, date: e.target.value, time: '' })} 
                               style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
                             />
                           </div>
 
-                          {/* Time Slot Selection Grid - Only shows when Doctor & Date are selected */}
+                          {/* Time Slot Selection Grid */}
                           {newBooking.doctorId && newBooking.date && (
                             <div className="col-12" style={{ gridColumn: '1 / -1', marginTop: '15px' }}>
                               <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Available Time Slots</label>
@@ -360,17 +379,8 @@ const PatientDashboard = () => {
                                         cursor: booked ? 'not-allowed' : 'pointer',
                                         fontWeight: 'bold',
                                         fontSize: '0.9rem',
-                                        // Logic for colors: Red (Booked), Blue (Selected), Green (Available)
-                                        backgroundColor: booked
-                                          ? '#ffcccc'
-                                          : isSelected
-                                            ? '#0056b3'
-                                            : '#d4edda',
-                                        color: booked
-                                          ? '#cc0000'
-                                          : isSelected
-                                            ? 'white'
-                                            : '#155724',
+                                        backgroundColor: booked ? '#ffcccc' : isSelected ? '#0056b3' : '#d4edda',
+                                        color: booked ? '#cc0000' : isSelected ? 'white' : '#155724',
                                         opacity: booked ? 0.7 : 1,
                                         boxShadow: isSelected ? '0 0 5px rgba(0,86,179,0.5)' : 'none'
                                       }}
@@ -402,7 +412,7 @@ const PatientDashboard = () => {
                             <button
                               className="btn btn-success fw-bold px-4 py-2"
                               onClick={handleBookAppointment}
-                              disabled={!newBooking.time} // Disable if no time selected
+                              disabled={!newBooking.time} 
                               style={{
                                 backgroundColor: !newBooking.time ? '#ccc' : '#28a745',
                                 border: 'none', color: 'white', padding: '10px 20px', borderRadius: '5px', fontWeight: 'bold',
@@ -417,6 +427,8 @@ const PatientDashboard = () => {
                     </div>
                   )}
 
+                  {/* Upcoming Appointments Table */}
+                  <h4 style={{ color: '#0056b3', marginTop: '20px', marginBottom: '10px' }}>Upcoming Appointments</h4>
                   <div className="table-container">
                     <table className="data-table">
                       <thead>
@@ -428,27 +440,69 @@ const PatientDashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {myAppointments.length === 0 ? (
-                          <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px' }}>No Appointments Found</td></tr>
+                        {upcomingAppointments.length === 0 ? (
+                          <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No Upcoming Appointments</td></tr>
                         ) : (
-                          myAppointments.map(appt => (
-                            <tr key={appt.id}>
-                              <td>{appt.date}</td>
-                              <td>{appt.time}</td>
-                              <td>{appt.doctor ? appt.doctor.name : 'Unknown'}</td>
-                              <td>
-                                <span style={{
-                                  padding: '5px 12px',
-                                  borderRadius: '20px',
-                                  background: appt.status === 'Pending' ? '#FFF3CD' : appt.status === 'Confirmed' ? '#D1E7DD' : '#F8D7DA',
-                                  color: appt.status === 'Pending' ? '#856404' : appt.status === 'Confirmed' ? '#0F5132' : '#721C24',
-                                  fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase'
-                                }}>
-                                  {appt.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
+                          upcomingAppointments.map(appt => {
+                            const style = getStatusStyle(appt.status);
+                            return (
+                              <tr key={appt.id}>
+                                <td>{appt.date}</td>
+                                <td>{appt.time}</td>
+                                <td>{appt.doctor ? appt.doctor.name : 'Unknown'}</td>
+                                <td>
+                                  <span style={{
+                                    padding: '5px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase',
+                                    backgroundColor: style.bg, color: style.color
+                                  }}>
+                                    {appt.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Visual Divider */}
+                  <div style={{ margin: '40px 0', borderTop: '2px dashed #eee' }}></div>
+
+                  {/* History Table */}
+                  <h4 style={{ color: '#666', marginBottom: '10px' }}>Appointment History</h4>
+                  <div className="table-container" style={{opacity: 0.8}}>
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Doctor</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historyAppointments.length === 0 ? (
+                          <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No Appointment History</td></tr>
+                        ) : (
+                          historyAppointments.map(appt => {
+                            const style = getStatusStyle(appt.status);
+                            return (
+                              <tr key={appt.id}>
+                                <td>{appt.date}</td>
+                                <td>{appt.time}</td>
+                                <td>{appt.doctor ? appt.doctor.name : 'Unknown'}</td>
+                                <td>
+                                  <span style={{
+                                    padding: '5px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase',
+                                    backgroundColor: style.bg, color: style.color
+                                  }}>
+                                    {appt.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })
                         )}
                       </tbody>
                     </table>
@@ -472,7 +526,7 @@ const PatientDashboard = () => {
                       </thead>
                       <tbody>
                         {myRecords.length === 0 ? (
-                          <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px' }}>No Medical Records Found</td></tr>
+                          <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No Medical Records Found</td></tr>
                         ) : (
                           myRecords.map(rec => (
                             <tr key={rec.id}>

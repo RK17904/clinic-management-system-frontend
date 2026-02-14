@@ -1807,3 +1807,118 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     transform: translateX(-50%);
   }
 }
+
+/* --- MODERN PATIENT SEARCH BAR STYLES --- */
+.search-box-container {
+  display: flex;
+  /* Row 1 */
+  align-items: center;
+  gap: 10px;
+  background-color: #f8f9fa;
+  /* Light background */
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
+  margin-bottom: 25px;
+  /* Added spacing from user req */
+}
+
+.consultation-info-box {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.consultation-info-box p {
+  margin-bottom: 1rem;
+  color: #555;
+  font-size: 1.1rem;
+}
+
+.consultation-info-box .action-btn {
+  margin-top: 15px;
+  background-color: #063ca8;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.consultation-info-box .action-btn:hover {
+  background-color: #05328c;
+}
+
+.consultation-search-select {
+  padding: 10px 14px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background-color: white;
+  color: #495057;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.consultation-search-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+}
+
+.consultation-search-input {
+  flex-grow: 1;
+  padding: 10px 14px;
+  border: 1px solid #ced4da;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.consultation-search-input:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.consultation-search-btn {
+  background-color: #0d6efd;
+  /* Primary Blue */
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+}
+
+.consultation-search-btn:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(13, 110, 253, 0.25);
+}
+
+.consultation-search-btn:active {
+  transform: translateY(0);
+}
+
+.search-error {
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin-left: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}

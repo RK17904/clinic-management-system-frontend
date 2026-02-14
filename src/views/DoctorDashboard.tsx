@@ -59,6 +59,9 @@ const DoctorDashboard = () => {
 
   // Current Patient State
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
+  const [consultationSearchType, setConsultationSearchType] = useState<'id' | 'name' | 'email' | 'phone'>('id');
+  const [consultationSearchQuery, setConsultationSearchQuery] = useState('');
+  const [consultationError, setConsultationError] = useState<string | null>(null);
 
   // Doctor Name State
   const [doctorName, setDoctorName] = useState('');
@@ -448,6 +451,42 @@ const DoctorDashboard = () => {
     }
   };
 
+
+
+  // ADVANCED CONSULTATION SEARCH
+  const handleConsultationSearch = () => {
+    setConsultationError(null);
+    if (!consultationSearchQuery.trim()) {
+      setConsultationError("Please enter search details.");
+      return;
+    }
+
+    const query = consultationSearchQuery.toLowerCase().trim();
+    let found = null;
+
+    if (consultationSearchType === 'id') {
+      found = patientsList.find(p => p.id?.toString() === query);
+    } else if (consultationSearchType === 'email') {
+      found = patientsList.find(p => p.email.toLowerCase() === query);
+    } else if (consultationSearchType === 'phone') {
+      found = patientsList.find(p => p.phone.includes(query));
+    } else if (consultationSearchType === 'name') {
+      // Basic name search (first match)
+      found = patientsList.find(p =>
+        p.firstName.toLowerCase().includes(query) ||
+        p.lastName.toLowerCase().includes(query) ||
+        `${p.firstName} ${p.lastName}`.toLowerCase().includes(query)
+      );
+    }
+
+    if (found) {
+      startConsultation(found);
+      setConsultationSearchQuery(''); // Clear search on success
+    } else {
+      setConsultationError("Patient not found. Please check the details.");
+    }
+  };
+
   const getTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'Doctor Dashboard';
@@ -562,62 +601,91 @@ const DoctorDashboard = () => {
               {/* CURRENT PATIENT SLIDE */}
               <div className="main-slider-slide">
                 <section className="consultation-view">
-                  {currentPatient ? (
-                    <>
-                      <div className="patient-profile-card">
-                        <div className="profile-avatar">👤</div>
-                        <h3>{currentPatient.firstName} {currentPatient.lastName}</h3>
-                        <div className="profile-details">
-                          <p><strong>ID:</strong> {currentPatient.id}</p>
-                          <p><strong>Age:</strong> {currentPatient.age || 'N/A'}</p>
-                          <p><strong>Gender:</strong> {currentPatient.gender || 'N/A'}</p>
-                          <p><strong>Phone:</strong> {currentPatient.phone}</p>
-                          <p><strong>Email:</strong> {currentPatient.email}</p>
-                        </div>
-                      </div>
 
-                      <div className="consultation-form-container">
-                        <h3>Clinical Notes & Diagnosis</h3>
-                        <form className="consultation-form" onSubmit={(e) => { e.preventDefault(); finishConsultation(); }}>
-                          <div className="form-group">
-                            <label>Diagnosis</label>
-                            <textarea
-                              rows={2}
-                              value={newRecord.diagnosis}
-                              onChange={(e) => setNewRecord({ ...newRecord, diagnosis: e.target.value })}
-                              placeholder="e.g. Acute Bronchitis"
-                              required
-                            />
+                  {/* Row 1: Search Section */}
+                  <div className="search-box-container">
+                    <select
+                      className="consultation-search-select"
+                      value={consultationSearchType}
+                      onChange={(e) => setConsultationSearchType(e.target.value as any)}
+                    >
+                      <option value="id">Find by ID</option>
+                      <option value="name">Find by Name</option>
+                      <option value="phone">Find by Phone</option>
+                      <option value="email">Find by Email</option>
+                    </select>
+                    <input
+                      className="consultation-search-input"
+                      type="text"
+                      placeholder={`Enter Patient ${consultationSearchType}...`}
+                      value={consultationSearchQuery}
+                      onChange={(e) => setConsultationSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleConsultationSearch()}
+                    />
+                    <button className="consultation-search-btn" onClick={handleConsultationSearch}>Find Patient</button>
+                    {consultationError && <span className="search-error">{consultationError}</span>}
+                  </div>
+
+                  <div className="consultation-content">
+                    {currentPatient ? (
+                      <>
+                        <div className="patient-profile-card">
+                          <div className="profile-avatar">👤</div>
+                          <h3>{currentPatient.firstName} {currentPatient.lastName}</h3>
+                          <div className="profile-details">
+                            <p><strong>ID:</strong> {currentPatient.id}</p>
+                            <p><strong>Age:</strong> {currentPatient.age || 'N/A'}</p>
+                            <p><strong>Gender:</strong> {currentPatient.gender || 'N/A'}</p>
+                            <p><strong>Phone:</strong> {currentPatient.phone}</p>
+                            <p><strong>Email:</strong> {currentPatient.email}</p>
                           </div>
-                          <div className="form-group">
-                            <label>Treatment Plan</label>
-                            <textarea
-                              rows={4}
-                              value={newRecord.treatment}
-                              onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
-                              placeholder="e.g. Amoxicillin 500mg TDS for 5 days..."
-                              required
-                            />
-                          </div>
-                          <div className="form-group">
-                            <label>Clinical Notes</label>
-                            <textarea
-                              rows={3}
-                              value={newRecord.notes}
-                              onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
-                              placeholder="Patient complains of dry cough..."
-                            />
-                          </div>
-                          <button type="submit" className="finish-btn">Finish Consultation</button>
-                        </form>
+                        </div>
+
+                        <div className="consultation-form-container">
+                          <h3>Clinical Notes & Diagnosis</h3>
+                          <form className="consultation-form" onSubmit={(e) => { e.preventDefault(); finishConsultation(); }}>
+                            <div className="form-group">
+                              <label>Diagnosis</label>
+                              <textarea
+                                rows={2}
+                                value={newRecord.diagnosis}
+                                onChange={(e) => setNewRecord({ ...newRecord, diagnosis: e.target.value })}
+                                placeholder="e.g. Acute Bronchitis"
+                                required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Treatment Plan</label>
+                              <textarea
+                                rows={4}
+                                value={newRecord.treatment}
+                                onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
+                                placeholder="e.g. Amoxicillin 500mg TDS for 5 days..."
+                                required
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>Clinical Notes</label>
+                              <textarea
+                                rows={3}
+                                value={newRecord.notes}
+                                onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
+                                placeholder="Patient complains of dry cough..."
+                              />
+                            </div>
+                            <button type="submit" className="finish-btn">Finish Consultation</button>
+                          </form>
+                        </div>
+                      </>
+                    ) : (
+                      /* Row 2: Information Section (Only visible when no patient selected) */
+                      <div className="consultation-info-box">
+                        <p>No patient selected for consultation.</p>
+                        <p style={{ fontSize: '0.95rem', color: '#888' }}>You can use the search bar above or select a patient from the 'All Patients' tab.</p>
+                        <button className="action-btn" onClick={() => setActiveTab('patients')}>View All Patients</button>
                       </div>
-                    </>
-                  ) : (
-                    <div className="no-results" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                      <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>No patient selected for consultation.</p>
-                      <button className="action-btn active" onClick={() => setActiveTab('patients')}>Select a Patient from List</button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </section>
               </div>
 

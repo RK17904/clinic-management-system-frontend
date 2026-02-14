@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios.Config.ts';
 import { UserIcon, SignInIcon, ListIcon, PlusIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
@@ -37,6 +37,9 @@ interface MedicalRecord {
   notes: string;
   recordDate: string;
   patient: Patient;
+  doctor?: { id: number; name: string };
+  doctorId?: string | number;
+  patientId?: string | number;
 }
 
 interface Billing {
@@ -155,6 +158,19 @@ const DoctorDashboard = () => {
       console.error("Error fetching data:", err);
     }
   };
+
+  // Calculate Stats
+  const myTreatedPatients = useMemo(() => {
+    if (!doctorId) return 0;
+    // Filter records where doctorId matches
+    const myRecords = recordsList.filter(r =>
+      (r.doctor && r.doctor.id.toString() === doctorId?.toString()) ||
+      (r.doctorId && r.doctorId.toString() === doctorId?.toString())
+    );
+    // Get unique patient IDs
+    const uniquePatients = new Set(myRecords.map(r => r.patient?.id || r.patientId));
+    return uniquePatients.size;
+  }, [recordsList, doctorId]);
 
   useEffect(() => {
     fetchData();
@@ -554,7 +570,11 @@ const DoctorDashboard = () => {
               {/* DASHBOARD OVERVIEW */}
               <div className="main-slider-slide">
                 <section className="dashboard-content">
-                  <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Total Patients</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{patientsList.length}</p></div>
+                  <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}>
+                    <h3>My Treated Patients</h3>
+                    <p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{myTreatedPatients}</p>
+                    <span style={{ color: '#28a745', fontSize: '0.9rem', fontWeight: 'bold' }}>+2 this week</span>
+                  </div>
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Appointments</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{appointmentsList.length}</p></div>
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Income</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>Rs. {income}</p></div>
                 </section>

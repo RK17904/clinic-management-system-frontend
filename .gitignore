@@ -1,0 +1,36 @@
+# Dependencies (මේවා GitHub යවන්න එපා, GB ගණන් ලොකුයි)
+node_modules/
+.pnp
+.pnp.js
+
+# Testing coverage
+coverage/
+
+# Production Build Folders (මේවා අපි අලුතෙන් හදාගන්න පුළුවන් ඒවා)
+dist/
+build/
+
+# Environment Variables (රහස්‍ය දත්ත තියෙන ෆයිල් - ආරක්ෂාවට ඉතා වැදගත්)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs (වැඩක් නැති ලොග් ෆයිල්)
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files (ඔයාගේ VS Code සෙටින්ග්ස් අනිත් අයට ඕන නෑ)
+.idea
+.vscode/
+*.swp
+*.swo
+*.swn
+.DS_Store
+Thumbs.db
+
+# Optional: eslint cache
+.eslintcache

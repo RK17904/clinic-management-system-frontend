@@ -76,7 +76,8 @@ const PatientSignIn = ({setViewMode}: PatientSignInProps) => {
         <div className="white-panel-header">
           <p>
             Don't have an account? <br />
-            <span onClick={() => navigate('/patient-signup')} className="toggle-link">Sign Up</span>
+            {/* Warning Fix: navigate වෙනුවට setViewMode භාවිතා කළෙමි */}
+            <span onClick={() => setViewMode('patientSignUp')} className="toggle-link">Sign Up</span>
           </p>
         </div>
 

@@ -16,6 +16,8 @@ const AdminLogin = () => {
     setError('');
 
     try {
+      // Backend එකේ Admin Login එකට අදාළ හරිම path එක මෙතන දාන්න.
+      // උදාහරණය: '/admins/login' හෝ '/auth/login'
       const response = await api.post('/admins/login', {
         email: email,
         password: password
@@ -23,6 +25,7 @@ const AdminLogin = () => {
 
       if (response.status === 200) {
         console.log("Admin Login Success!");
+        // Admin දත්ත LocalStorage එකේ Save කරගැනීම
         localStorage.setItem('adminData', JSON.stringify(response.data));
         navigate('/admin-dashboard'); 
       }
@@ -34,7 +37,7 @@ const AdminLogin = () => {
 
   return (
     <>
-      {/* -Blue Panel--- */}
+      {/* --- Blue Panel --- */}
       <div className="form-panel blue-panel">
         <h1>HealthCare +</h1>
         <h2>Admin Portal</h2>

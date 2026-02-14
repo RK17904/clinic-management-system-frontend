@@ -631,52 +631,29 @@ const DoctorDashboard = () => {
                   <div className="consultation-content patient-profile-container">
                     {currentPatient ? (
                       <>
-                        <div className="patient-profile-card">
-                          <div className="profile-avatar">👤</div>
-                          <h3>{currentPatient.firstName} {currentPatient.lastName}</h3>
-                          <div className="profile-details">
-                            <p><strong>ID:</strong> {currentPatient.id}</p>
-                            <p><strong>Age:</strong> {currentPatient.age || 'N/A'}</p>
-                            <p><strong>Gender:</strong> {currentPatient.gender || 'N/A'}</p>
-                            <p><strong>Phone:</strong> {currentPatient.phone}</p>
+                        <div className="patient-detail-card">
+                          <div className="patient-info-left">
+                            <h3>{currentPatient.firstName} {currentPatient.lastName}</h3>
                             <p><strong>Email:</strong> {currentPatient.email}</p>
+                            <p><strong>Phone:</strong> {currentPatient.phone}</p>
                           </div>
                         </div>
 
-                        <div className="consultation-form-container">
-                          <h3>Clinical Notes & Diagnosis</h3>
-                          <form className="consultation-form" onSubmit={(e) => { e.preventDefault(); finishConsultation(); }}>
-                            <div className="form-group">
-                              <label>Diagnosis</label>
-                              <textarea
-                                rows={2}
-                                value={newRecord.diagnosis}
-                                onChange={(e) => setNewRecord({ ...newRecord, diagnosis: e.target.value })}
-                                placeholder="e.g. Acute Bronchitis"
-                                required
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Treatment Plan</label>
-                              <textarea
-                                rows={4}
-                                value={newRecord.treatment}
-                                onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
-                                placeholder="e.g. Amoxicillin 500mg TDS for 5 days..."
-                                required
-                              />
-                            </div>
-                            <div className="form-group">
-                              <label>Clinical Notes</label>
-                              <textarea
-                                rows={3}
-                                value={newRecord.notes}
-                                onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
-                                placeholder="Patient complains of dry cough..."
-                              />
-                            </div>
-                            <button type="submit" className="finish-btn">Finish Consultation</button>
-                          </form>
+                        <div className="treatment-form-section">
+                          <h3>Diagnosis & Treatment</h3>
+                          <textarea
+                            rows={3}
+                            placeholder="Diagnosis"
+                            value={newRecord.diagnosis}
+                            onChange={(e) => setNewRecord({ ...newRecord, diagnosis: e.target.value })}
+                          />
+                          <textarea
+                            rows={4}
+                            placeholder="Treatment Plan"
+                            value={newRecord.treatment}
+                            onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
+                          />
+                          <button className="finish-btn" onClick={finishConsultation}>Finish Consultation & Save Record</button>
                         </div>
                       </>
                     ) : (

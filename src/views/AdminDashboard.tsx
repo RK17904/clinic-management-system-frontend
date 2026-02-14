@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, ListIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
+import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts';
 
 // types
@@ -257,6 +257,13 @@ const AdminDashboard = () => {
   const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
   const [patientsList, setPatientsList] = useState<Patient[]>([]);
   const [appointmentsList, setAppointmentsList] = useState<Appointment[]>([]);
+
+  // Search State
+  const [doctorSearchType, setDoctorSearchType] = useState<'id' | 'name' | 'email' | 'phone'>('id');
+  const [doctorSearchQuery, setDoctorSearchQuery] = useState('');
+
+  const [patientSearchType, setPatientSearchType] = useState<'id' | 'name' | 'email' | 'phone'>('id');
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
 
   // Doctor Form State 
   const [newDoctor, setNewDoctor] = useState<Doctor>({
@@ -535,11 +542,8 @@ const AdminDashboard = () => {
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
-                    <button className={`action-btn ${doctorSubTab === 'view' ? 'active' : ''}`} onClick={() => setDoctorSubTab('view')}>
-                      <ListIcon /> View Doctors
-                    </button>
-                    <button className={`action-btn ${doctorSubTab === 'add' ? 'active' : ''}`} onClick={() => setDoctorSubTab('add')}>
-                      <PlusIcon /> Add Doctor
+                    <button className={`action-btn ${doctorSubTab === 'add' ? 'active' : ''}`} onClick={() => setDoctorSubTab(doctorSubTab === 'add' ? 'view' : 'add')}>
+                      <PlusIcon /> {doctorSubTab === 'add' ? 'View Doctors' : 'Add Doctor'}
                     </button>
                   </div>
 
@@ -547,13 +551,47 @@ const AdminDashboard = () => {
                     <div className={`slider-track ${doctorSubTab === 'add' ? 'slide-left' : ''}`}>
                       {/* List */}
                       <div className="slider-slide">
+                        <div style={{ padding: '0 20px 20px 20px' }}>
+                          <div className="search-box-container" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                            <select
+                              value={doctorSearchType}
+                              onChange={(e) => setDoctorSearchType(e.target.value as any)}
+                              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+                            >
+                              <option value="id">ID</option>
+                              <option value="name">Name</option>
+                              <option value="email">Email</option>
+                              <option value="phone">Phone</option>
+                            </select>
+                            <div style={{ position: 'relative', flex: 1 }}>
+                              <input
+                                type="text"
+                                placeholder={`Search Doctors by ${doctorSearchType}...`}
+                                value={doctorSearchQuery}
+                                onChange={(e) => setDoctorSearchQuery(e.target.value)}
+                                style={{ width: '100%', padding: '8px 10px 8px 35px', borderRadius: '6px', border: '1px solid #ddd' }}
+                              />
+                              <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }}>
+                                <SearchIcon width="16" height="16" />
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                         <div className="table-container">
                           <table className="data-table">
                             <thead>
                               <tr><th>ID</th><th>Name</th><th>Specialization</th><th>Email</th><th>Phone</th><th>Exp</th></tr>
                             </thead>
                             <tbody>
-                              {doctorsList.map((d) => (
+                              {doctorsList.filter(d => {
+                                if (!doctorSearchQuery) return true;
+                                const q = doctorSearchQuery.toLowerCase();
+                                if (doctorSearchType === 'id') return d.id?.toString().includes(q);
+                                if (doctorSearchType === 'name') return d.name.toLowerCase().includes(q);
+                                if (doctorSearchType === 'email') return d.email.toLowerCase().includes(q);
+                                if (doctorSearchType === 'phone') return d.phone.includes(q);
+                                return true;
+                              }).map((d) => (
                                 <tr key={d.id}>
                                   <td>{d.id}</td><td>{d.name}</td><td>{d.specialization}</td><td>{d.email}</td><td>{d.phone}</td><td>{d.experience}</td>
                                 </tr>
@@ -594,10 +632,43 @@ const AdminDashboard = () => {
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="table-container">
+                    <div className="search-box-container" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                      <select
+                        value={patientSearchType}
+                        onChange={(e) => setPatientSearchType(e.target.value as any)}
+                        style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+                      >
+                        <option value="id">ID</option>
+                        <option value="name">Name</option>
+                        <option value="email">Email</option>
+                        <option value="phone">Phone</option>
+                      </select>
+                      <div style={{ position: 'relative', flex: 1 }}>
+                        <input
+                          type="text"
+                          placeholder={`Search Patients by ${patientSearchType}...`}
+                          value={patientSearchQuery}
+                          onChange={(e) => setPatientSearchQuery(e.target.value)}
+                          style={{ width: '100%', padding: '8px 10px 8px 35px', borderRadius: '6px', border: '1px solid #ddd' }}
+                        />
+                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }}>
+                          <SearchIcon width="16" height="16" />
+                        </span>
+                      </div>
+                    </div>
+
                     <table className="data-table">
                       <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
                       <tbody>
-                        {patientsList.map((p) => (
+                        {patientsList.filter(p => {
+                          if (!patientSearchQuery) return true;
+                          const q = patientSearchQuery.toLowerCase();
+                          if (patientSearchType === 'id') return p.id.toString().includes(q);
+                          if (patientSearchType === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(q);
+                          if (patientSearchType === 'email') return p.email.toLowerCase().includes(q);
+                          if (patientSearchType === 'phone') return p.phone.includes(q);
+                          return true;
+                        }).map((p) => (
                           <tr key={p.id}><td>{p.id}</td><td>{p.firstName} {p.lastName}</td><td>{p.email}</td><td>{p.phone}</td></tr>
                         ))}
                       </tbody>

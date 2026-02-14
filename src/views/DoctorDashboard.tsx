@@ -272,27 +272,9 @@ const DoctorDashboard = () => {
     }
   };
 
-  const handleDeleteRecord = async (id: number) => {
-    if (!window.confirm("Delete this record?")) return;
-    try {
-      await api.delete(`/medical-records/${id}`);
-      fetchData();
-    } catch { alert("Error Deleting Record!"); }
-  };
 
-  const startEditRecord = (r: MedicalRecord) => {
-    setNewRecord({
-      patientId: r.patient?.id?.toString() || '',
-      doctorId: '1',
-      diagnosis: r.diagnosis,
-      treatment: r.treatment,
-      notes: r.notes,
-      recordDate: r.recordDate
-    });
-    setIsEditing(true);
-    setEditingId(r.id);
-    setRecordSubTab('add');
-  };
+
+
 
   // ACTIONS: BILLING 
   const handleSaveBill = async () => {
@@ -430,6 +412,14 @@ const DoctorDashboard = () => {
       notes: '',
       recordDate: new Date().toISOString().split('T')[0]
     });
+  };
+
+  const handleTreatNow = (appointment: Appointment) => {
+    if (appointment.patient) {
+      startConsultation(appointment.patient);
+    } else {
+      alert("Patient details not found for this appointment.");
+    }
   };
 
   const finishConsultation = async () => {
@@ -802,6 +792,9 @@ const DoctorDashboard = () => {
                                         <button style={{ ...btnStyle, background: '#dc3545' }} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
                                       </>
                                     )}
+                                    {a.status.toUpperCase() === 'APPROVED' && (
+                                      <button className="treat-now-btn" onClick={() => handleTreatNow(a)}>Treat Now</button>
+                                    )}
 
                                   </td>
                                 </tr>
@@ -839,7 +832,7 @@ const DoctorDashboard = () => {
                       <div className="slider-slide">
                         <div className="table-container">
                           <table className="data-table">
-                            <thead><tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Treatment</th><th>Actions</th></tr></thead>
+                            <thead><tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Treatment</th></tr></thead>
                             <tbody>
                               {recordsList.map(r => (
                                 <tr key={r.id}>
@@ -847,10 +840,6 @@ const DoctorDashboard = () => {
                                   <td>{r.patient ? r.patient.firstName : 'N/A'}</td>
                                   <td>{r.diagnosis}</td>
                                   <td>{r.treatment}</td>
-                                  <td>
-                                    <button style={{ ...btnStyle, background: '#FFC107', color: 'black' }} onClick={() => startEditRecord(r)}>Edit</button>
-                                    <button style={{ ...btnStyle, background: '#F44336' }} onClick={() => handleDeleteRecord(r.id)}>Delete</button>
-                                  </td>
                                 </tr>
                               ))}
                             </tbody>

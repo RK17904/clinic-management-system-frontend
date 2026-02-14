@@ -4,7 +4,7 @@ import { UserIcon, SignInIcon, BellIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts'; 
 import logo from '../assets/logo.png';
 
-// --- Interfaces ---
+// Interfaces 
 interface Doctor {
   id: number;
   name: string;
@@ -35,7 +35,7 @@ const Home = () => {
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- CALENDAR STATE ---
+  // CALENDAR STATE
   const [currentDate, setCurrentDate] = useState(new Date()); 
   const [selectedDate, setSelectedDate] = useState<string | null>(null); 
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -43,11 +43,11 @@ const Home = () => {
   // Navigation State
   const [activeSection, setActiveSection] = useState('hero');
 
-  // --- NOTIFICATION STATE ---
+  // NOTIFICATION STATE
   const [notifications, setNotifications] = useState<string[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // --- 1. INSTANT AUTH CHECK ---
+  // AUTH CHECK 
   useEffect(() => {
     const checkAuth = () => {
       try {
@@ -77,18 +77,18 @@ const Home = () => {
     checkAuth();
   }, []);
 
-  // --- 2. DATA FETCHING ---
+  // DATA FETCHING
   useEffect(() => {
     const fetchHomeData = async () => {
       setIsLoading(true);
       
-      // A. Fetch Doctors (Public Info)
+      // Fetch Doctors (Public Info)
       try {
         const doctorsRes = await api.get('/doctors');
         setDoctors(doctorsRes.data); 
       } catch (e) { console.error("Could not fetch doctors."); }
 
-      // B. Fetch Appointments (Only if Patient is logged in)
+      // Fetch Appointments (Only for patient login)
       if (userRole === 'patient' && userId) {
         try {
           const appRes = await api.get('/appointments');
@@ -107,19 +107,19 @@ const Home = () => {
     fetchHomeData();
   }, [userRole, userId]); 
 
-  // --- 3. GENERATE NOTIFICATIONS (Logic) ---
+  // notification logic
   useEffect(() => {
     if (userRole === 'patient') {
        const newNotifs: string[] = [];
 
-       // 1. Rejected Appointments
+       // Rejected Appointments
        myAppointments.forEach(a => {
            if (a.status === 'REJECTED') {
                newNotifs.push(`⚠️ Your appointment with Dr. ${a.doctor?.name || 'Unknown'} on ${a.date} was rejected.`);
            }
        });
 
-       // 2. Upcoming Appointments (Within 3 days)
+       // Upcoming Appointments (Within 3 days)
        const today = new Date();
        const threeDaysLater = new Date();
        threeDaysLater.setDate(today.getDate() + 3);
@@ -131,7 +131,7 @@ const Home = () => {
            }
        });
 
-       // 3. New Doctor Added (Find newest by ID)
+       // Doctor Added (Find newest by ID)
        if (doctors.length > 0) {
            // Sort a copy of the array by ID descending to find the newest
            const sortedDocs = [...doctors].sort((a, b) => b.id - a.id);
@@ -143,7 +143,7 @@ const Home = () => {
     }
   }, [userRole, myAppointments, doctors]);
 
-  // --- CALENDAR LOGIC ---
+  // CALENDAR LOGIC 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
@@ -193,7 +193,7 @@ const Home = () => {
     return days;
   };
 
-  // --- SCROLL ANIMATION OBSERVER ---
+  // SCROLL ANIMATION OBSERVER 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -216,7 +216,7 @@ const Home = () => {
     };
   }, [doctors, myAppointments, isLoading]); 
 
-  // --- ACTIVE SECTION OBSERVER ---
+  // ACTIVE SECTION OBSERVER 
   useEffect(() => {
     const sectionIds = ['hero', 'appointments', 'doctors', 'about', 'contact'];
     const sections = sectionIds.map(id => document.getElementById(id));
@@ -230,7 +230,7 @@ const Home = () => {
     return () => navObserver.disconnect();
   }, []);
 
-  // --- Handlers ---
+  // Handlers 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
@@ -256,7 +256,7 @@ const Home = () => {
 
   const getNavStyle = (sectionId: string) => activeSection === sectionId ? { fontWeight: 'bold', color: '#0056b3' } : {};
 
-  // --- Render Helper for Doctor Card ---
+  // Render for Doctor Card 
   const renderDoctorCard = (doc: Doctor, key: string | number) => (
     <div key={key} className="doctor-card" style={{minWidth: '300px'}}>
       <div className="doc-avatar">👨‍⚕️</div>
@@ -415,17 +415,17 @@ const Home = () => {
             {isLoading && doctors.length === 0 ? (
                 <p>Loading Specialists...</p>
             ) : doctors.length > 3 ? (
-                // --- SCROLLING BANNER (>3 Doctors) ---
+                // SCROLLING BANNER (>3 Doctors) 
                 <div className="scrolling-wrapper">
                     <div className="scrolling-track">
-                        {/* Duplicate list to create seamless loop */}
+                        {/* loop */}
                         {[...doctors, ...doctors].map((doc, index) => 
                             renderDoctorCard(doc, `${doc.id}-scroll-${index}`)
                         )}
                     </div>
                 </div>
             ) : (
-                // --- STATIC GRID (<=3 Doctors) ---
+                // STATIC GRID (<=3 Doctors) 
                 <div className="cards-grid">
                     {doctors.length > 0 ? doctors.map((doc) => 
                         renderDoctorCard(doc, doc.id)
@@ -453,7 +453,7 @@ const Home = () => {
         <div className="section-container reveal-on-scroll">
           <h2 style={{color: 'white'}}>Contact Us</h2>
           <div className="contact-grid">
-            <div className="contact-item"><h4>Email</h4><p style={{color: '#9ca3af'}}>support@healthcareplus.com</p></div>
+            <div className="contact-item"><h4>Email</h4><p style={{color: '#9ca3af'}}>clinicmanagementsystem3@gmail.com</p></div>
             <div className="contact-item"><h4>Phone</h4><p style={{color: '#9ca3af'}}>+94 11 234 5678</p></div>
             <div className="contact-item"><h4>Address</h4><p style={{color: '#9ca3af'}}>Kandy road, Dalugama, Kelaniya.</p></div>
           </div>

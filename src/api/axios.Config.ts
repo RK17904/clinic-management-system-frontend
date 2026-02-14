@@ -1,13 +1,13 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8083/api', // Make sure this matches your backend port
+  baseURL: 'http://localhost:8080/api', 
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// --- INTERCEPTOR: Attach Token to Requests ---
+// --- Attach Token to Requests ---
 api.interceptors.request.use(
   (config) => {
     // Check for any stored user data
@@ -20,7 +20,7 @@ api.interceptors.request.use(
     // Logic to find the active token
     if (adminData) {
       const parsed = JSON.parse(adminData);
-      token = parsed.token || parsed.id; // Adjust based on what your backend sends
+      token = parsed.token || parsed.id; 
     } else if (doctorData) {
       const parsed = JSON.parse(doctorData);
       token = parsed.token || parsed.id;

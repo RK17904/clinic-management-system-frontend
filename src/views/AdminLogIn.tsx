@@ -28,13 +28,13 @@ const AdminLogin = () => {
       }
     } catch (err) {
       console.error(err);
-      setError("Invalid Email or Password. Please Check Database.");
+      setError("Invalid Email or Password.");
     }
   };
 
   return (
     <>
-      {/* - Blue Panel --- */}
+      {/* -Blue Panel--- */}
       <div className="form-panel blue-panel">
         <h1>HealthCare +</h1>
         <h2>Admin Portal</h2>
@@ -42,7 +42,7 @@ const AdminLogin = () => {
         <img src={signInIllustration} alt="Admin Login" className="panel-image" />
       </div>
 
-      {/* ---  form --- */}
+      {/* --- Form --- */}
       <div className="form-panel white-panel">
         <div className="form-content">
           <h1 className="form-title" style={{color: '#d9534f'}}>Admin Login</h1>

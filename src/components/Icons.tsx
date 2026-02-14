@@ -103,4 +103,3 @@ export const BellIcon = () => ( //notification icon
     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
   </svg>
 );
-

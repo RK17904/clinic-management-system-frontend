@@ -550,12 +550,12 @@ const AdminDashboard = () => {
                         <div className="table-container">
                           <table className="data-table">
                             <thead>
-                              <tr><th>Name</th><th>Specialization</th><th>Email</th><th>Phone</th><th>Exp</th></tr>
+                              <tr><th>ID</th><th>Name</th><th>Specialization</th><th>Email</th><th>Phone</th><th>Exp</th></tr>
                             </thead>
                             <tbody>
                               {doctorsList.map((d) => (
                                 <tr key={d.id}>
-                                  <td>{d.name}</td><td>{d.specialization}</td><td>{d.email}</td><td>{d.phone}</td><td>{d.experience}</td>
+                                  <td>{d.id}</td><td>{d.name}</td><td>{d.specialization}</td><td>{d.email}</td><td>{d.phone}</td><td>{d.experience}</td>
                                 </tr>
                               ))}
                             </tbody>

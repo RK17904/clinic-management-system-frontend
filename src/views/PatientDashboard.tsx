@@ -65,9 +65,30 @@ const PatientDashboard = () => {
     time: '',
     notes: ''
   });
+  
+  // Calendar View State (for the custom date picker)
+  const [calendarView, setCalendarView] = useState(new Date());
 
-  // Get Today's Date for min attribute (Prevent Past Dates)
-  const today = new Date().toISOString().split('T')[0];
+  // Feedback State
+  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Auto-clear feedback after 5 seconds
+  useEffect(() => {
+    if (feedback) {
+      const timer = setTimeout(() => setFeedback(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [feedback]);
+
+  // Get Today's Date String (Local Time) to prevent timezone bugs
+  const getTodayString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const today = getTodayString();
 
   // Generate 15-min Time Slots (9:00 AM to 5:00 PM)
   const timeSlots = useMemo(() => {
@@ -161,10 +182,30 @@ const PatientDashboard = () => {
     return isInactive || isPast;
   });
 
+  // --- CUSTOM CALENDAR LOGIC ---
+  const daysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const startDayOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+
+  const handleMonthChange = (offset: number) => {
+    setCalendarView(prev => new Date(prev.getFullYear(), prev.getMonth() + offset, 1));
+  };
+
+  const handleDateClick = (day: number) => {
+    const year = calendarView.getFullYear();
+    const month = String(calendarView.getMonth() + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    const dateString = `${year}-${month}-${d}`;
+
+    // Prevent selecting past dates
+    if (dateString < today) return;
+
+    setNewBooking({ ...newBooking, date: dateString, time: '' });
+  };
+
   // Handle Booking
   const handleBookAppointment = async () => {
     if (!patient || !newBooking.doctorId || !newBooking.date || !newBooking.time) {
-      alert("Please select a doctor, date and time!");
+      setFeedback({ message: "Please select a doctor, date and time!", type: 'error' });
       return;
     }
 
@@ -185,7 +226,9 @@ const PatientDashboard = () => {
       console.log("Sending Payload:", payload);
 
       await api.post('/appointments', payload);
-      alert("Appointment Request Sent Successfully!");
+      
+      // Success Feedback
+      setFeedback({ message: "Appointment Request Sent Successfully!", type: 'success' });
 
       setShowBookingForm(false);
       setNewBooking({ doctorId: '', date: '', time: '', notes: '' });
@@ -198,11 +241,11 @@ const PatientDashboard = () => {
 
     } catch (error: any) {
       console.error(error);
-      if (error.response && error.response.data) {
-        alert("Booking Failed: " + (typeof error.response.data === 'string' ? error.response.data : error.response.data.message));
-      } else {
-        alert("Booking Failed! Please try again.");
-      }
+      const errorMsg = error.response && error.response.data 
+        ? (typeof error.response.data === 'string' ? error.response.data : error.response.data.message)
+        : "Booking Failed! Please try again.";
+        
+      setFeedback({ message: "Booking Failed: " + errorMsg, type: 'error' });
     }
   };
 
@@ -212,9 +255,14 @@ const PatientDashboard = () => {
   const getStatusStyle = (status: string) => {
     const s = status.toUpperCase();
     if(s === 'PENDING') return { bg: '#FFF3CD', color: '#856404' };
-    if(s === 'APPROVED' || s === 'CONFIRMED' || s === 'SCHEDULED') return { bg: '#D1E7DD', color: '#0F5132' };
+    if(s === 'APPROVED' || s === 'CONFIRMED' || s === 'SCHEDULED' || s === 'COMPLETED') return { bg: '#D1E7DD', color: '#0F5132' };
     return { bg: '#F8D7DA', color: '#721C24' }; // Rejected/Cancelled
   };
+
+  // Calendar render helpers
+  const currentMonthDays = daysInMonth(calendarView);
+  const startDay = startDayOfMonth(calendarView);
+  const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   return (
     <div className="dashboard-layout" style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
@@ -312,9 +360,33 @@ const PatientDashboard = () => {
                         display: 'flex', alignItems: 'center', gap: '5px'
                       }}
                     >
-                      {showBookingForm ? 'Go Back' : <><PlusIcon /> Book New Appointment</>}
+                      {showBookingForm ? 'Cancel Booking' : <><PlusIcon /> Book New Appointment</>}
                     </button>
                   </div>
+                  
+                  {/* FEEDBACK BANNER */}
+                  {feedback && (
+                    <div style={{
+                      padding: '12px 16px',
+                      marginBottom: '20px',
+                      borderRadius: '8px',
+                      backgroundColor: feedback.type === 'success' ? '#d4edda' : '#f8d7da',
+                      color: feedback.type === 'success' ? '#155724' : '#721c24',
+                      border: `1px solid ${feedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
+                    }}>
+                      <span style={{ fontWeight: 500 }}>{feedback.message}</span>
+                      <button 
+                        onClick={() => setFeedback(null)} 
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', opacity: 0.7 }}
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  )}
 
                   {/* BOOKING FORM */}
                   {showBookingForm && (
@@ -322,8 +394,9 @@ const PatientDashboard = () => {
                       <div className="card-body p-4">
                         <h4 className="card-title mb-4 text-primary" style={{ color: '#0056b3', marginBottom: '15px' }}>📅 Book New Appointment</h4>
 
-                        <div className="row g-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                          {/* Doctor Select */}
+                        <div className="row g-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                          
+                          {/* Doctor Select - Full Width */}
                           <div className="col-md-12" style={{ gridColumn: '1 / -1' }}>
                             <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Select Doctor</label>
                             <select
@@ -332,7 +405,7 @@ const PatientDashboard = () => {
                               onChange={(e) => {
                                 setNewBooking({ ...newBooking, doctorId: e.target.value, time: '' }); 
                               }}
-                              style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+                              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '1rem' }}
                             >
                               <option value="">-- Choose a Specialist --</option>
                               {doctors.map(d => (
@@ -341,22 +414,97 @@ const PatientDashboard = () => {
                             </select>
                           </div>
 
-                          {/* Date Picker (with min=today) */}
-                          <div className="col-md-6" style={{ gridColumn: '1 / -1' }}>
-                            <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date</label>
-                            <input
-                              type="date"
-                              className="form-control"
-                              min={today} // Prevent past dates
-                              value={newBooking.date}
-                              onChange={e => setNewBooking({ ...newBooking, date: e.target.value, time: '' })} 
-                              style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
-                            />
+                          {/* Custom Inline Calendar - Full Width */}
+                          <div className="col-md-12" style={{ gridColumn: '1 / -1' }}>
+                            <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Select Date</label>
+                            
+                            <div style={{ 
+                              background: 'white', 
+                              borderRadius: '12px', 
+                              border: '1px solid #eee', 
+                              padding: '20px',
+                              boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                <button 
+                                  onClick={() => handleMonthChange(-1)}
+                                  type="button"
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#0056b3', padding: '5px' }}
+                                >
+                                  &lt; Prev
+                                </button>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#333' }}>
+                                  {calendarView.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                                </span>
+                                <button 
+                                  onClick={() => handleMonthChange(1)}
+                                  type="button"
+                                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#0056b3', padding: '5px' }}
+                                >
+                                  Next &gt;
+                                </button>
+                              </div>
+
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center' }}>
+                                {/* Weekday Headers */}
+                                {weekDays.map(day => (
+                                  <div key={day} style={{ fontWeight: 'bold', color: '#888', fontSize: '0.9rem', marginBottom: '5px' }}>
+                                    {day}
+                                  </div>
+                                ))}
+
+                                {/* Empty Slots for Start of Month */}
+                                {Array.from({ length: startDay }).map((_, i) => (
+                                  <div key={`empty-${i}`} />
+                                ))}
+
+                                {/* Days */}
+                                {Array.from({ length: currentMonthDays }).map((_, i) => {
+                                  const day = i + 1;
+                                  const year = calendarView.getFullYear();
+                                  const month = String(calendarView.getMonth() + 1).padStart(2, '0');
+                                  const dStr = String(day).padStart(2, '0');
+                                  const dateStr = `${year}-${month}-${dStr}`;
+                                  
+                                  const isSelected = newBooking.date === dateStr;
+                                  const isToday = dateStr === today;
+                                  const isPast = dateStr < today;
+
+                                  return (
+                                    <button
+                                      key={day}
+                                      type="button"
+                                      disabled={isPast}
+                                      onClick={() => handleDateClick(day)}
+                                      style={{
+                                        padding: '10px 0',
+                                        background: isSelected ? '#0056b3' : isToday ? '#e6f0ff' : 'transparent',
+                                        color: isSelected ? 'white' : isPast ? '#ccc' : '#333',
+                                        border: isToday && !isSelected ? '1px solid #0056b3' : 'none',
+                                        borderRadius: '8px',
+                                        cursor: isPast ? 'not-allowed' : 'pointer',
+                                        fontWeight: isSelected || isToday ? 'bold' : 'normal',
+                                        transition: 'background 0.2s'
+                                      }}
+                                    >
+                                      {day}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            
+                            {/* Selected Date Indicator */}
+                            {newBooking.date && (
+                                <div style={{ marginTop: '10px', textAlign: 'right', fontSize: '0.9rem', color: '#0056b3', fontWeight: 'bold' }}>
+                                    Selected: {newBooking.date}
+                                </div>
+                            )}
                           </div>
 
-                          {/* Time Slot Selection Grid */}
+                          {/* Time Slot Selection Grid - Only shows when Doctor & Date are selected */}
                           {newBooking.doctorId && newBooking.date && (
-                            <div className="col-12" style={{ gridColumn: '1 / -1', marginTop: '15px' }}>
+                            <div className="col-12" style={{ gridColumn: '1 / -1' }}>
                               <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Available Time Slots</label>
                               <div style={{
                                 display: 'grid',
@@ -403,7 +551,7 @@ const PatientDashboard = () => {
                               placeholder="e.g. Annual checkup, Flu symptoms..."
                               value={newBooking.notes}
                               onChange={e => setNewBooking({ ...newBooking, notes: e.target.value })}
-                              style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}
+                              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}
                             />
                           </div>
 
@@ -486,7 +634,17 @@ const PatientDashboard = () => {
                           <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No Appointment History</td></tr>
                         ) : (
                           historyAppointments.map(appt => {
-                            const style = getStatusStyle(appt.status);
+                            
+                            // LOGIC: If date is in past AND was approved/scheduled/confirmed -> Show as COMPLETED
+                            let displayStatus = appt.status;
+                            const isPast = appt.date < today;
+                            const isApproved = ['APPROVED', 'CONFIRMED', 'SCHEDULED'].includes(appt.status.toUpperCase());
+                            
+                            if (isPast && isApproved) {
+                                displayStatus = 'COMPLETED';
+                            }
+
+                            const style = getStatusStyle(displayStatus);
                             return (
                               <tr key={appt.id}>
                                 <td>{appt.date}</td>
@@ -497,7 +655,7 @@ const PatientDashboard = () => {
                                     padding: '5px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 'bold', textTransform: 'uppercase',
                                     backgroundColor: style.bg, color: style.color
                                   }}>
-                                    {appt.status}
+                                    {displayStatus}
                                   </span>
                                 </td>
                               </tr>

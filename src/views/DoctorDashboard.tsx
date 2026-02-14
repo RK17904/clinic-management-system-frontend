@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../api/axios.Config.ts';
+import api from '../api/axios.Config.ts'; // Using the configured API instance
 import { UserIcon, SignInIcon, ListIcon, PlusIcon, UsersIcon, CalendarIcon } from '../components/Icons.tsx';
 import logo from '../assets/logo.png';
 
@@ -24,10 +24,11 @@ interface Appointment {
   patient: Patient;
 }
 
-// Roster Interface
+// Roster Interface (Frontend use)
 interface RosterEntry {
   date: string;
-  status: 'DUTY' | 'HALFDAY-MORNING' | 'HALFDAY-EVENING' | 'OFF';
+  status: string;
+  shiftStatus?: string; // Backend sends shiftStatus
 }
 
 interface MedicalRecord {
@@ -72,17 +73,35 @@ const DoctorDashboard = () => {
   const [doctorName, setDoctorName] = useState('');
   const [doctorId, setDoctorId] = useState<string | null>(null);
 
-  // Roster State
-  const [rosterData, setRosterData] = useState<RosterEntry[]>([]);
+  // Roster States
+  const [rosterData, setRosterData] = useState<RosterEntry[]>([]); // For Roster Management Tab
+  const [rosterEntries, setRosterEntries] = useState<any[]>([]); // For Dashboard Overview (Fetched from DB)
 
-  // Generate next 30 days
+  // Generate next 15 days for Dashboard View
+  const next15Days = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < 15; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  }, []);
+
+  // Generate next 30 days for Management Tab
   const generateNext30Days = () => {
     const days: RosterEntry[] = [];
     for (let i = 0; i < 30; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
+      // Format date manually to avoid timezone issues
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+
       days.push({
-        date: date.toISOString().split('T')[0],
+        date: dateString,
         status: 'OFF' // Default status
       });
     }
@@ -113,13 +132,12 @@ const DoctorDashboard = () => {
   const [newBill, setNewBill] = useState({ appointmentId: '', amount: '', paymentMethod: 'CASH', status: 'PAID' });
 
   const handleLogout = () => {
-    localStorage.removeItem('doctorData'); // ලොග් අවුට් වෙද්දී Data මකනවා
+    localStorage.removeItem('doctorData');
     navigate('/doctor-login');
   };
 
   // Load Doctor Name Dynamic Logic
   useEffect(() => {
-    // 1. LocalStorage එකෙන් ඩොක්ටර්ගේ විස්තර ගන්නවා
     const storedData = localStorage.getItem('doctorData');
 
     if (storedData) {
@@ -150,11 +168,22 @@ const DoctorDashboard = () => {
       setAppointmentsList(aRes.data);
 
       const rRes = await api.get('/medical-records');
-      console.log("Fetched Medical Records:", rRes.data);
       setRecordsList(rRes.data);
 
       const bRes = await api.get('/billings');
       setBillingsList(bRes.data);
+
+      // --- Roster Fetching Logic ---
+      if (doctorId) {
+        try {
+          const rosterResponse = await api.get(`/rosters/doctor/${doctorId}`);
+          setRosterEntries(rosterResponse.data);
+          console.log("Roster Loaded Successfully:", rosterResponse.data);
+        } catch (rosterError) {
+          console.error("Error fetching roster:", rosterError);
+        }
+      }
+      // -----------------------------
 
       // Filter billings for this doctor 
       const myBills = bRes.data.filter((b: any) =>
@@ -175,7 +204,7 @@ const DoctorDashboard = () => {
   const myTreatedPatients = useMemo(() => {
     if (!doctorId || !recordsList || recordsList.length === 0) return 0;
 
-    // Filter records where doctorId matches (Robust String Comparison)
+    // Filter records where doctorId matches
     const myRecords = recordsList.filter(r => {
       const recDocId = r.doctor?.id || r.doctorId;
       return String(recDocId) === String(doctorId);
@@ -186,14 +215,14 @@ const DoctorDashboard = () => {
       String(r.patient?.id || r.patientId)
     ));
 
-    console.log("My Treated Patients Debug (Robust):", { doctorId, totalRecords: recordsList.length, myRecords: myRecords.length, unique: uniqueIds.size });
-
     return uniqueIds.size;
   }, [recordsList, doctorId]);
 
   useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+    if (doctorId) {
+      fetchData();
+    }
+  }, [activeTab, doctorId]);
 
   // Reset Forms
   const resetForms = () => {
@@ -214,10 +243,26 @@ const DoctorDashboard = () => {
 
   const saveRoster = async () => {
     try {
-      // await api.post(`/doctor/${doctorId}/roster`, rosterData);
-      console.log("Saving Roster:", rosterData);
-      alert("Roster Updated Successfully for the next 30 days!");
+      // Filter out 'OFF' days if you only want to save active shifts, 
+      // or save everything if backend handles it.
+      // Here we map frontend structure to backend expected structure
+      const rosterPayload = rosterData.map(r => ({
+        date: r.date,
+        shiftStatus: r.status === 'OFF' ? 'Off' : r.status === 'DUTY' ? 'Full Duty' : r.status === 'HALFDAY-MORNING' ? 'Morning' : 'Evening',
+        doctor: { id: doctorId }
+      })).filter(r => r.shiftStatus !== 'Off'); // Only sending active duties
+
+      // Sending one by one or bulk depending on backend. 
+      // Assuming loop for safety based on previous context
+      for (const rosterItem of rosterPayload) {
+        await api.post('/rosters', rosterItem);
+      }
+
+      console.log("Saving Roster payload:", rosterPayload);
+      alert("Roster Updated Successfully!");
+      fetchData(); // Refresh to see changes in dashboard
     } catch (error) {
+      console.error(error);
       alert("Failed to save roster.");
     }
   };
@@ -273,8 +318,6 @@ const DoctorDashboard = () => {
     } catch { alert("Error Saving Appointment!"); }
   };
 
-
-
   // Handle Status Update (Accept/Reject) 
   const handleStatusUpdate = async (id: number, status: string) => {
     if (!window.confirm(`Are you sure you want to ${status} this appointment?`)) return;
@@ -306,10 +349,6 @@ const DoctorDashboard = () => {
       alert("Error Saving Record!");
     }
   };
-
-
-
-
 
   // ACTIONS: BILLING 
   const handleSaveBill = async () => {
@@ -433,7 +472,6 @@ const DoctorDashboard = () => {
     }
   };
 
-
   // ACTIONS: CURRENT PATIENT
   const startConsultation = (patient: Patient) => {
     setCurrentPatient(patient);
@@ -464,19 +502,16 @@ const DoctorDashboard = () => {
     }
 
     try {
-      // Use existing save logic or direct API call
       await api.post('/medical-records', newRecord);
       alert("Consultation Finished & Record Saved!");
       setCurrentPatient(null);
       resetForms();
-      setActiveTab('patients'); // Go back to list
-      fetchData(); // Refresh records
+      setActiveTab('patients');
+      fetchData();
     } catch {
       alert("Error Saving Record!");
     }
   };
-
-
 
   // ADVANCED CONSULTATION SEARCH
   const handleConsultationSearch = () => {
@@ -496,7 +531,6 @@ const DoctorDashboard = () => {
     } else if (consultationSearchType === 'phone') {
       found = patientsList.find(p => p.phone.includes(query));
     } else if (consultationSearchType === 'name') {
-      // Basic name search (first match)
       found = patientsList.find(p =>
         p.firstName.toLowerCase().includes(query) ||
         p.lastName.toLowerCase().includes(query) ||
@@ -506,7 +540,7 @@ const DoctorDashboard = () => {
 
     if (found) {
       startConsultation(found);
-      setConsultationSearchQuery(''); // Clear search on success
+      setConsultationSearchQuery('');
     } else {
       setConsultationError("Patient not found. Please check the details.");
     }
@@ -540,11 +574,7 @@ const DoctorDashboard = () => {
         </div>
         <nav className="dashboard-nav">
           <button onClick={() => setActiveTab('dashboard')} className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}><UserIcon /> <span>Dashboard</span></button>
-
-          {/* Current Patient Tab - Only visible or active if there is a patient? Or always there? */}
-          {/* User requested it to be in the sidebar. We can conditionally style it. */}
           <button onClick={() => setActiveTab('currentPatient')} className={`nav-item ${activeTab === 'currentPatient' ? 'active' : ''}`} style={currentPatient ? { background: '#e3f2fd', color: '#063ca8', borderRight: '4px solid #063ca8' } : {}}><UserIcon /> <span>Current Patient</span></button>
-
           <button onClick={() => setActiveTab('roster')} className={`nav-item ${activeTab === 'roster' ? 'active' : ''}`}><CalendarIcon /> <span>My Roster</span></button>
           <button onClick={() => setActiveTab('patients')} className={`nav-item ${activeTab === 'patients' ? 'active' : ''}`}><UsersIcon /> <span>All Patients</span></button>
           <button onClick={() => setActiveTab('appointments')} className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`}><CalendarIcon /> <span>Appointments</span></button>
@@ -561,7 +591,6 @@ const DoctorDashboard = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ textAlign: 'right', lineHeight: '1.2' }}>
               <span style={{ fontWeight: 'bold', color: '#063ca8', fontSize: '1.1rem' }}>
-                {/* මෙතන නම පෙන්නන්නේ dynamic විදිහට */}
                 Welcome Doctor {doctorName}
               </span>
             </div>
@@ -598,31 +627,46 @@ const DoctorDashboard = () => {
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Income</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>Rs. {income}</p></div>
                 </section>
 
-                {/* --- ROSTER QUICK VIEW --- */}
+                {/* --- ROSTER QUICK VIEW (UPDATED) --- */}
                 <div className="roster-status-preview">
                   <h3>Next 15 Days Schedule</h3>
-                  <div className="roster-grid">
-                    {rosterData.slice(0, 15).map((entry, index) => {
-                      let statusColor = '#dc3545'; // Default Off
-                      let statusLabel = 'Off';
+                  <div className="roster-grid" style={{ display: 'flex', gap: '10px', overflowX: 'auto', padding: '10px 0' }}>
+                    {next15Days.map((date, index) => {
+                      // Fix Timezone Issue and formatting
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      const dateString = `${year}-${month}-${day}`;
 
-                      if (entry.status === 'DUTY') { statusColor = '#28a745'; statusLabel = 'On Duty'; }
-                      else if (entry.status === 'HALFDAY-MORNING') { statusColor = '#ffc107'; statusLabel = 'Morning'; }
-                      else if (entry.status === 'HALFDAY-EVENING') { statusColor = '#007bff'; statusLabel = 'Evening'; }
+                      // Check roster for this date
+                      const rosterForDay = rosterEntries.find((r: any) => r.date === dateString);
+
+                      // Determine Status
+                      const status = rosterForDay ? rosterForDay.shiftStatus : "Off";
+
+                      // Assign Colors (Using inline styles to match existing design pattern)
+                      let cardStyle = {
+                        backgroundColor: '#f8f9fa', color: '#6c757d', // Default Gray
+                        minWidth: '80px', padding: '10px', borderRadius: '8px', textAlign: 'center' as const, border: '1px solid #eee'
+                      };
+
+                      if (status === "Full Duty") cardStyle = { ...cardStyle, backgroundColor: '#d4edda', color: '#155724', border: '1px solid #c3e6cb' }; // Green
+                      if (status === "Morning") cardStyle = { ...cardStyle, backgroundColor: '#fff3cd', color: '#856404', border: '1px solid #ffeeba' }; // Yellow
+                      if (status === "Evening") cardStyle = { ...cardStyle, backgroundColor: '#d1ecf1', color: '#0c5460', border: '1px solid #bee5eb' }; // Blue
 
                       return (
-                        <div key={index} className="roster-card" title={`${entry.date} - ${statusLabel}`} style={{ borderColor: statusColor }}>
-                          <span className="roster-day-number">{new Date(entry.date).getDate()}</span>
-                          <div className="status-indicator" style={{ backgroundColor: statusColor }}></div>
+                        <div key={index} style={cardStyle}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>{date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>{date.getDate()}</div>
+                          <div style={{ fontSize: '0.65rem', marginTop: '4px', textTransform: 'uppercase', fontWeight: 'bold' }}>{status}</div>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="roster-legend">
-                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#28a745' }}></span> Full Duty</span>
-                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#ffc107' }}></span> Morning</span>
-                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#007bff' }}></span> Evening</span>
-                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#dc3545' }}></span> Off</span>
+                  <div className="roster-legend" style={{ marginTop: '10px', fontSize: '0.8rem', color: '#666', display: 'flex', gap: '15px' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#28a745' }}></span> Full Duty</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ffc107' }}></span> Morning</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}><span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#007bff' }}></span> Evening</span>
                   </div>
                 </div>
               </div>
@@ -697,7 +741,7 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* MY ROSTER SLIDE */}
+              {/* MY ROSTER SLIDE (Management Tab) */}
               <div className="main-slider-slide">
                 <section className="roster-management">
                   <div className="roster-header">

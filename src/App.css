@@ -698,7 +698,9 @@ code {
 /* --- CURRENT PATIENT CONSULTATION STYLES --- */
 .consultation-view {
   display: flex;
-  gap: 2rem;
+  flex-direction: column;
+  /* Added column direction for stacking */
+  gap: 1.5rem;
   height: 100%;
   padding: 1rem;
 }
@@ -1813,15 +1815,25 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   display: flex;
   /* Row 1 */
   align-items: center;
-  gap: 10px;
-  background-color: #f8f9fa;
+  gap: 8px;
+  background-color: #98c0e9;
   /* Light background */
-  padding: 15px;
-  border-radius: 12px;
+  padding: 20px 15px;
+  border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-  border: 1px solid #e9ecef;
-  margin-bottom: 25px;
-  /* Added spacing from user req */
+  border: 1px solid #d1e3f8;
+  margin: 0 auto 10px auto;
+  width: 100%;
+  max-width: 550px;
+
+}
+
+/* Container for patient profile & form */
+.patient-profile-container {
+  width: 100%;
+  display: flex;
+  gap: 2rem;
+  flex: 1;
 }
 
 .consultation-info-box {

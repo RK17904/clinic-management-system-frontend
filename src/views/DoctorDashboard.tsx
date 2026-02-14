@@ -602,7 +602,7 @@ const DoctorDashboard = () => {
               <div className="main-slider-slide">
                 <section className="consultation-view">
 
-                  {/* Row 1: Search Section */}
+                  {/* Row 1: Search Box (Inputs Only) */}
                   <div className="search-box-container">
                     <select
                       className="consultation-search-select"
@@ -623,10 +623,12 @@ const DoctorDashboard = () => {
                       onKeyDown={(e) => e.key === 'Enter' && handleConsultationSearch()}
                     />
                     <button className="consultation-search-btn" onClick={handleConsultationSearch}>Find Patient</button>
-                    {consultationError && <span className="search-error">{consultationError}</span>}
                   </div>
 
-                  <div className="consultation-content">
+                  {/* Error Message (Separate Row) */}
+                  {consultationError && <div style={{ color: '#d32f2f', marginBottom: '15px', textAlign: 'center' }}>{consultationError}</div>}
+
+                  <div className="consultation-content patient-profile-container">
                     {currentPatient ? (
                       <>
                         <div className="patient-profile-card">

@@ -486,6 +486,34 @@ const DoctorDashboard = () => {
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Appointments</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{appointmentsList.length}</p></div>
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Income</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>Rs. {income}</p></div>
                 </section>
+
+                {/* --- ROSTER QUICK VIEW --- */}
+                <div className="roster-status-preview">
+                  <h3>Next 15 Days Schedule</h3>
+                  <div className="roster-grid">
+                    {rosterData.slice(0, 15).map((entry, index) => {
+                      let statusColor = '#dc3545'; // Default Off
+                      let statusLabel = 'Off';
+
+                      if (entry.status === 'DUTY') { statusColor = '#28a745'; statusLabel = 'On Duty'; }
+                      else if (entry.status === 'HALFDAY-MORNING') { statusColor = '#ffc107'; statusLabel = 'Morning'; }
+                      else if (entry.status === 'HALFDAY-EVENING') { statusColor = '#007bff'; statusLabel = 'Evening'; }
+
+                      return (
+                        <div key={index} className="roster-card" title={`${entry.date} - ${statusLabel}`} style={{ borderColor: statusColor }}>
+                          <span className="roster-day-number">{new Date(entry.date).getDate()}</span>
+                          <div className="status-indicator" style={{ backgroundColor: statusColor }}></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="roster-legend">
+                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#28a745' }}></span> Full Duty</span>
+                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#ffc107' }}></span> Morning</span>
+                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#007bff' }}></span> Evening</span>
+                    <span className="legend-item"><span className="dot" style={{ backgroundColor: '#dc3545' }}></span> Off</span>
+                  </div>
+                </div>
               </div>
 
               {/* MY ROSTER SLIDE */}
@@ -495,8 +523,8 @@ const DoctorDashboard = () => {
                     <h3>Schedule Your Next 30 Days</h3>
                     <button className="save-btn" onClick={saveRoster} style={{ width: 'auto', padding: '10px 30px' }}>Save Roster</button>
                   </div>
-                  <div className="table-container" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                    <table className="data-table">
+                  <div className="roster-table-container">
+                    <table className="roster-table">
                       <thead>
                         <tr>
                           <th>Date</th>
@@ -505,24 +533,35 @@ const DoctorDashboard = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {rosterData.map((entry) => (
-                          <tr key={entry.date}>
-                            <td>{entry.date}</td>
-                            <td>{new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long' })}</td>
-                            <td>
-                              <select
-                                value={entry.status}
-                                onChange={(e) => handleRosterChange(entry.date, e.target.value)}
-                                className="roster-select"
-                              >
-                                <option value="DUTY">Full Duty</option>
-                                <option value="HALFDAY-MORNING">Half Day (Morning)</option>
-                                <option value="HALFDAY-EVENING">Half Day (Evening)</option>
-                                <option value="OFF">Off Day</option>
-                              </select>
-                            </td>
-                          </tr>
-                        ))}
+                        {rosterData.map((entry) => {
+                          // Determine the class based on status
+                          let statusClass = 'status-off';
+                          switch (entry.status) {
+                            case 'DUTY': statusClass = 'status-duty'; break;
+                            case 'HALFDAY-MORNING': statusClass = 'status-morning'; break;
+                            case 'HALFDAY-EVENING': statusClass = 'status-evening'; break;
+                            default: statusClass = 'status-off';
+                          }
+
+                          return (
+                            <tr key={entry.date}>
+                              <td className="roster-date">{entry.date}</td>
+                              <td className="roster-day">{new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long' })}</td>
+                              <td>
+                                <select
+                                  value={entry.status}
+                                  onChange={(e) => handleRosterChange(entry.date, e.target.value)}
+                                  className={`roster-select ${statusClass}`}
+                                >
+                                  <option value="DUTY">Full Duty</option>
+                                  <option value="HALFDAY-MORNING">Half Day (Morning)</option>
+                                  <option value="HALFDAY-EVENING">Half Day (Evening)</option>
+                                  <option value="OFF">Off Day</option>
+                                </select>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

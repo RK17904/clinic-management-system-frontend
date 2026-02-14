@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8083/api', // lakmal 8080 
+  baseURL: 'http://localhost:8080/api', // lakmal 8080 Kaweesha 8083
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,7 +20,7 @@ api.interceptors.request.use(
     // Logic to find the active token
     if (adminData) {
       const parsed = JSON.parse(adminData);
-      token = parsed.token || parsed.id; 
+      token = parsed.token || parsed.id;
     } else if (doctorData) {
       const parsed = JSON.parse(doctorData);
       token = parsed.token || parsed.id;
@@ -32,7 +32,7 @@ api.interceptors.request.use(
     if (token) {
       // Attach token to Authorization header (Bearer standard)
       // config.headers.Authorization = `Bearer ${token}`;
-      
+
       // OR if your backend just expects the ID or a custom header:
       // config.headers['x-auth-token'] = token;
     }

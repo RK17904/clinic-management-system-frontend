@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios.Config';
 import { LockIcon, UserIcon } from '../components/Icons';
-import signInIllustration from '../assets/admin.jpg'; 
+import signInIllustration from '../assets/admin.jpg';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
+
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,7 +24,7 @@ const AdminLogin = () => {
       if (response.status === 200) {
         console.log("Admin Login Success!");
         localStorage.setItem('adminData', JSON.stringify(response.data));
-        navigate('/admin-dashboard'); 
+        navigate('/admin-dashboard');
       }
     } catch (err) {
       console.error(err);
@@ -45,34 +45,34 @@ const AdminLogin = () => {
       {/* --- Form --- */}
       <div className="form-panel white-panel">
         <div className="form-content">
-          <h1 className="form-title" style={{color: '#d9534f'}}>Admin Login</h1>
-          
+          <h1 className="form-title" style={{ color: '#d9534f' }}>Admin Login</h1>
+
           <form onSubmit={handleLogin}>
             <div className="input-group">
               <span className="icon"><UserIcon /></span>
-              <input 
-                type="email" 
-                placeholder="Admin Email" 
+              <input
+                type="email"
+                placeholder="Admin Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
-            
+
             <div className="input-group">
               <span className="icon"><LockIcon /></span>
-              <input 
-                type="password" 
-                placeholder="Password" 
+              <input
+                type="password"
+                placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
 
-            {error && <p style={{color: 'red', textAlign: 'center', fontSize: '0.9rem'}}>{error}</p>}
+            {error && <p style={{ color: 'red', textAlign: 'center', fontSize: '0.9rem' }}>{error}</p>}
 
-            <button type="submit" className="form-button" style={{background: '#d9534f'}}>
+            <button type="submit" className="form-button" style={{ background: '#d9534f' }}>
               LOGIN
             </button>
           </form>

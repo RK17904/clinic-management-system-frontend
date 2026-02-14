@@ -8,7 +8,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f4f7fa; 
+  background-color: #f4f7fa;
 }
 
 code {
@@ -21,7 +21,7 @@ code {
 
 /* --- LOGIN / SIGNUP BACKGROUND --- */
 .auth-background {
-  background: url(/loginimage.jpg); 
+  background: url(/loginimage.jpg);
   background-attachment: fixed;
   background-repeat: no-repeat;
   background-size: cover;
@@ -34,9 +34,20 @@ code {
 
 /* --- entry Breath animation --- */
 @keyframes breathEntry {
-  0% { opacity: 0; transform: scale(0.92); }
-  60% { opacity: 1; transform: scale(1.01); }
-  100% { opacity: 1; transform: scale(1); }
+  0% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(1.01);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* --- APP WRAPPER- Centered Card --- */
@@ -44,7 +55,7 @@ code {
   align-items: center;
   display: flex;
   width: 100%;
-  max-width: 1100px; 
+  max-width: 1100px;
   margin: 2rem;
   animation: breathEntry 0.7s ease-out forwards;
 }
@@ -52,12 +63,12 @@ code {
 /* --- SIDEBAR--- */
 .sidebar {
   width: 80px;
-  background: rgba(255, 255, 255, 0.85); 
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  
-  color: rgb(189, 194, 194); 
+
+  color: rgb(189, 194, 194);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -79,18 +90,19 @@ code {
 }
 
 .sidebar-icon:hover {
-  color:whitesmoke;
-  background:blueviolet; 
-  border-radius:10px; 
-  padding: 10px;;
+  color: whitesmoke;
+  background: blueviolet;
+  border-radius: 10px;
+  padding: 10px;
+  ;
   width: 100px;
 }
 
 .sidebar-icon.active {
   color: #ffffff;
-  background: rgb(6, 60, 168); 
+  background: rgb(6, 60, 168);
   border-radius: 10px;
-  width: 100px; 
+  width: 100px;
   padding: 10px 0;
 }
 
@@ -98,40 +110,47 @@ code {
 .main-container {
   display: flex;
   width: 1000px;
-  max-height: 650px;   
+  max-height: 650px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   border-radius: 0 15px 15px 0;
   overflow: hidden;
-  transition: max-height 0.4s ease-in-out; 
-  background: transparent; 
+  transition: max-height 0.4s ease-in-out;
+  background: transparent;
 }
 
 .main-container.sign-in-mode {
-  max-height: 600px; 
+  max-height: 600px;
 }
 
 @keyframes slideInUp {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .form-panel {
-  flex: 1; 
+  flex: 1;
   padding: 3rem;
   display: flex;
   flex-direction: column;
-  
-  opacity: 0; 
+
+  opacity: 0;
   animation: slideInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* --- BLUE PANEL --- */
 .blue-panel {
   /* Glassmorphism */
-  background: rgba(6, 60, 168, 0.85); 
+  background: rgba(6, 60, 168, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  
+
   color: white;
   text-align: left;
   padding-top: 3rem;
@@ -159,19 +178,19 @@ code {
 
 /* --- LOGO STYLES --- */
 .logo-container {
-  display: flex; 
-  align-items: center; 
-  margin-bottom: 1rem; 
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
 .logo-container h1 {
-  margin-bottom: 0; 
+  margin-bottom: 0;
 }
 
 .logo-image {
-  width: 50px; 
+  width: 50px;
   height: 50px;
-  margin-right: 0.75rem; 
+  margin-right: 0.75rem;
 }
 
 /* --- WHITE PANEL--- */
@@ -180,7 +199,7 @@ code {
   background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  animation-delay: 100ms; 
+  animation-delay: 100ms;
 }
 
 .white-panel-header {
@@ -191,11 +210,11 @@ code {
 
 .white-panel-header span,
 .white-panel-header .toggle-link {
-  color: #4A4E69; 
+  color: #4A4E69;
   font-weight: bold;
   cursor: pointer;
   margin-left: 5px;
-  display: inline-block; 
+  display: inline-block;
 }
 
 .form-content {
@@ -206,7 +225,7 @@ code {
 }
 
 .form-title {
-  color: #22223B; 
+  color: #22223B;
   font-size: 2rem;
   margin-bottom: 2rem;
   text-align: left;
@@ -228,12 +247,12 @@ code {
 .input-group input,
 .input-group select {
   width: 100%;
-  padding: 1rem 1rem 1rem 3rem; 
+  padding: 1rem 1rem 1rem 3rem;
   border: 1px solid #ccc;
   border-radius: 8px;
   background: white;
   font-size: 1rem;
-  box-sizing: border-box; 
+  box-sizing: border-box;
 }
 
 .form-button {
@@ -241,7 +260,7 @@ code {
   padding: 1rem;
   border: none;
   border-radius: 8px;
-  background: rgb(6, 60, 168); 
+  background: rgb(6, 60, 168);
   color: white;
   font-size: 1rem;
   font-weight: bold;
@@ -285,7 +304,7 @@ code {
 .dashboard-sidebar {
   background: #063ca8;
   width: 260px;
-  
+
   color: white;
   display: flex;
   flex-direction: column;
@@ -302,21 +321,21 @@ code {
 }
 
 .dashboard-logo-img {
-  height: 1.5rem; 
+  height: 1.5rem;
   width: auto;
-  margin-right: 0.75rem; 
-  display: block; 
+  margin-right: 0.75rem;
+  display: block;
 }
 
 .dashboard-logo h2 {
   font-size: 1.5rem;
   margin: 0;
   line-height: 1;
-  font-weight: 700; 
+  font-weight: 700;
 }
 
 .dashboard-nav {
-  flex-grow: 1; 
+  flex-grow: 1;
   margin-top: 1.5rem;
 }
 
@@ -326,7 +345,7 @@ code {
   padding: 0.875rem 1rem;
   border-radius: 8px;
   text-decoration: none;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   margin-bottom: 0.5rem;
   transition: all 0.2s ease;
   font-size: 1rem;
@@ -362,7 +381,7 @@ code {
 /* --- DASHBOARD MAIN CONTENT --- */
 .dashboard-main {
   flex: 1;
-  overflow: hidden; 
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -383,7 +402,7 @@ code {
 
 .dashboard-content-wrapper {
   flex: 1;
-  overflow-y: auto; 
+  overflow-y: auto;
   padding: 2rem;
   position: relative;
 }
@@ -402,7 +421,7 @@ code {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   border: 1px solid #e0e0e0;
   transition: all 0.3s ease;
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 .stat-card:hover {
@@ -427,18 +446,19 @@ code {
   transition: color 0.3s ease;
 }
 
-.stat-card:hover h3{
-  color:#555;
+.stat-card:hover h3 {
+  color: #555;
 }
+
 .stat-card:hover p {
-  color: #063ca8 !important; 
+  color: #063ca8 !important;
 }
 
 /* SECTIONS (Doctors/Patients) */
 .doctors-section {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   padding: 2rem;
   min-height: 500px;
 }
@@ -568,20 +588,20 @@ code {
 
 /* --- ANIMATION SLIDERS (SUB-SECTIONS: VIEW/ADD) --- */
 .slider-viewport {
-  overflow: hidden; 
+  overflow: hidden;
   width: 100%;
   position: relative;
 }
 
 .slider-track {
   display: flex;
-  width: 200%; 
+  width: 200%;
   transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .slider-slide {
-  width: 50%; 
-  padding: 0.5rem; 
+  width: 50%;
+  padding: 0.5rem;
   box-sizing: border-box;
 }
 
@@ -592,7 +612,7 @@ code {
 .table-container,
 .form-container {
   width: 100%;
-  max-width: 100%; 
+  max-width: 100%;
 }
 
 /* --- MAIN DASHBOARD SLIDERS --- */
@@ -606,71 +626,151 @@ code {
 /* Track (Default: Admin Tabs) */
 .main-slider-track {
   display: flex;
-  width: 400%; 
+  width: 400%;
   transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
   align-items: flex-start;
 }
 
 /* Slide (Default: Admin) */
 .main-slider-slide {
-  width: 25%; 
+  width: 25%;
   padding: 0.5rem;
   box-sizing: border-box;
 }
 
 /* Admin Positions */
-.main-slider-track.pos-dashboard { transform: translateX(0%); }
-.main-slider-track.pos-doctors { transform: translateX(-25%); }
-.main-slider-track.pos-patients { transform: translateX(-50%); }
-.main-slider-track.pos-appointments { transform: translateX(-75%); }
+.main-slider-track.pos-dashboard {
+  transform: translateX(0%);
+}
+
+.main-slider-track.pos-doctors {
+  transform: translateX(-25%);
+}
+
+.main-slider-track.pos-patients {
+  transform: translateX(-50%);
+}
+
+.main-slider-track.pos-appointments {
+  transform: translateX(-75%);
+}
 
 /* --- DOCTOR DASHBOARD OVERRIDES --- */
 .main-slider-track.doctor-track {
-  width: 500%; 
+  width: 600%;
 }
 
 .main-slider-track.doctor-track .main-slider-slide {
-  width: 20%; 
+  width: 16.666%;
 }
 
 /* Doctor Positions  */
-.main-slider-track.doctor-track.pos-dashboard { transform: translateX(0%); }
-.main-slider-track.doctor-track.pos-patients { transform: translateX(-20%); }
-.main-slider-track.doctor-track.pos-appointments { transform: translateX(-40%); }
-.main-slider-track.doctor-track.pos-records { transform: translateX(-60%); }
-.main-slider-track.doctor-track.pos-billing { transform: translateX(-80%); }
+.main-slider-track.doctor-track.pos-dashboard {
+  transform: translateX(0%);
+}
+
+.main-slider-track.doctor-track.pos-roster {
+  transform: translateX(-16.666%);
+}
+
+.main-slider-track.doctor-track.pos-patients {
+  transform: translateX(-33.333%);
+}
+
+.main-slider-track.doctor-track.pos-appointments {
+  transform: translateX(-50%);
+}
+
+.main-slider-track.doctor-track.pos-records {
+  transform: translateX(-66.666%);
+}
+
+.main-slider-track.doctor-track.pos-billing {
+  transform: translateX(-83.333%);
+}
+
+/* --- ROSTER STYLES --- */
+.roster-management {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.roster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.roster-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.roster-select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  width: 100%;
+  font-size: 0.95rem;
+  background-color: #fff;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.roster-select:focus {
+  border-color: #063ca8;
+  outline: none;
+}
+
+.roster-select option {
+  padding: 10px;
+}
 
 /* --- PATIENT DASHBOARD VERTICAL SLIDER --- */
 .patient-slider-viewport {
   width: 100%;
-  height: 100%; 
-  overflow: hidden; 
+  height: 100%;
+  overflow: hidden;
   position: relative;
 }
 
 .patient-slider-track {
   display: flex;
-  flex-direction: column; 
-  height: 300%; 
-  transition: transform 0.6s ease-in-out; 
+  flex-direction: column;
+  height: 300%;
+  transition: transform 0.6s ease-in-out;
   will-change: transform;
 }
 
 .patient-slider-slide {
-  height: 33.3333%; 
+  height: 33.3333%;
   width: 100%;
   padding: 2rem;
   box-sizing: border-box;
-  overflow-y: auto; 
+  overflow-y: auto;
   flex-shrink: 0;
 }
 
-.patient-slider-track.v-pos-dashboard { transform: translateY(0%); }
-.patient-slider-track.v-pos-appointments { transform: translateY(-33.3333%); }
-.patient-slider-track.v-pos-records { transform: translateY(-66.6666%); }
+.patient-slider-track.v-pos-dashboard {
+  transform: translateY(0%);
+}
+
+.patient-slider-track.v-pos-appointments {
+  transform: translateY(-33.3333%);
+}
+
+.patient-slider-track.v-pos-records {
+  transform: translateY(-66.6666%);
+}
 
 /* ---FORM STYLING --- */
-.form-control:focus, 
+.form-control:focus,
 .form-select:focus {
   border-color: #063ca8;
   box-shadow: 0 0 0 0.25rem rgba(6, 60, 168, 0.25);
@@ -701,8 +801,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 @keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
@@ -727,7 +834,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-  
+
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -748,7 +855,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 .header-logo h1 {
   font-size: 2rem;
-  color: #0056b3; 
+  color: #0056b3;
   margin: 0;
 }
 
@@ -817,7 +924,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   align-items: center;
   color: #0056b3;
   cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .logout-link {
@@ -865,7 +972,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   width: 380px;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   border: 1px solid #f0f0f0;
   z-index: 2000;
   overflow: hidden;
@@ -874,8 +981,15 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
 /* Reusing keyframe or ensure it is defined */
 @keyframes slideInDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .notification-header {
@@ -928,7 +1042,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   position: relative;
   display: flex;
   align-items: center;
-  overflow: hidden; 
+  overflow: hidden;
 }
 
 /* Hero Video */
@@ -940,27 +1054,32 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   height: 100%;
   object-fit: cover;
   z-index: 0;
-  
-  filter: blur(4px); 
-  transform: scale(1.05); 
-  opacity: 0; 
+
+  filter: blur(4px);
+  transform: scale(1.05);
+  opacity: 0;
   animation: videoFadeIn 2s ease-out forwards;
 }
 
 @keyframes videoFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .hero-overlay {
-  background: rgba(0, 0, 0, 0.5); 
+  background: rgba(0, 0, 0, 0.5);
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   padding-left: 10%;
-  position: relative; 
-  z-index: 1; 
+  position: relative;
+  z-index: 1;
 }
 
 .hero-content {
@@ -1024,12 +1143,12 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   position: relative;
   background-size: cover;
   background-position: center;
-  background-attachment: fixed; 
-  padding: 0; 
+  background-attachment: fixed;
+  padding: 0;
 }
 
 .bg-overlay {
-  background: rgba(0, 0, 0, 0.75); 
+  background: rgba(0, 0, 0, 0.75);
   width: 100%;
   min-height: 100%;
   padding: 5rem 2rem;
@@ -1038,22 +1157,22 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   align-items: center;
 }
 
-.bg-section h2, 
-.bg-section p, 
+.bg-section h2,
+.bg-section p,
 .bg-section h3,
 .bg-section h4 {
-  color: white !important; 
+  color: white !important;
 }
 
 /* Glassmorphism Home Cards */
 .bg-section .feature-card,
 .bg-section .doctor-card {
-  background: linear-gradient(135deg, rgba(20, 17, 209, 0.7), rgba(0, 114, 255, 0.7)); 
-  backdrop-filter: blur(12px); 
-  -webkit-backdrop-filter: blur(12px); 
-  border: 1px solid rgba(255, 255, 255, 0.3); 
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); 
-  color: white; 
+  background: linear-gradient(135deg, rgba(20, 17, 209, 0.7), rgba(0, 114, 255, 0.7));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  color: white;
 }
 
 /* Content Sections */
@@ -1092,15 +1211,17 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   gap: 2rem;
 }
 
-.feature-card, .doctor-card {
+.feature-card,
+.doctor-card {
   background: white;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s;
 }
 
-.feature-card:hover, .doctor-card:hover {
+.feature-card:hover,
+.doctor-card:hover {
   transform: translateY(-10px);
 }
 
@@ -1148,7 +1269,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .contact-item h4 {
   font-size: 1.2rem;
   margin-bottom: 0.5rem;
-  color: #60a5fa; 
+  color: #60a5fa;
 }
 
 .footer-copy {
@@ -1161,7 +1282,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 /* --- SCROLL ANIMATION (POP IN) --- */
 .reveal-on-scroll {
   opacity: 0;
-  transform: translateY(30px) scale(0.98); 
+  transform: translateY(30px) scale(0.98);
   transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
@@ -1189,7 +1310,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   backdrop-filter: blur(10px);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   color: #333;
 }
 
@@ -1228,7 +1349,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .calendar-day {
-  aspect-ratio: 1; 
+  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1251,7 +1372,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .appt-dot {
   width: 6px;
   height: 6px;
-  background-color: #0056b3; 
+  background-color: #0056b3;
   border-radius: 50%;
   position: absolute;
   bottom: 4px;
@@ -1264,7 +1385,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .calendar-day.selected .appt-dot {
-  background-color: white; 
+  background-color: white;
 }
 
 /* Details Card Wrapper */
@@ -1279,11 +1400,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   width: 100%;
   padding: 2rem;
   text-align: left;
-  border-left: 5px solid white; 
+  border-left: 5px solid white;
 }
 
 .detail-header {
-  border-bottom: 1px solid rgba(255,255,255,0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   padding-bottom: 1rem;
   margin-bottom: 1rem;
 }
@@ -1325,7 +1446,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .view-btn {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   border: 1px solid white;
   color: white;
   padding: 0.8rem 1.5rem;
@@ -1337,7 +1458,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 .view-btn:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .empty-detail-card {
@@ -1352,7 +1473,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .selected-date-hint {
   font-weight: bold;
   margin: 1rem 0;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
   padding: 0.5rem 1rem;
   border-radius: 20px;
 }
@@ -1372,8 +1493,10 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .scrolling-track {
   display: flex;
   gap: 2rem;
-  width: max-content; /* Ensure container is as wide as the cards */
-  animation: scrollDoctors 30s linear infinite; /* continuous loop */
+  width: max-content;
+  /* Ensure container is as wide as the cards */
+  animation: scrollDoctors 30s linear infinite;
+  /* continuous loop */
 }
 
 /* Pause animation on hover so users can click 'View Profile' */
@@ -1382,6 +1505,11 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 }
 
 @keyframes scrollDoctors {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); } 
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }

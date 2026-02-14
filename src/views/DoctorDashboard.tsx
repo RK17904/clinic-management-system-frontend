@@ -24,6 +24,12 @@ interface Appointment {
   patient: Patient;
 }
 
+// Roster Interface
+interface RosterEntry {
+  date: string;
+  status: 'DUTY' | 'HALFDAY-MORNING' | 'HALFDAY-EVENING' | 'OFF';
+}
+
 interface MedicalRecord {
   id: number;
   diagnosis: string;
@@ -49,10 +55,28 @@ const DoctorDashboard = () => {
   const navigate = useNavigate();
 
   // States 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'appointments' | 'records' | 'billing'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'appointments' | 'records' | 'billing' | 'roster'>('dashboard');
 
-  // Doctor Name State - (දැන් මෙය හිස්ව තබමු, ලොග් වන කෙනා අනුව වෙනස් වේ)
+  // Doctor Name State
   const [doctorName, setDoctorName] = useState('');
+  const [doctorId, setDoctorId] = useState<string | null>(null);
+
+  // Roster State
+  const [rosterData, setRosterData] = useState<RosterEntry[]>([]);
+
+  // Generate next 30 days
+  const generateNext30Days = () => {
+    const days: RosterEntry[] = [];
+    for (let i = 0; i < 30; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() + i);
+      days.push({
+        date: date.toISOString().split('T')[0],
+        status: 'OFF' // Default status
+      });
+    }
+    return days;
+  };
 
   // Sub Tabs (View vs Add)
   const [patientSubTab, setPatientSubTab] = useState<'view' | 'add'>('view');
@@ -90,12 +114,10 @@ const DoctorDashboard = () => {
     if (storedData) {
       try {
         const parsedData = JSON.parse(storedData);
+        setDoctorId(parsedData.id);
 
-        // 2. නමක් තියෙනවා නම් එය set කරනවා
-        // (Login වෙද්දී save වුනේ 'username' ද 'name' ද කියල බලන්න, මෙතන මම දෙකම check කරනවා)
         if (parsedData.name || parsedData.username) {
           const fullName = parsedData.name || parsedData.username;
-          // "Dr." කෑල්ල මුලට තිබුණොත් අයින් කරලා නම විතරක් ගන්නවා ලස්සනට පේන්න
           const cleanName = fullName.replace(/^Dr\.?\s*/i, '');
           setDoctorName(cleanName);
         }
@@ -103,6 +125,7 @@ const DoctorDashboard = () => {
         console.error("Error parsing doctor data", e);
       }
     }
+    setRosterData(generateNext30Days());
   }, []);
 
   // API Calls 
@@ -139,6 +162,23 @@ const DoctorDashboard = () => {
     setNewAppointment({ patientId: '', doctorId: '', date: '', time: '', notes: '' });
     setNewRecord({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
     setNewBill({ appointmentId: '', amount: '', paymentMethod: 'CASH', status: 'PAID' });
+  };
+
+  // ROSTER ACTIONS
+  const handleRosterChange = (date: string, newStatus: any) => {
+    setRosterData(prev => prev.map(entry =>
+      entry.date === date ? { ...entry, status: newStatus } : entry
+    ));
+  };
+
+  const saveRoster = async () => {
+    try {
+      // await api.post(`/doctor/${doctorId}/roster`, rosterData);
+      console.log("Saving Roster:", rosterData);
+      alert("Roster Updated Successfully for the next 30 days!");
+    } catch (error) {
+      alert("Failed to save roster.");
+    }
   };
 
   // ACTIONS: PATIENTS 
@@ -374,6 +414,7 @@ const DoctorDashboard = () => {
   const getTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'Doctor Dashboard';
+      case 'roster': return 'Duty Roster Management';
       case 'patients': return 'Manage Patients';
       case 'appointments': return 'Appointments';
       case 'records': return 'Medical Records';
@@ -397,6 +438,7 @@ const DoctorDashboard = () => {
         </div>
         <nav className="dashboard-nav">
           <button onClick={() => setActiveTab('dashboard')} className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}><UserIcon /> <span>Dashboard</span></button>
+          <button onClick={() => setActiveTab('roster')} className={`nav-item ${activeTab === 'roster' ? 'active' : ''}`}><CalendarIcon /> <span>My Roster</span></button>
           <button onClick={() => setActiveTab('patients')} className={`nav-item ${activeTab === 'patients' ? 'active' : ''}`}><UsersIcon /> <span>Patients</span></button>
           <button onClick={() => setActiveTab('appointments')} className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`}><CalendarIcon /> <span>Appointments</span></button>
           <button onClick={() => setActiveTab('records')} className={`nav-item ${activeTab === 'records' ? 'active' : ''}`}><ListIcon /> <span>Records</span></button>
@@ -443,6 +485,47 @@ const DoctorDashboard = () => {
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Total Patients</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{patientsList.length}</p></div>
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Appointments</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{appointmentsList.length}</p></div>
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Income</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>Rs. {income}</p></div>
+                </section>
+              </div>
+
+              {/* MY ROSTER SLIDE */}
+              <div className="main-slider-slide">
+                <section className="roster-management">
+                  <div className="roster-header">
+                    <h3>Schedule Your Next 30 Days</h3>
+                    <button className="save-btn" onClick={saveRoster} style={{ width: 'auto', padding: '10px 30px' }}>Save Roster</button>
+                  </div>
+                  <div className="table-container" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Day</th>
+                          <th>Shift Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rosterData.map((entry) => (
+                          <tr key={entry.date}>
+                            <td>{entry.date}</td>
+                            <td>{new Date(entry.date).toLocaleDateString('en-US', { weekday: 'long' })}</td>
+                            <td>
+                              <select
+                                value={entry.status}
+                                onChange={(e) => handleRosterChange(entry.date, e.target.value)}
+                                className="roster-select"
+                              >
+                                <option value="DUTY">Full Duty</option>
+                                <option value="HALFDAY-MORNING">Half Day (Morning)</option>
+                                <option value="HALFDAY-EVENING">Half Day (Evening)</option>
+                                <option value="OFF">Off Day</option>
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </section>
               </div>
 

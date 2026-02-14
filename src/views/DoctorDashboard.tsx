@@ -55,7 +55,10 @@ const DoctorDashboard = () => {
   const navigate = useNavigate();
 
   // States 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'patients' | 'appointments' | 'records' | 'billing' | 'roster'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'currentPatient' | 'patients' | 'appointments' | 'records' | 'billing' | 'roster'>('dashboard');
+
+  // Current Patient State
+  const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
 
   // Doctor Name State
   const [doctorName, setDoctorName] = useState('');
@@ -411,9 +414,44 @@ const DoctorDashboard = () => {
   };
 
 
+  // ACTIONS: CURRENT PATIENT
+  const startConsultation = (patient: Patient) => {
+    setCurrentPatient(patient);
+    setActiveTab('currentPatient');
+    // Pre-fill record with patient info
+    setNewRecord({
+      patientId: patient.id?.toString() || '',
+      doctorId: doctorId?.toString() || '',
+      diagnosis: '',
+      treatment: '',
+      notes: '',
+      recordDate: new Date().toISOString().split('T')[0]
+    });
+  };
+
+  const finishConsultation = async () => {
+    if (!newRecord.diagnosis || !newRecord.treatment) {
+      alert("Please enter diagnosis and treatment!");
+      return;
+    }
+
+    try {
+      // Use existing save logic or direct API call
+      await api.post('/medical-records', newRecord);
+      alert("Consultation Finished & Record Saved!");
+      setCurrentPatient(null);
+      resetForms();
+      setActiveTab('patients'); // Go back to list
+      fetchData(); // Refresh records
+    } catch {
+      alert("Error Saving Record!");
+    }
+  };
+
   const getTitle = () => {
     switch (activeTab) {
       case 'dashboard': return 'Doctor Dashboard';
+      case 'currentPatient': return currentPatient ? `Consulting: ${currentPatient.firstName} ${currentPatient.lastName}` : 'Current Patient';
       case 'roster': return 'Duty Roster Management';
       case 'patients': return 'Manage Patients';
       case 'appointments': return 'Appointments';
@@ -438,6 +476,11 @@ const DoctorDashboard = () => {
         </div>
         <nav className="dashboard-nav">
           <button onClick={() => setActiveTab('dashboard')} className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}><UserIcon /> <span>Dashboard</span></button>
+
+          {/* Current Patient Tab - Only visible or active if there is a patient? Or always there? */}
+          {/* User requested it to be in the sidebar. We can conditionally style it. */}
+          <button onClick={() => setActiveTab('currentPatient')} className={`nav-item ${activeTab === 'currentPatient' ? 'active' : ''}`} style={currentPatient ? { background: '#e3f2fd', color: '#063ca8', borderRight: '4px solid #063ca8' } : {}}><UserIcon /> <span>Current Patient</span></button>
+
           <button onClick={() => setActiveTab('roster')} className={`nav-item ${activeTab === 'roster' ? 'active' : ''}`}><CalendarIcon /> <span>My Roster</span></button>
           <button onClick={() => setActiveTab('patients')} className={`nav-item ${activeTab === 'patients' ? 'active' : ''}`}><UsersIcon /> <span>All Patients</span></button>
           <button onClick={() => setActiveTab('appointments')} className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`}><CalendarIcon /> <span>Appointments</span></button>
@@ -516,6 +559,68 @@ const DoctorDashboard = () => {
                 </div>
               </div>
 
+              {/* CURRENT PATIENT SLIDE */}
+              <div className="main-slider-slide">
+                <section className="consultation-view">
+                  {currentPatient ? (
+                    <>
+                      <div className="patient-profile-card">
+                        <div className="profile-avatar">👤</div>
+                        <h3>{currentPatient.firstName} {currentPatient.lastName}</h3>
+                        <div className="profile-details">
+                          <p><strong>ID:</strong> {currentPatient.id}</p>
+                          <p><strong>Age:</strong> {currentPatient.age || 'N/A'}</p>
+                          <p><strong>Gender:</strong> {currentPatient.gender || 'N/A'}</p>
+                          <p><strong>Phone:</strong> {currentPatient.phone}</p>
+                          <p><strong>Email:</strong> {currentPatient.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="consultation-form-container">
+                        <h3>Clinical Notes & Diagnosis</h3>
+                        <form className="consultation-form" onSubmit={(e) => { e.preventDefault(); finishConsultation(); }}>
+                          <div className="form-group">
+                            <label>Diagnosis</label>
+                            <textarea
+                              rows={2}
+                              value={newRecord.diagnosis}
+                              onChange={(e) => setNewRecord({ ...newRecord, diagnosis: e.target.value })}
+                              placeholder="e.g. Acute Bronchitis"
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Treatment Plan</label>
+                            <textarea
+                              rows={4}
+                              value={newRecord.treatment}
+                              onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
+                              placeholder="e.g. Amoxicillin 500mg TDS for 5 days..."
+                              required
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Clinical Notes</label>
+                            <textarea
+                              rows={3}
+                              value={newRecord.notes}
+                              onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
+                              placeholder="Patient complains of dry cough..."
+                            />
+                          </div>
+                          <button type="submit" className="finish-btn">Finish Consultation</button>
+                        </form>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="no-results" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <p style={{ fontSize: '1.2rem', marginBottom: '1rem' }}>No patient selected for consultation.</p>
+                      <button className="action-btn active" onClick={() => setActiveTab('patients')}>Select a Patient from List</button>
+                    </div>
+                  )}
+                </section>
+              </div>
+
               {/* MY ROSTER SLIDE */}
               <div className="main-slider-slide">
                 <section className="roster-management">
@@ -591,6 +696,7 @@ const DoctorDashboard = () => {
                                   <td>{p.email}</td>
                                   <td>{p.phone}</td>
                                   <td>
+                                    <button style={{ ...btnStyle, background: '#007bff', color: 'white' }} onClick={() => startConsultation(p)}>Treat Now</button>
                                     <button style={{ ...btnStyle, background: '#FFC107', color: 'black' }} onClick={() => startEditPatient(p)}>Edit</button>
                                     <button style={{ ...btnStyle, background: '#F44336' }} onClick={() => handleDeletePatient(p.id!)}>Delete</button>
                                   </td>

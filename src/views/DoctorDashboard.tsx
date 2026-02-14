@@ -158,6 +158,9 @@ const DoctorDashboard = () => {
   }, []);
 
   // API Calls 
+
+
+  // API Calls 
   const fetchData = async () => {
     try {
       console.log("Fetching Dashboard Data...");
@@ -173,23 +176,50 @@ const DoctorDashboard = () => {
       const bRes = await api.get('/billings');
       setBillingsList(bRes.data);
 
-      // --- Roster Fetching Logic ---
+      // --- Roster Fetching & Sync Logic (මෙතනයි වෙනස කළේ) ---
       if (doctorId) {
         try {
           const rosterResponse = await api.get(`/rosters/doctor/${doctorId}`);
-          setRosterEntries(rosterResponse.data);
-          console.log("Roster Loaded Successfully:", rosterResponse.data);
+          const fetchedRoster = rosterResponse.data;
+
+          // 1. Dashboard එකේ පොඩි කැලැන්ඩර් එකට දත්ත යවනවා
+          setRosterEntries(fetchedRoster);
+
+          // 2. "My Roster" (Edit Table) එකට Database එකේ දත්ත පුරවනවා
+          const base30Days = generateNext30Days(); // මුලින් දවස් 30ක් හදාගන්නවා
+
+          // Database එකේ තියෙන දත්ත මේ දවස් 30 එක්ක ගලපනවා
+          const mergedRoster = base30Days.map(localDay => {
+            // මේ දවසට අදාළ record එකක් DB එකේ තියෙනවාද බලනවා
+            const found = fetchedRoster.find((dbEntry: any) => dbEntry.date === localDay.date);
+
+            if (found) {
+              // Database Status එක Frontend Status එකට හරවනවා
+              let mappedStatus = 'OFF';
+              if (found.shiftStatus === 'Full Duty') mappedStatus = 'DUTY';
+              else if (found.shiftStatus === 'Morning') mappedStatus = 'HALFDAY-MORNING';
+              else if (found.shiftStatus === 'Evening') mappedStatus = 'HALFDAY-EVENING';
+              else mappedStatus = 'OFF';
+
+              return { ...localDay, status: mappedStatus }; // Update කරනවා
+            }
+            return localDay; // නැත්නම් පරණ විදිහටම (OFF) තියනවා
+          });
+
+          // යාවත්කාලීන කළ ලිස්ට් එක Roster Table එකට දානවා
+          setRosterData(mergedRoster);
+          console.log("Roster Synced Successfully:", mergedRoster);
+
         } catch (rosterError) {
           console.error("Error fetching roster:", rosterError);
         }
       }
-      // -----------------------------
+      // ---------------------------------------------------------
 
       // Filter billings for this doctor 
       const myBills = bRes.data.filter((b: any) =>
         (b.doctor && String(b.doctor.id) === String(doctorId)) ||
         (b.doctorId && String(b.doctorId) === String(doctorId)) ||
-        // Fallback: Check appointment's doctor if available 
         (b.appointment?.doctor && String(b.appointment.doctor.id) === String(doctorId))
       );
 

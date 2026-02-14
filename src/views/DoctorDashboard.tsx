@@ -52,6 +52,8 @@ interface Billing {
     id: number;
     patient?: Patient;
   };
+  doctor?: { id: number; name: string };
+  doctorId?: string | number;
 }
 
 const DoctorDashboard = () => {
@@ -140,6 +142,7 @@ const DoctorDashboard = () => {
   // API Calls 
   const fetchData = async () => {
     try {
+      console.log("Fetching Dashboard Data...");
       const pRes = await api.get('/patients');
       setPatientsList(pRes.data);
 
@@ -147,12 +150,21 @@ const DoctorDashboard = () => {
       setAppointmentsList(aRes.data);
 
       const rRes = await api.get('/medical-records');
+      console.log("Fetched Medical Records:", rRes.data);
       setRecordsList(rRes.data);
 
       const bRes = await api.get('/billings');
       setBillingsList(bRes.data);
 
-      const total = bRes.data.reduce((acc: number, curr: any) => acc + curr.amount, 0);
+      // Filter billings for this doctor 
+      const myBills = bRes.data.filter((b: any) =>
+        (b.doctor && String(b.doctor.id) === String(doctorId)) ||
+        (b.doctorId && String(b.doctorId) === String(doctorId)) ||
+        // Fallback: Check appointment's doctor if available 
+        (b.appointment?.doctor && String(b.appointment.doctor.id) === String(doctorId))
+      );
+
+      const total = myBills.reduce((acc: number, curr: any) => acc + curr.amount, 0);
       setIncome(total);
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -161,15 +173,22 @@ const DoctorDashboard = () => {
 
   // Calculate Stats
   const myTreatedPatients = useMemo(() => {
-    if (!doctorId) return 0;
-    // Filter records where doctorId matches
-    const myRecords = recordsList.filter(r =>
-      (r.doctor && r.doctor.id.toString() === doctorId?.toString()) ||
-      (r.doctorId && r.doctorId.toString() === doctorId?.toString())
-    );
+    if (!doctorId || !recordsList || recordsList.length === 0) return 0;
+
+    // Filter records where doctorId matches (Robust String Comparison)
+    const myRecords = recordsList.filter(r => {
+      const recDocId = r.doctor?.id || r.doctorId;
+      return String(recDocId) === String(doctorId);
+    });
+
     // Get unique patient IDs
-    const uniquePatients = new Set(myRecords.map(r => r.patient?.id || r.patientId));
-    return uniquePatients.size;
+    const uniqueIds = new Set(myRecords.map(r =>
+      String(r.patient?.id || r.patientId)
+    ));
+
+    console.log("My Treated Patients Debug (Robust):", { doctorId, totalRecords: recordsList.length, myRecords: myRecords.length, unique: uniqueIds.size });
+
+    return uniqueIds.size;
   }, [recordsList, doctorId]);
 
   useEffect(() => {

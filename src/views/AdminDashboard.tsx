@@ -249,6 +249,7 @@ const AdminDashboard = () => {
   // states
   const [activeTab, setActiveTab] = useState<'dashboard' | 'doctors' | 'patients' | 'appointments'>('dashboard');
   const [doctorSubTab, setDoctorSubTab] = useState<'view' | 'add'>('view');
+  const [patientSubTab, setPatientSubTab] = useState<'view' | 'add'>('view');
 
   // Admin Name State
   const [adminName, setAdminName] = useState('');
@@ -269,6 +270,8 @@ const AdminDashboard = () => {
   const [newDoctor, setNewDoctor] = useState<Doctor>({
     name: '', specialization: '', email: '', phone: '', experience: '', password: ''
   });
+
+  const [newPatient, setNewPatient] = useState({ firstName: '', lastName: '', email: '', phone: '', age: '', gender: 'Male', password: '' });
 
   const handleLogout = () => {
     localStorage.removeItem('adminData');
@@ -329,7 +332,8 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteDoctor = async (id: number) => {
+  const handleDeleteDoctor = async (id: number | undefined) => {
+    if (!id) return;
     if (!window.confirm("Are you sure you want to delete this doctor?")) return;
     try {
       await api.delete(`/doctors/${id}`);
@@ -338,6 +342,35 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error("Error deleting doctor:", error);
       alert("Failed to delete doctor");
+    }
+  };
+
+  const handleAddPatient = async () => {
+    try {
+      if (!newPatient.firstName || !newPatient.email || !newPatient.password) {
+        alert("Please fill in required fields!");
+        return;
+      }
+      await api.post('/auth/register/patient', newPatient);
+      alert("Patient Added Successfully!");
+      setNewPatient({ firstName: '', lastName: '', email: '', phone: '', age: '', gender: 'Male', password: '' });
+      fetchPatients();
+      setPatientSubTab('view');
+    } catch (error) {
+      console.error("Error adding patient:", error);
+      alert("Failed to add patient!");
+    }
+  };
+
+  const handleDeletePatient = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this patient?")) return;
+    try {
+      await api.delete(`/patients/${id}`);
+      alert("Patient deleted successfully");
+      fetchPatients();
+    } catch (error) {
+      console.error("Error deleting patient:", error);
+      alert("Failed to delete patient");
     }
   };
 
@@ -648,48 +681,101 @@ const AdminDashboard = () => {
               {/* --- PATIENT DIRECTORY --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
-                  <div className="table-container">
-                    <div className="search-box-container" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                      <select
-                        value={patientSearchType}
-                        onChange={(e) => setPatientSearchType(e.target.value as any)}
-                        style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
-                      >
-                        <option value="id">ID</option>
-                        <option value="name">Name</option>
-                        <option value="email">Email</option>
-                        <option value="phone">Phone</option>
-                      </select>
-                      <div style={{ position: 'relative', flex: 1 }}>
-                        <input
-                          type="text"
-                          placeholder={`Search Patients by ${patientSearchType}...`}
-                          value={patientSearchQuery}
-                          onChange={(e) => setPatientSearchQuery(e.target.value)}
-                          style={{ width: '100%', padding: '8px 10px 8px 35px', borderRadius: '6px', border: '1px solid #ddd' }}
-                        />
-                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }}>
-                          <SearchIcon width="16" height="16" />
-                        </span>
-                      </div>
-                    </div>
+                  <div className="action-buttons-container">
+                    <button className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} onClick={() => setPatientSubTab(patientSubTab === 'add' ? 'view' : 'add')}>
+                      <PlusIcon /> {patientSubTab === 'add' ? 'View Patients' : 'Add Patient'}
+                    </button>
+                  </div>
 
-                    <table className="data-table">
-                      <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
-                      <tbody>
-                        {patientsList.filter(p => {
-                          if (!patientSearchQuery) return true;
-                          const q = patientSearchQuery.toLowerCase();
-                          if (patientSearchType === 'id') return p.id.toString().includes(q);
-                          if (patientSearchType === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(q);
-                          if (patientSearchType === 'email') return p.email.toLowerCase().includes(q);
-                          if (patientSearchType === 'phone') return p.phone.includes(q);
-                          return true;
-                        }).map((p) => (
-                          <tr key={p.id}><td>{p.id}</td><td>{p.firstName} {p.lastName}</td><td>{p.email}</td><td>{p.phone}</td></tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="slider-viewport">
+                    <div className={`slider-track ${patientSubTab === 'add' ? 'slide-left' : ''}`}>
+
+                      {/* View List */}
+                      <div className="slider-slide">
+                        <div className="table-container">
+                          <div className="search-box-container" style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                            <select
+                              value={patientSearchType}
+                              onChange={(e) => setPatientSearchType(e.target.value as any)}
+                              style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+                            >
+                              <option value="id">ID</option>
+                              <option value="name">Name</option>
+                              <option value="email">Email</option>
+                              <option value="phone">Phone</option>
+                            </select>
+                            <div style={{ position: 'relative', flex: 1 }}>
+                              <input
+                                type="text"
+                                placeholder={`Search Patients by ${patientSearchType}...`}
+                                value={patientSearchQuery}
+                                onChange={(e) => setPatientSearchQuery(e.target.value)}
+                                style={{ width: '100%', padding: '8px 10px 8px 35px', borderRadius: '6px', border: '1px solid #ddd' }}
+                              />
+                              <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }}>
+                                <SearchIcon width="16" height="16" />
+                              </span>
+                            </div>
+                          </div>
+
+                          <table className="data-table">
+                            <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Action</th></tr></thead>
+                            <tbody>
+                              {patientsList.filter(p => {
+                                if (!patientSearchQuery) return true;
+                                const q = patientSearchQuery.toLowerCase();
+                                if (patientSearchType === 'id') return p.id.toString().includes(q);
+                                if (patientSearchType === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(q);
+                                if (patientSearchType === 'email') return p.email.toLowerCase().includes(q);
+                                if (patientSearchType === 'phone') return p.phone.includes(q);
+                                return true;
+                              }).map((p) => (
+                                <tr key={p.id}>
+                                  <td>{p.id}</td><td>{p.firstName} {p.lastName}</td><td>{p.email}</td><td>{p.phone}</td>
+                                  <td>
+                                    <button onClick={() => handleDeletePatient(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545' }}>
+                                      <TrashIcon width="18" height="18" />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      {/* Add Form */}
+                      <div className="slider-slide">
+                        <div className="form-container">
+                          <h3>Register New Patient</h3>
+                          <form className="admin-form">
+                            <div className="form-row">
+                              <div className="form-group"><label>First Name</label><input type="text" value={newPatient.firstName} onChange={e => setNewPatient({ ...newPatient, firstName: e.target.value })} /></div>
+                              <div className="form-group"><label>Last Name</label><input type="text" value={newPatient.lastName} onChange={e => setNewPatient({ ...newPatient, lastName: e.target.value })} /></div>
+                            </div>
+                            <div className="form-row">
+                              <div className="form-group"><label>Email</label><input type="email" value={newPatient.email} onChange={e => setNewPatient({ ...newPatient, email: e.target.value })} /></div>
+                              <div className="form-group"><label>Phone</label><input type="text" value={newPatient.phone} onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })} /></div>
+                            </div>
+                            <div className="form-row">
+                              <div className="form-group"><label>Age</label><input type="number" value={newPatient.age} onChange={e => setNewPatient({ ...newPatient, age: e.target.value })} /></div>
+                              <div className="form-group"><label>Gender</label>
+                                <select value={newPatient.gender} onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="form-row">
+                              <div className="form-group"><label>Password</label><input type="password" value={newPatient.password} onChange={e => setNewPatient({ ...newPatient, password: e.target.value })} /></div>
+                            </div>
+                            <button type="button" className="save-btn" onClick={handleAddPatient}>Save Patient</button>
+                          </form>
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
                 </section>
               </div>

@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import './App.css';
 
+// Import Types
+import type { ViewMode } from './types/types.ts';
+
 // Import Sidebar Icons
 import { SignInIcon, SignUpIcon, DoctorIcon, StethoscopeIcon, HomeIcon } from './components/Icons.tsx';
 
@@ -15,15 +18,17 @@ import AdminLogin from './views/AdminLogIn.tsx';
 import AdminDashboard from './views/AdminDashboard.tsx';
 import Home from './views/Home.tsx'; 
 
-// --- Layout Component for Auth Pages (Sidebar + Content) ---
+// Auth Layout Wrapper 
 const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, activeTab: string }) => {
   const navigate = useNavigate();
+  // State for animation
   const [isExiting, setIsExiting] = useState(false);
 
+  // Handler for Go Home
   const handleGoHome = () => {
-    setIsExiting(true);
+    setIsExiting(true); // Start animation
     setTimeout(() => {
-      navigate('/home');
+      navigate('/home'); // Navigate 
     }, 500); 
   };
 
@@ -31,6 +36,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
     <div className="auth-background">
       <div 
         className="app-wrapper"
+        // Apply animation styles 
         style={{
           transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
           transform: isExiting ? 'translateX(-100vw)' : 'none',
@@ -40,7 +46,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
         {/* --- SIDEBAR --- */}
         <div className="sidebar">
           
-          {/* Home Button */}
+          {/* ---Home Button --- */}
           <div
             className="sidebar-icon"
             onClick={handleGoHome} 
@@ -88,7 +94,7 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
           </div>
         </div>
 
-        {/* --- MAIN CONTENT AREA --- */}
+        {/* --- MAIN CONTENT --- */}
         <div className={`main-container ${activeTab !== 'patientSignUp' ? 'sign-in-mode' : ''}`}>
            {children}
         </div>
@@ -97,46 +103,45 @@ const AuthLayout = ({ children, activeTab }: { children: React.ReactNode, active
   );
 };
 
-// --- Wrapper to handle "setViewMode" prop compatibility ---
-// This bridge allows components to switch routes using their existing props logic
-const AuthPageWrapper = ({ Component, mode }: { Component: any, mode: string }) => {
-    const navigate = useNavigate();
-
-    // Map the 'ViewMode' strings to actual Routes
-    const handleSetViewMode = (newMode: string) => {
-        if (newMode === 'patientSignIn') navigate('/patient-login');
-        if (newMode === 'patientSignUp') navigate('/patient-signup');
-        if (newMode === 'doctorLogin') navigate('/doctor-login');
-        if (newMode === 'adminLogin') navigate('/admin-login');
-    };
-
-    return (
-        <AuthLayout activeTab={mode}>
-            <Component setViewMode={handleSetViewMode} />
-        </AuthLayout>
-    );
-};
-
-// --- MAIN APP COMPONENT ---
+// Main App Component 
 function App() {
+  
+  // Navigation
+  const AuthRoute = ({ component: Component, mode }: { component: any, mode: ViewMode }) => {
+      const navigate = useNavigate();
+      
+      const handleSetViewMode = (newMode: ViewMode) => {
+          if (newMode === 'patientSignIn') navigate('/patient-login');
+          if (newMode === 'patientSignUp') navigate('/patient-signup');
+          if (newMode === 'doctorLogin') navigate('/doctor-login');
+          if (newMode === 'adminLogin') navigate('/admin-login');
+      };
+
+      return (
+          <AuthLayout activeTab={mode}>
+              <Component setViewMode={handleSetViewMode} />
+          </AuthLayout>
+      );
+  };
+
   return (
     <BrowserRouter>
       <Routes>
         {/* --- HOME ROUTE --- */}
         <Route path="/home" element={<Home />} />
         
-        {/* --- AUTH ROUTES (Wrapped in Layout) --- */}
-        <Route path="/patient-login" element={<AuthPageWrapper Component={PatientSignIn} mode="patientSignIn" />} />
-        <Route path="/patient-signup" element={<AuthPageWrapper Component={PatientSignUp} mode="patientSignUp" />} />
-        <Route path="/doctor-login" element={<AuthPageWrapper Component={DoctorLogin} mode="doctorLogin" />} />
-        <Route path="/admin-login" element={<AuthPageWrapper Component={AdminLogin} mode="adminLogin" />} />
+        {/* --- AUTH ROUTES  --- */}
+        <Route path="/patient-login" element={<AuthRoute component={PatientSignIn} mode="patientSignIn" />} />
+        <Route path="/patient-signup" element={<AuthRoute component={PatientSignUp} mode="patientSignUp" />} />
+        <Route path="/doctor-login" element={<AuthRoute component={DoctorLogin} mode="doctorLogin" />} />
+        <Route path="/admin-login" element={<AuthRoute component={AdminLogin} mode="adminLogin" />} />
 
         {/* --- DASHBOARD ROUTES --- */}
         <Route path="/patient-dashboard" element={<PatientDashboard />} />
         <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
 
-        {/* --- DEFAULT REDIRECT --- */}
+        {/* --- DEFAULT --- */}
         <Route path="/" element={<Navigate to="/home" />} />
         <Route path="*" element={<Navigate to="/home" />} />
       </Routes>

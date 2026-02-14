@@ -1,4 +1,5 @@
 import { useState } from 'react';
+//  Types  import 
 import type { Dispatch, SetStateAction } from 'react'; 
 import type { ViewMode } from '../types/types';
 import { MailIcon, LockIcon } from '../components/Icons.tsx'; 
@@ -11,7 +12,7 @@ interface PatientSignUpProps {
 
 const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
   
-  // States
+  //  States
   const [formData, setFormData] = useState({
       firstName: '',
       lastName: '',
@@ -25,7 +26,7 @@ const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
 
   const [error, setError] = useState('');
 
-  // Input State update 
+  // Input  State update 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setFormData({
           ...formData,
@@ -37,14 +38,14 @@ const PatientSignUp = ({ setViewMode }: PatientSignUpProps) => {
     e.preventDefault();
     setError('');
 
-    // Validation
+    //  Validation
     if(!formData.firstName || !formData.email || !formData.password || !formData.phone) {
         setError("Please fill in all required fields.");
         return;
     }
 
     try {
-      // Backend Request 
+      // Backend  Request 
       const response = await api.post('/patients', formData);
 
       if (response.status === 201 || response.status === 200) {

@@ -257,7 +257,7 @@ body {
   cursor: pointer;
   text-align: left;
   font-size: 0.95rem;
-  color: #555;
+  color: #000000;
   transition: all 0.2s;
   width: 100%;
 }

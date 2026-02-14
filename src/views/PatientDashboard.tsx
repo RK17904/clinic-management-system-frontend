@@ -143,7 +143,7 @@ const PatientDashboard = () => {
     });
   };
 
-  // Handle Booking (FIXED: Includes appointmentTime & Logic)
+  // Handle Booking
   const handleBookAppointment = async () => {
     if (!patient || !newBooking.doctorId || !newBooking.date || !newBooking.time) {
       alert("Please select a doctor, date and time!");
@@ -152,6 +152,7 @@ const PatientDashboard = () => {
 
     try {
       // 1. Create the combined LocalDateTime string (Format: YYYY-MM-DDTHH:mm:ss)
+      // Example: "2026-02-14T10:30:00"
       const combinedAppointmentTime = `${newBooking.date}T${newBooking.time}:00`;
 
       const payload = {
@@ -159,7 +160,7 @@ const PatientDashboard = () => {
         doctorId: newBooking.doctorId.toString(),
         date: newBooking.date,
         time: newBooking.time + ":00",
-        appointmentTime: combinedAppointmentTime, // Fixed: Added this field
+        appointmentTime: combinedAppointmentTime, // <--- මේ පේළිය තමයි අලුතෙන් එකතු කළේ (Backend එකට මේක අනිවාර්යයි)
         notes: newBooking.notes,
         status: "Pending"
       };
@@ -188,14 +189,7 @@ const PatientDashboard = () => {
     }
   };
 
-  // FIX: Loading Screen & Fix "unused variable" warning
-  if (loading || !patient) {
-    return (
-      <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#063ca8'}}>
-        <h2>Loading Dashboard...</h2>
-      </div>
-    );
-  }
+  if (!patient) return <div>Loading...</div>;
 
   const sidebarColor = 'white';
   const activeTextColor = '#0056b3';

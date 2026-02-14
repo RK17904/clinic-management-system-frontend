@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon } from '../components/Icons.tsx';
+import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon, TrashIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts';
 
 // types
@@ -329,6 +329,18 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleDeleteDoctor = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this doctor?")) return;
+    try {
+      await api.delete(`/doctors/${id}`);
+      alert("Doctor deleted successfully");
+      fetchDoctors();
+    } catch (error) {
+      console.error("Error deleting doctor:", error);
+      alert("Failed to delete doctor");
+    }
+  };
+
   // Fetch data (on load)
   useEffect(() => {
     fetchDoctors();
@@ -580,7 +592,7 @@ const AdminDashboard = () => {
                         <div className="table-container">
                           <table className="data-table">
                             <thead>
-                              <tr><th>ID</th><th>Name</th><th>Specialization</th><th>Email</th><th>Phone</th><th>Exp</th></tr>
+                              <tr><th>ID</th><th>Name</th><th>Specialization</th><th>Email</th><th>Phone</th><th>Exp</th><th>Action</th></tr>
                             </thead>
                             <tbody>
                               {doctorsList.filter(d => {
@@ -594,6 +606,11 @@ const AdminDashboard = () => {
                               }).map((d) => (
                                 <tr key={d.id}>
                                   <td>{d.id}</td><td>{d.name}</td><td>{d.specialization}</td><td>{d.email}</td><td>{d.phone}</td><td>{d.experience}</td>
+                                  <td>
+                                    <button onClick={() => handleDeleteDoctor(d.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545' }}>
+                                      <TrashIcon width="18" height="18" />
+                                    </button>
+                                  </td>
                                 </tr>
                               ))}
                             </tbody>

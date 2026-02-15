@@ -118,6 +118,14 @@ const PatientDashboard = () => {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [myRecords, setMyRecords] = useState<MedicalRecord[]>([]);
 
+  // Place this at the very top inside your function
+  const [visibleCount, setVisibleCount] = useState(5);
+
+  // Function to show 5 more records when "View More" is clicked
+  const handleShowMore = () => {
+    setVisibleCount(prev => prev + 5);
+  };
+
   // STATES for Booking 
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -800,35 +808,101 @@ const PatientDashboard = () => {
 
               {/* MEDICAL RECORDS TAB */}
               <div className="main-slider-slide">
-                <section className="doctors-section p-4">
-                  <h3>My Medical Records</h3>
-                  <div className="table-container">
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Diagnosis</th>
-                          <th>Treatment</th>
-                          <th>Notes</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {myRecords.length === 0 ? (
-                          <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No Medical Records Found</td></tr>
-                        ) : (
-                          myRecords.map(rec => (
-                            <tr key={rec.id}>
-                              <td>{rec.recordDate}</td>
-                              <td>{rec.diagnosis}</td>
-                              <td>{rec.treatment}</td>
-                              <td style={{ maxWidth: '300px' }}>{rec.notes}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
+                {/* --- MY MEDICAL RECORDS SECTION (CARD STYLE) --- */}
+                <div className="medical-records-section" style={{ marginTop: '20px', padding: '20px' }}>
+                  <h3 style={{ color: '#063ca8', borderBottom: '2px solid #eee', paddingBottom: '10px' }}>
+                    My Medical Records
+                  </h3>
+
+                  <div className="records-list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+
+                    {/* 1. Records List Mapping */}
+                    {myRecords && myRecords.length > 0 ? (
+                      myRecords
+                        .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime()) // Sort: Newest first
+                        .slice(0, visibleCount) // 🔥 The logic: Take only the first 'visibleCount' records
+                        .map((rec, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              backgroundColor: '#fff',
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+                              borderLeft: '5px solid #063ca8', // Blue line on the left
+                              padding: '20px',
+                              transition: 'transform 0.2s',
+                              border: '1px solid #f0f0f0'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                          >
+                            {/* Top Section (Date and Diagnosis) */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <h4 style={{ margin: 0, color: '#333', fontSize: '1.1rem' }}>{rec.diagnosis}</h4>
+                              <span style={{
+                                backgroundColor: '#e3f2fd',
+                                color: '#063ca8',
+                                padding: '5px 12px',
+                                borderRadius: '20px',
+                                fontSize: '0.85rem',
+                                fontWeight: '600'
+                              }}>
+                                📅 {rec.recordDate}
+                              </span>
+                            </div>
+
+                            {/* Middle Section (Treatment) */}
+                            <div style={{ marginBottom: '8px' }}>
+                              <strong style={{ color: '#555' }}>💊 Treatment:</strong>
+                              <p style={{ margin: '5px 0', color: '#444', lineHeight: '1.5' }}>{rec.treatment}</p>
+                            </div>
+
+                            {/* Bottom Section (Notes - Only if available) */}
+                            {rec.notes && (
+                              <div style={{ background: '#f9f9f9', padding: '10px', borderRadius: '8px', marginTop: '10px' }}>
+                                <strong style={{ color: '#777', fontSize: '0.9rem' }}>📝 Doctor's Note:</strong>
+                                <p style={{ margin: '5px 0', color: '#666', fontSize: '0.95rem', fontStyle: 'italic' }}>
+                                  "{rec.notes}"
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                    ) : (
+                      <p style={{ textAlign: 'center', color: '#888', marginTop: '20px' }}>No medical records found.</p>
+                    )}
+
+                    {/* 2. View More Button (Show only if there are hidden records) */}
+                    {myRecords && visibleCount < myRecords.length && (
+                      <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                        <button
+                          onClick={handleShowMore}
+                          style={{
+                            backgroundColor: 'transparent',
+                            border: '2px solid #063ca8',
+                            color: '#063ca8',
+                            padding: '10px 25px',
+                            borderRadius: '25px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            transition: 'all 0.3s'
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.backgroundColor = '#063ca8';
+                            e.currentTarget.style.color = '#fff';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = '#063ca8';
+                          }}
+                        >
+                          View More Records ↓
+                        </button>
+                      </div>
+                    )}
+
                   </div>
-                </section>
+                </div>
               </div>
 
             </div>

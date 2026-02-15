@@ -465,12 +465,14 @@ const AdminDashboard = () => {
   // Helper for Status Badge Color
   const getStatusColor = (status: string) => {
     const s = status.toUpperCase();
+    if (s === 'COMPLETED') return '#e0e7ff'; // Indigo/Blue bg for Completed
     if (s === 'APPROVED' || s === 'SCHEDULED' || s === 'CONFIRMED') return '#d1fae5'; // Green bg
     if (s === 'REJECTED' || s === 'CANCELLED') return '#fee2e2'; // Red bg
     return '#fef3c7'; // Yellow/Orange bg for Pending
   };
   const getStatusTextColor = (status: string) => {
     const s = status.toUpperCase();
+    if (s === 'COMPLETED') return '#3730a3'; // Indigo text
     if (s === 'APPROVED' || s === 'SCHEDULED' || s === 'CONFIRMED') return '#065f46'; // Green text
     if (s === 'REJECTED' || s === 'CANCELLED') return '#991b1b'; // Red text
     return '#92400e'; // Yellow/Orange text
@@ -836,43 +838,52 @@ const AdminDashboard = () => {
                       </thead>
                       <tbody>
                         {filteredAppointments.length > 0 ? (
-                          filteredAppointments.map((a) => (
-                            <tr key={a.id}>
-                              <td>#{a.id}</td>
-                              <td style={{ fontWeight: '500' }}>
-                                {a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : <span style={{ color: '#999', fontStyle: 'italic' }}>Unknown</span>}
-                              </td>
-                              <td>
-                                {a.doctor ? `Dr. ${a.doctor.name}` : <span style={{ color: '#999', fontStyle: 'italic' }}>Unknown</span>}
-                              </td>
-                              <td>
-                                {a.doctor ? (
-                                  <span style={{ fontSize: '0.85rem', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' }}>
-                                    {a.doctor.specialization}
+                          filteredAppointments.map((a) => {
+                            // Calculate Display Status
+                            const today = new Date();
+                            const todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                            const isApproved = ['APPROVED', 'SCHEDULED', 'CONFIRMED'].includes(a.status.toUpperCase());
+                            const isPast = a.date < todayStr;
+                            const displayStatus = (isApproved && isPast) ? 'COMPLETED' : a.status;
+
+                            return (
+                              <tr key={a.id}>
+                                <td>#{a.id}</td>
+                                <td style={{ fontWeight: '500' }}>
+                                  {a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : <span style={{ color: '#999', fontStyle: 'italic' }}>Unknown</span>}
+                                </td>
+                                <td>
+                                  {a.doctor ? `Dr. ${a.doctor.name}` : <span style={{ color: '#999', fontStyle: 'italic' }}>Unknown</span>}
+                                </td>
+                                <td>
+                                  {a.doctor ? (
+                                    <span style={{ fontSize: '0.85rem', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' }}>
+                                      {a.doctor.specialization}
+                                    </span>
+                                  ) : '-'}
+                                </td>
+                                <td>
+                                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                    <span style={{ fontSize: '0.9rem' }}>{a.date}</span>
+                                    <span style={{ fontSize: '0.8rem', color: '#666' }}>{a.time}</span>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span style={{
+                                    padding: '4px 10px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 'bold',
+                                    backgroundColor: getStatusColor(displayStatus),
+                                    color: getStatusTextColor(displayStatus),
+                                    textTransform: 'uppercase'
+                                  }}>
+                                    {displayStatus}
                                   </span>
-                                ) : '-'}
-                              </td>
-                              <td>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                  <span style={{ fontSize: '0.9rem' }}>{a.date}</span>
-                                  <span style={{ fontSize: '0.8rem', color: '#666' }}>{a.time}</span>
-                                </div>
-                              </td>
-                              <td>
-                                <span style={{
-                                  padding: '4px 10px',
-                                  borderRadius: '12px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 'bold',
-                                  backgroundColor: getStatusColor(a.status),
-                                  color: getStatusTextColor(a.status),
-                                  textTransform: 'uppercase'
-                                }}>
-                                  {a.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))
+                                </td>
+                              </tr>
+                            );
+                          })
                         ) : (
                           <tr>
                             <td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#888' }}>

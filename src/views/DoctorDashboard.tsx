@@ -77,6 +77,7 @@ const DoctorDashboard = () => {
   // Medical Records Explorer States
   const [recordSearchQuery, setRecordSearchQuery] = useState('');
   const [selectedHistoryPatient, setSelectedHistoryPatient] = useState<number | null>(null);
+  const [recordSearchTab, setRecordSearchTab] = useState('name'); // <--- Add this new line to handle tab selection.
 
   // Walk-in Patient Search State
   const [searchTerm, setSearchTerm] = useState('');
@@ -166,6 +167,9 @@ const DoctorDashboard = () => {
   }, []);
 
   // API Calls 
+
+
+  // API Calls 
   const fetchData = async () => {
     try {
       console.log("Fetching Dashboard Data...");
@@ -181,33 +185,37 @@ const DoctorDashboard = () => {
       const bRes = await api.get('/billings');
       setBillingsList(bRes.data);
 
-      // --- Roster Fetching & Sync Logic ---
+      // --- Roster Fetching & Sync Logic (මෙතනයි වෙනස කළේ) ---
       if (doctorId) {
         try {
           const rosterResponse = await api.get(`/rosters/doctor/${doctorId}`);
           const fetchedRoster = rosterResponse.data;
 
-          // 1. Send data to small dashboard calendar
+          // 1. Dashboard එකේ පොඩි කැලැන්ඩර් එකට දත්ත යවනවා
           setRosterEntries(fetchedRoster);
 
-          // 2. Fill "My Roster" table with DB data
-          const base30Days = generateNext30Days(); 
+          // 2. "My Roster" (Edit Table) එකට Database එකේ දත්ත පුරවනවා
+          const base30Days = generateNext30Days(); // මුලින් දවස් 30ක් හදාගන්නවා
 
+          // Database එකේ තියෙන දත්ත මේ දවස් 30 එක්ක ගලපනවා
           const mergedRoster = base30Days.map(localDay => {
+            // මේ දවසට අදාළ record එකක් DB එකේ තියෙනවාද බලනවා
             const found = fetchedRoster.find((dbEntry: any) => dbEntry.date === localDay.date);
 
             if (found) {
+              // Database Status එක Frontend Status එකට හරවනවා
               let mappedStatus = 'OFF';
               if (found.shiftStatus === 'Full Duty') mappedStatus = 'DUTY';
               else if (found.shiftStatus === 'Morning') mappedStatus = 'HALFDAY-MORNING';
               else if (found.shiftStatus === 'Evening') mappedStatus = 'HALFDAY-EVENING';
               else mappedStatus = 'OFF';
 
-              return { ...localDay, status: mappedStatus }; 
+              return { ...localDay, status: mappedStatus }; // Update කරනවා
             }
-            return localDay; 
+            return localDay; // නැත්නම් පරණ විදිහටම (OFF) තියනවා
           });
 
+          // යාවත්කාලීන කළ ලිස්ට් එක Roster Table එකට දානවා
           setRosterData(mergedRoster);
           console.log("Roster Synced Successfully:", mergedRoster);
 
@@ -215,6 +223,7 @@ const DoctorDashboard = () => {
           console.error("Error fetching roster:", rosterError);
         }
       }
+      // ---------------------------------------------------------
 
       // Filter billings for this doctor 
       const myBills = bRes.data.filter((b: any) =>
@@ -235,6 +244,7 @@ const DoctorDashboard = () => {
     const seenIds = new Set();
     const uniqueList: any[] = [];
 
+    // Filter records by doctor, sort by newest date
     const sortedRecords = [...recordsList]
       .filter(r => String(r.doctor?.id || r.doctorId) === String(doctorId))
       .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime());
@@ -254,11 +264,13 @@ const DoctorDashboard = () => {
   const myTreatedPatients = useMemo(() => {
     if (!doctorId || !recordsList || recordsList.length === 0) return 0;
 
+    // Filter records where doctorId matches
     const myRecords = recordsList.filter(r => {
       const recDocId = r.doctor?.id || r.doctorId;
       return String(recDocId) === String(doctorId);
     });
 
+    // Get unique patient IDs
     const uniqueIds = new Set(myRecords.map(r =>
       String(r.patient?.id || r.patientId)
     ));
@@ -291,6 +303,8 @@ const DoctorDashboard = () => {
 
   const saveRoster = async () => {
     try {
+      // FIX: Map ALL statuses including 'OFF'. 
+      // Do NOT filter out 'Off' days, as we need to update the database if a doctor changes from Duty -> Off.
       const rosterPayload = rosterData.map(r => ({
         date: r.date,
         shiftStatus: r.status === 'OFF' ? 'Off' : r.status === 'DUTY' ? 'Full Duty' : r.status === 'HALFDAY-MORNING' ? 'Morning' : 'Evening',
@@ -299,11 +313,14 @@ const DoctorDashboard = () => {
 
       console.log("Sending Roster Update:", rosterPayload);
 
+      // Send requests sequentially to ensure data integrity
       for (const rosterItem of rosterPayload) {
         await api.post('/rosters', rosterItem);
       }
 
       alert("Roster Updated Successfully!");
+
+      // Refresh the dashboard UI to reflect new colors immediately
       fetchData();
     } catch (error) {
       console.error("Error saving roster:", error);
@@ -362,6 +379,7 @@ const DoctorDashboard = () => {
     } catch { alert("Error Saving Appointment!"); }
   };
 
+  // Handle Status Update (Accept/Reject) 
   const handleStatusUpdate = async (id: number, status: string) => {
     if (!window.confirm(`Are you sure you want to ${status} this appointment?`)) return;
 
@@ -382,11 +400,17 @@ const DoctorDashboard = () => {
         await api.put(`/medical-records/${editingId}`, newRecord);
         alert("Record Updated!");
       } else {
+        // --- SCENARIO: WALK-IN PATIENT (No Existing Appointment) ---
+
+        // 1. Initialize finalAppointmentId variable
         let finalAppointmentId = null;
 
+        // Check if we have a patient selected but NO appointment linked
         if (currentPatient?.id) {
           try {
             console.log("Generating Walk-in Appointment for Patient ID:", currentPatient.id);
+
+            // Construct payload for a "Completed" artificial appointment
             const walkInPayload = {
               patientId: currentPatient.id.toString(),
               doctorId: doctorId,
@@ -396,8 +420,10 @@ const DoctorDashboard = () => {
               notes: "Walk-in consultation (Auto-generated)"
             };
 
+            // API Call to create the appointment
             const apptResponse = await api.post('/appointments', walkInPayload);
 
+            // Capture the new Appointment ID
             if (apptResponse.data && apptResponse.data.id) {
               finalAppointmentId = apptResponse.data.id;
               console.log("Walk-in Appointment Created via API. ID:", finalAppointmentId);
@@ -409,6 +435,7 @@ const DoctorDashboard = () => {
           }
         }
 
+        // 2. Save the Medical Record (Standard Logic)
         const recordPayload = {
           patientId: currentPatient?.id?.toString() || newRecord.patientId,
           doctorId: doctorId || newRecord.doctorId,
@@ -421,8 +448,14 @@ const DoctorDashboard = () => {
         await api.post('/medical-records', recordPayload);
         alert("Medical Record Saved! Proceeding to Billing...");
 
+        // --- AUTOMATED BILLING FLOW ---
+        // 1. Switch to Billing Tab
         setActiveTab('billing');
+
+        // 2. Open 'Create Bill' Form
         setBillingSubTab('add');
+
+        // 3. Pre-fill Billing Details
         setNewBill({
           patientId: currentPatient?.id?.toString() || '',
           appointmentId: finalAppointmentId ? finalAppointmentId.toString() : '',
@@ -483,6 +516,7 @@ const DoctorDashboard = () => {
     setBillingSubTab('add');
   };
 
+  // PRINT BILL FUNCTION 
   const printBill = (bill: Billing) => {
     const printWindow = window.open('', '_blank', 'width=800,height=600');
     if (printWindow) {
@@ -560,10 +594,12 @@ const DoctorDashboard = () => {
     }
   };
 
+  // ACTIONS: CURRENT PATIENT
   const startConsultation = (patient: Patient) => {
     setCurrentPatient(patient);
     setActiveTab('currentPatient');
     setHistoryLimit(5);
+    // Pre-fill record with patient info
     setNewRecord({
       patientId: patient.id?.toString() || '',
       doctorId: doctorId?.toString() || '',
@@ -582,6 +618,7 @@ const DoctorDashboard = () => {
     }
   };
 
+  // ADVANCED CONSULTATION SEARCH
   const handleConsultationSearch = () => {
     setConsultationError(null);
     if (!consultationSearchQuery.trim()) {
@@ -686,27 +723,12 @@ const DoctorDashboard = () => {
               {/* DASHBOARD OVERVIEW */}
               <div className="main-slider-slide">
                 <section className="dashboard-content">
-                  {/* CLICKABLE STAT CARD: PATIENTS */}
-                  <div 
-                    className="stat-card" 
-                    onClick={() => setActiveTab('patients')} 
-                    style={{ backgroundColor: '#ffffffff', cursor: 'pointer' }}
-                  >
+                  <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}>
                     <h3>My Treated Patients</h3>
                     <p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{myTreatedPatients}</p>
                     <span style={{ color: '#28a745', fontSize: '0.9rem', fontWeight: 'bold' }}>+2 this week</span>
                   </div>
-
-                  {/* CLICKABLE STAT CARD: APPOINTMENTS */}
-                  <div 
-                    className="stat-card" 
-                    onClick={() => setActiveTab('appointments')} 
-                    style={{ backgroundColor: '#ffffffff', cursor: 'pointer' }}
-                  >
-                    <h3>Appointments</h3>
-                    <p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{appointmentsList.length}</p>
-                  </div>
-
+                  <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Appointments</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>{appointmentsList.length}</p></div>
                   <div className="stat-card" style={{ backgroundColor: '#ffffffff' }}><h3>Income</h3><p style={{ color: '#1565C0', fontSize: '2.5rem' }}>Rs. {income}</p></div>
                 </section>
 
@@ -761,26 +783,126 @@ const DoctorDashboard = () => {
                   {/* --- WALK-IN PATIENT SEARCH --- */}
 
                   {/* Row 1: Search Box (Inputs Only) */}
-                  <div className="search-box-container">
-                    <select
-                      className="consultation-search-select"
-                      value={consultationSearchType}
-                      onChange={(e) => setConsultationSearchType(e.target.value as any)}
-                    >
-                      <option value="id">Find by ID</option>
-                      <option value="name">Find by Name</option>
-                      <option value="phone">Find by Phone</option>
-                      <option value="email">Find by Email</option>
-                    </select>
-                    <input
-                      className="consultation-search-input"
-                      type="text"
-                      placeholder={`Enter Patient ${consultationSearchType}...`}
-                      value={consultationSearchQuery}
-                      onChange={(e) => setConsultationSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleConsultationSearch()}
-                    />
-                    <button className="consultation-search-btn" onClick={handleConsultationSearch}>Find Patient</button>
+                  {/* --- WALK-IN PATIENT SEARCH (TABBED STYLE) --- */}
+                  <div className="advanced-search-container" style={{ marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '10px', border: '1px solid #dee2e6' }}>
+                    <p style={{ fontWeight: '600', color: '#063ca8', marginBottom: '10px' }}>Find Patient for Consultation:</p>
+
+                    {/* 1. Tabs Header */}
+                    <div className="search-tabs" style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                      {['ID', 'Name', 'Phone', 'Email'].map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => {
+                            setConsultationSearchType(tab.toLowerCase() as any); // Switches the search tab
+                            setConsultationSearchQuery(''); // Clears previous search query
+                          }}
+                          style={{
+                            padding: '6px 15px',
+                            fontSize: '0.85rem',
+                            borderRadius: '20px', // Rounded buttons for a modern look
+                            border: 'none',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            backgroundColor: consultationSearchType === tab.toLowerCase() ? '#063ca8' : '#e9ecef',
+                            color: consultationSearchType === tab.toLowerCase() ? '#fff' : '#555',
+                            fontWeight: consultationSearchType === tab.toLowerCase() ? 'bold' : 'normal'
+                          }}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* 2. Input Area with Live Search */}
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        placeholder={`Start typing patient ${consultationSearchType}...`}
+                        value={consultationSearchQuery}
+                        onChange={(e) => setConsultationSearchQuery(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: '1px solid #ccc',
+                          fontSize: '1rem'
+                        }}
+                      />
+
+                      {/* 3. Dropdown Results (Live Filtering) */}
+                      {consultationSearchQuery && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          maxHeight: '250px',
+                          overflowY: 'auto',
+                          background: 'white',
+                          border: '1px solid #dee2e6',
+                          zIndex: 1000,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          borderRadius: '0 0 8px 8px',
+                          marginTop: '2px'
+                        }}>
+                          {patientsList
+                            .filter(p => {
+                              const val = consultationSearchQuery.toLowerCase();
+                              if (!val) return false;
+
+                              // Filtering logic based on the selected Tab
+                              if (consultationSearchType === 'id') return String(p.id).includes(val);
+                              if (consultationSearchType === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(val);
+                              if (consultationSearchType === 'phone') return p.phone.includes(val);
+                              if (consultationSearchType === 'email') return p.email.toLowerCase().includes(val);
+                              return false;
+                            })
+                            .map(p => (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  startConsultation(p); // Directly starts consultation upon selecting the patient
+                                  setConsultationSearchQuery(''); // Clears search query
+                                }}
+                                style={{
+                                  padding: '12px',
+                                  borderBottom: '1px solid #eee',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = '#f1f5ff'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+                              >
+                                <div>
+                                  <span style={{ fontWeight: 'bold', display: 'block' }}>{p.firstName} {p.lastName}</span>
+                                  <span style={{ fontSize: '0.8rem', color: '#666' }}>{p.email}</span>
+                                </div>
+                                <span style={{ color: '#063ca8', fontSize: '0.85rem', background: '#e3f2fd', padding: '2px 8px', borderRadius: '4px' }}>
+                                  ID: {p.id}
+                                </span>
+                              </div>
+                            ))
+                          }
+
+                          {/* Message to show if no data matches the search */}
+                          {patientsList.filter(p => {
+                            const val = consultationSearchQuery.toLowerCase();
+                            if (consultationSearchType === 'id') return String(p.id).includes(val);
+                            if (consultationSearchType === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(val);
+                            if (consultationSearchType === 'phone') return p.phone.includes(val);
+                            if (consultationSearchType === 'email') return p.email.toLowerCase().includes(val);
+                            return false;
+                          }).length === 0 && (
+                              <div style={{ padding: '15px', textAlign: 'center', color: '#888' }}>
+                                No patient found matching "{consultationSearchQuery}"
+                              </div>
+                            )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Error Message (Separate Row) */}
@@ -1061,13 +1183,39 @@ const DoctorDashboard = () => {
                       <>
                         <div className="records-nav-header">
                           <h3 className="history-title">Medical Records Explorer</h3>
-                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+                            {/* --- NEW: Search Tabs --- */}
+                            <div className="search-tabs" style={{ display: 'flex', gap: '5px' }}>
+                              {['ID', 'Name', 'Phone', 'Email'].map((tab) => (
+                                <button
+                                  key={tab}
+                                  type="button"
+                                  onClick={() => setRecordSearchTab(tab.toLowerCase())}
+                                  style={{
+                                    padding: '5px 12px',
+                                    fontSize: '0.75rem',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    backgroundColor: recordSearchTab === tab.toLowerCase() ? '#063ca8' : '#e9ecef',
+                                    color: recordSearchTab === tab.toLowerCase() ? '#fff' : '#333'
+                                  }}
+                                >
+                                  {tab}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* --- Search Input --- */}
                             <div className="search-box-container" style={{ margin: 0 }}>
                               <input
                                 type="text"
-                                placeholder="Search Patient Name or ID..."
+                                placeholder={`Search by ${recordSearchTab}...`} // Dynamic Placeholder
                                 value={recordSearchQuery}
                                 onChange={(e) => setRecordSearchQuery(e.target.value)}
+                                style={{ width: '100%', padding: '8px' }}
                               />
                             </div>
                           </div>
@@ -1081,9 +1229,19 @@ const DoctorDashboard = () => {
                             <tbody>
                               {lastTenUniquePatients
                                 .filter(r => {
-                                  const fullName = `${r.patient?.firstName || ''} ${r.patient?.lastName || ''}`.toLowerCase();
-                                  return fullName.includes(recordSearchQuery.toLowerCase()) ||
-                                    String(r.patient?.id || r.patientId).includes(recordSearchQuery);
+                                  const query = recordSearchQuery.toLowerCase();
+                                  if (!query) return true; // Show all records if the search query is empty
+
+                                  const p = r.patient; // Access the Patient Object
+                                  if (!p) return false;
+
+                                  // Filtering logic based on the selected Tab
+                                  if (recordSearchTab === 'id') return String(p.id || r.patientId).includes(query);
+                                  if (recordSearchTab === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(query);
+                                  if (recordSearchTab === 'phone') return p.phone.includes(query);
+                                  if (recordSearchTab === 'email') return p.email.toLowerCase().includes(query);
+
+                                  return false;
                                 })
                                 .map((r, i) => (
                                   <tr key={i}>

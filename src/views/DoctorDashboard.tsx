@@ -783,26 +783,126 @@ const DoctorDashboard = () => {
                   {/* --- WALK-IN PATIENT SEARCH --- */}
 
                   {/* Row 1: Search Box (Inputs Only) */}
-                  <div className="search-box-container">
-                    <select
-                      className="consultation-search-select"
-                      value={consultationSearchType}
-                      onChange={(e) => setConsultationSearchType(e.target.value as any)}
-                    >
-                      <option value="id">Find by ID</option>
-                      <option value="name">Find by Name</option>
-                      <option value="phone">Find by Phone</option>
-                      <option value="email">Find by Email</option>
-                    </select>
-                    <input
-                      className="consultation-search-input"
-                      type="text"
-                      placeholder={`Enter Patient ${consultationSearchType}...`}
-                      value={consultationSearchQuery}
-                      onChange={(e) => setConsultationSearchQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleConsultationSearch()}
-                    />
-                    <button className="consultation-search-btn" onClick={handleConsultationSearch}>Find Patient</button>
+                  {/* --- WALK-IN PATIENT SEARCH (TABBED STYLE) --- */}
+                  <div className="advanced-search-container" style={{ marginBottom: '20px', background: '#f8f9fa', padding: '15px', borderRadius: '10px', border: '1px solid #dee2e6' }}>
+                    <p style={{ fontWeight: '600', color: '#063ca8', marginBottom: '10px' }}>Find Patient for Consultation:</p>
+
+                    {/* 1. Tabs Header */}
+                    <div className="search-tabs" style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                      {['ID', 'Name', 'Phone', 'Email'].map((tab) => (
+                        <button
+                          key={tab}
+                          type="button"
+                          onClick={() => {
+                            setConsultationSearchType(tab.toLowerCase() as any); // Switches the search tab
+                            setConsultationSearchQuery(''); // Clears previous search query
+                          }}
+                          style={{
+                            padding: '6px 15px',
+                            fontSize: '0.85rem',
+                            borderRadius: '20px', // Rounded buttons for a modern look
+                            border: 'none',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            backgroundColor: consultationSearchType === tab.toLowerCase() ? '#063ca8' : '#e9ecef',
+                            color: consultationSearchType === tab.toLowerCase() ? '#fff' : '#555',
+                            fontWeight: consultationSearchType === tab.toLowerCase() ? 'bold' : 'normal'
+                          }}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* 2. Input Area with Live Search */}
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        type="text"
+                        placeholder={`Start typing patient ${consultationSearchType}...`}
+                        value={consultationSearchQuery}
+                        onChange={(e) => setConsultationSearchQuery(e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          border: '1px solid #ccc',
+                          fontSize: '1rem'
+                        }}
+                      />
+
+                      {/* 3. Dropdown Results (Live Filtering) */}
+                      {consultationSearchQuery && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          maxHeight: '250px',
+                          overflowY: 'auto',
+                          background: 'white',
+                          border: '1px solid #dee2e6',
+                          zIndex: 1000,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          borderRadius: '0 0 8px 8px',
+                          marginTop: '2px'
+                        }}>
+                          {patientsList
+                            .filter(p => {
+                              const val = consultationSearchQuery.toLowerCase();
+                              if (!val) return false;
+
+                              // Filtering logic based on the selected Tab
+                              if (consultationSearchType === 'id') return String(p.id).includes(val);
+                              if (consultationSearchType === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(val);
+                              if (consultationSearchType === 'phone') return p.phone.includes(val);
+                              if (consultationSearchType === 'email') return p.email.toLowerCase().includes(val);
+                              return false;
+                            })
+                            .map(p => (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  startConsultation(p); // Directly starts consultation upon selecting the patient
+                                  setConsultationSearchQuery(''); // Clears search query
+                                }}
+                                style={{
+                                  padding: '12px',
+                                  borderBottom: '1px solid #eee',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = '#f1f5ff'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+                              >
+                                <div>
+                                  <span style={{ fontWeight: 'bold', display: 'block' }}>{p.firstName} {p.lastName}</span>
+                                  <span style={{ fontSize: '0.8rem', color: '#666' }}>{p.email}</span>
+                                </div>
+                                <span style={{ color: '#063ca8', fontSize: '0.85rem', background: '#e3f2fd', padding: '2px 8px', borderRadius: '4px' }}>
+                                  ID: {p.id}
+                                </span>
+                              </div>
+                            ))
+                          }
+
+                          {/* Message to show if no data matches the search */}
+                          {patientsList.filter(p => {
+                            const val = consultationSearchQuery.toLowerCase();
+                            if (consultationSearchType === 'id') return String(p.id).includes(val);
+                            if (consultationSearchType === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(val);
+                            if (consultationSearchType === 'phone') return p.phone.includes(val);
+                            if (consultationSearchType === 'email') return p.email.toLowerCase().includes(val);
+                            return false;
+                          }).length === 0 && (
+                              <div style={{ padding: '15px', textAlign: 'center', color: '#888' }}>
+                                No patient found matching "{consultationSearchQuery}"
+                              </div>
+                            )}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Error Message (Separate Row) */}

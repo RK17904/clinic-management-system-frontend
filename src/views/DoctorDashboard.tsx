@@ -75,6 +75,10 @@ const DoctorDashboard = () => {
   const [doctorName, setDoctorName] = useState('');
   const [doctorId, setDoctorId] = useState<string | null>(null);
 
+  // Medical Records Explorer States
+  const [recordSearchQuery, setRecordSearchQuery] = useState('');
+  const [selectedHistoryPatient, setSelectedHistoryPatient] = useState<number | null>(null);
+
   // Roster States
   const [rosterData, setRosterData] = useState<RosterEntry[]>([]); // For Roster Management Tab
   const [rosterEntries, setRosterEntries] = useState<any[]>([]); // For Dashboard Overview (Fetched from DB)
@@ -231,6 +235,27 @@ const DoctorDashboard = () => {
       console.error("Error fetching data:", err);
     }
   };
+
+  // Last 10 Unique Patients Logic
+  const lastTenUniquePatients = useMemo(() => {
+    const seenIds = new Set();
+    const uniqueList: any[] = [];
+
+    // Filter records by doctor, sort by newest date
+    const sortedRecords = [...recordsList]
+      .filter(r => String(r.doctor?.id || r.doctorId) === String(doctorId))
+      .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime());
+
+    for (const record of sortedRecords) {
+      const pId = record.patient?.id || record.patientId;
+      if (!seenIds.has(pId)) {
+        seenIds.add(pId);
+        uniqueList.push(record);
+      }
+      if (uniqueList.length >= 10) break;
+    }
+    return uniqueList;
+  }, [recordsList, doctorId]);
 
   // Calculate Stats
   const myTreatedPatients = useMemo(() => {
@@ -1015,43 +1040,80 @@ const DoctorDashboard = () => {
               {/* RECORDS TAB */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
-                  <div className="action-buttons-container">
-                    <button className={`action-btn ${recordSubTab === 'view' ? 'active' : ''}`} onClick={() => { setRecordSubTab('view'); resetForms(); }}>View List</button>
-                    <button className={`action-btn ${recordSubTab === 'add' ? 'active' : ''}`} onClick={() => { setRecordSubTab('add'); resetForms(); }}>Add Record</button>
-                  </div>
+                  {/* --- IMPROVED RECORDS EXPLORER --- */}
+                  <div className="records-explorer-container">
 
-                  <div className="slider-viewport">
-                    <div className={`slider-track ${recordSubTab === 'add' ? 'slide-left' : ''}`}>
-                      <div className="slider-slide">
+                    {!selectedHistoryPatient ? (
+                      /* View 1: Patient List with Search */
+                      <>
+                        <div className="records-nav-header">
+                          <h3 className="history-title">Medical Records Explorer</h3>
+                          <div className="search-box-container" style={{ margin: 0 }}>
+                            <input
+                              type="text"
+                              placeholder="Search Patient Name or ID..."
+                              value={recordSearchQuery}
+                              onChange={(e) => setRecordSearchQuery(e.target.value)}
+                            />
+                          </div>
+                        </div>
+
                         <div className="table-container">
                           <table className="data-table">
-                            <thead><tr><th>Date</th><th>Patient</th><th>Diagnosis</th><th>Treatment</th></tr></thead>
+                            <thead>
+                              <tr><th>ID</th><th>Patient Name</th><th>Last Treated</th><th>Actions</th></tr>
+                            </thead>
                             <tbody>
-                              {recordsList.map(r => (
-                                <tr key={r.id}>
-                                  <td>{r.recordDate}</td>
-                                  <td>{r.patient ? r.patient.firstName : 'N/A'}</td>
-                                  <td>{r.diagnosis}</td>
-                                  <td>{r.treatment}</td>
-                                </tr>
-                              ))}
+                              {lastTenUniquePatients
+                                .filter(r => {
+                                  const fullName = `${r.patient?.firstName || ''} ${r.patient?.lastName || ''}`.toLowerCase();
+                                  return fullName.includes(recordSearchQuery.toLowerCase()) ||
+                                    String(r.patient?.id || r.patientId).includes(recordSearchQuery);
+                                })
+                                .map((r, i) => (
+                                  <tr key={i}>
+                                    <td>{r.patient?.id || r.patientId}</td>
+                                    <td>{r.patient?.firstName} {r.patient?.lastName}</td>
+                                    <td>{r.recordDate}</td>
+                                    <td>
+                                      <button className="view-btn" onClick={() => setSelectedHistoryPatient(r.patient?.id || r.patientId)}>
+                                        View All Records
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
                             </tbody>
                           </table>
                         </div>
-                      </div>
-                      <div className="slider-slide">
-                        <div className="form-container">
-                          <h3>{isEditing ? 'Edit Medical Record' : 'Add Medical Record'}</h3>
-                          <form className="admin-form">
-                            <div className="form-group"><label>Patient ID</label><input type="number" value={newRecord.patientId} onChange={e => setNewRecord({ ...newRecord, patientId: e.target.value })} /></div>
-                            <div className="form-group"><label>Doctor ID</label><input type="number" value={newRecord.doctorId} onChange={e => setNewRecord({ ...newRecord, doctorId: e.target.value })} /></div>
-                            <div className="form-group"><label>Diagnosis</label><input value={newRecord.diagnosis} onChange={e => setNewRecord({ ...newRecord, diagnosis: e.target.value })} /></div>
-                            <div className="form-group"><label>Treatment</label><input value={newRecord.treatment} onChange={e => setNewRecord({ ...newRecord, treatment: e.target.value })} /></div>
-                            <button type="button" className="save-btn" onClick={handleSaveRecord}>{isEditing ? 'Update Record' : 'Save Record'}</button>
-                          </form>
+                      </>
+                    ) : (
+                      /* View 2: Full Medical History for Selected Patient */
+                      <div className="detailed-history-view">
+                        <div className="records-nav-header">
+                          <button className="back-to-list-btn" onClick={() => setSelectedHistoryPatient(null)}>
+                            ← Back to Patient List
+                          </button>
+                          <h3 style={{ color: '#063ca8' }}>Full Medical History (ID: #{selectedHistoryPatient})</h3>
+                        </div>
+
+                        <div className="history-list-vertical">
+                          {recordsList
+                            .filter(r => String(r.patient?.id || r.patientId) === String(selectedHistoryPatient))
+                            .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime())
+                            .map((rec, idx) => (
+                              <div key={idx} className="patient-record-card">
+                                <div className="history-item-row">
+                                  <strong>📅 Date: {rec.recordDate}</strong>
+                                  <span className="history-id-badge">Rec ID: #{rec.id}</span>
+                                </div>
+                                <p><strong>Diagnosis:</strong> {rec.diagnosis}</p>
+                                <p><strong>Treatment:</strong> {rec.treatment}</p>
+                                {rec.notes && <p style={{ fontSize: '0.9rem', color: '#666' }}><em>Note: {rec.notes}</em></p>}
+                              </div>
+                            ))}
                         </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </section>
               </div>

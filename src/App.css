@@ -2109,3 +2109,73 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   border-radius: 8px;
 }
 
+
+/* --- MEDICAL RECORDS EXPLORER STYLES --- */
+.records-explorer-container {
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.records-nav-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 2px solid #f0f2f5;
+  padding-bottom: 15px;
+}
+
+.back-to-list-btn {
+  background: #f0f2f5;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #063ca8;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back-to-list-btn:hover {
+  background: #e2e6ea;
+}
+
+.patient-record-card {
+  border-left: 5px solid #063ca8;
+  background: #f8f9fa;
+  margin-bottom: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+
+.history-item-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.history-list-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.view-btn {
+  background: #063ca8;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.view-btn:hover {
+  background: #052f8a;
+}
+

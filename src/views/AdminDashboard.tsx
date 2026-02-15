@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon, TrashIcon, EditIcon } from '../components/Icons.tsx';
+import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon, TrashIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts';
 
-// types
+// --- INTERFACES ---
 interface Doctor {
   id?: number;
   name: string;
@@ -23,14 +23,24 @@ interface Patient {
   date?: string;
 }
 
+// Updated Appointment Interface to include nested relations
 interface Appointment {
   id: number;
   date: string;
   time: string;
   status: string;
+  patient?: {
+    firstName: string;
+    lastName: string;
+  };
+  doctor?: {
+    name: string;
+    specialization: string;
+  };
 }
 
-//  Bar Chart
+// --- CHARTS COMPONENTS ---
+// Bar Chart
 const EnhancedBarChart = ({ data, color }: { data: { label: string; value: number }[], color: string }) => {
   const maxValue = Math.max(...data.map(d => d.value), 5); // minimum scale of 5
   const gridLines = [0, 0.25, 0.5, 0.75, 1];
@@ -82,7 +92,6 @@ const EnhancedBarChart = ({ data, color }: { data: { label: string; value: numbe
                 }}
                 title={`${d.label}: ${d.value}`}
               >
-                {/* Floating Value Label */}
                 <div style={{
                   position: 'absolute', top: '-28px', left: '50%', transform: 'translateX(-50%)',
                   background: '#1f2937', color: '#fff', padding: '3px 8px', borderRadius: '6px',
@@ -113,8 +122,6 @@ const EnhancedDonutChart = ({ data }: { data: { label: string; value: number; co
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '25px', backgroundColor: '#fff', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #f0f0f0' }}>
-
-      {/* SVG Donut */}
       <div style={{ position: 'relative', width: '200px', height: '200px', marginBottom: '25px' }}>
         <svg viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)', width: '100%', height: '100%', overflow: 'visible' }}>
           {data.map((d, i) => {
@@ -142,7 +149,6 @@ const EnhancedDonutChart = ({ data }: { data: { label: string; value: number; co
             );
           })}
         </svg>
-        {/* Center Text */}
         <div style={{
           position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
           textAlign: 'center', pointerEvents: 'none'
@@ -152,7 +158,6 @@ const EnhancedDonutChart = ({ data }: { data: { label: string; value: number; co
         </div>
       </div>
 
-      {/* Detailed Legend Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', width: '100%' }}>
         {data.map((d, i) => (
           <div key={i} style={{
@@ -176,14 +181,12 @@ const EnhancedLineChart = ({ dataPoints, labels, color }: { dataPoints: number[]
   const max = Math.max(...dataPoints, 5);
   const hexColor = color.replace('#', '');
 
-  // SVG Points for the line
   const points = dataPoints.map((val, i) => {
     const x = (i / (dataPoints.length - 1)) * 100;
     const y = 100 - (val / max) * 100;
     return `${x},${y}`;
   }).join(' ');
 
-  // Points for closing the area at the bottom
   const areaPoints = `${points} 100,100 0,100`;
 
   return (
@@ -196,18 +199,12 @@ const EnhancedLineChart = ({ dataPoints, labels, color }: { dataPoints: number[]
               <stop offset="100%" stopColor={color} stopOpacity="0.0" />
             </linearGradient>
           </defs>
-
-          {/* Horizontal Grid Lines */}
           {[0, 25, 50, 75, 100].map(y => (
             <g key={y}>
               <line x1="0" y1={y} x2="100" y2={y} stroke="#f3f4f6" strokeWidth="0.5" />
             </g>
           ))}
-
-          {/* Area Fill */}
           <polygon points={areaPoints} fill={`url(#grad-${hexColor})`} />
-
-          {/* The Line */}
           <polyline
             fill="none"
             stroke={color}
@@ -217,8 +214,6 @@ const EnhancedLineChart = ({ dataPoints, labels, color }: { dataPoints: number[]
             strokeLinecap="round"
             strokeLinejoin="round"
           />
-
-          {/* Interactive Dots */}
           {dataPoints.map((val, i) => {
             const x = (i / (dataPoints.length - 1)) * 100;
             const y = 100 - (val / max) * 100;
@@ -251,6 +246,9 @@ const AdminDashboard = () => {
   const [doctorSubTab, setDoctorSubTab] = useState<'view' | 'add'>('view');
   const [patientSubTab, setPatientSubTab] = useState<'view' | 'add'>('view');
 
+  // New State for Appointment Filtering
+  const [appointmentFilter, setAppointmentFilter] = useState<'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'>('ALL');
+
   // Admin Name State
   const [adminName, setAdminName] = useState('');
 
@@ -265,10 +263,6 @@ const AdminDashboard = () => {
 
   const [patientSearchType, setPatientSearchType] = useState<'id' | 'name' | 'email' | 'phone'>('id');
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
-
-  // Editing State
-  const [isEditingPatient, setIsEditingPatient] = useState(false);
-  const [editingPatientId, setEditingPatientId] = useState<number | null>(null);
 
   // Doctor Form State 
   const [newDoctor, setNewDoctor] = useState<Doctor>({
@@ -351,53 +345,19 @@ const AdminDashboard = () => {
 
   const handleAddPatient = async () => {
     try {
-      if (!newPatient.firstName || !newPatient.email) {
+      if (!newPatient.firstName || !newPatient.email || !newPatient.password) {
         alert("Please fill in required fields!");
         return;
       }
-
-      if (isEditingPatient && editingPatientId) {
-        // UPDATE LOGIC
-        const updatePayload = {
-          firstName: newPatient.firstName,
-          lastName: newPatient.lastName,
-          email: newPatient.email,
-          phone: newPatient.phone
-        };
-
-        await api.put(`/patients/${editingPatientId}`, updatePayload);
-        alert("Patient Updated Successfully!");
-      } else {
-        // CREATE LOGIC
-        if (!newPatient.password) { alert("Password is required for new patients!"); return; }
-        await api.post('/auth/register/patient', newPatient);
-        alert("Patient Added Successfully!");
-      }
-
+      await api.post('/auth/register/patient', newPatient);
+      alert("Patient Added Successfully!");
       setNewPatient({ firstName: '', lastName: '', email: '', phone: '', age: '', gender: 'Male', password: '' });
-      setIsEditingPatient(false);
-      setEditingPatientId(null);
       fetchPatients();
       setPatientSubTab('view');
     } catch (error) {
-      console.error("Error saving patient:", error);
-      alert("Failed to save patient!");
+      console.error("Error adding patient:", error);
+      alert("Failed to add patient!");
     }
-  };
-
-  const startEditPatient = (patient: Patient) => {
-    setNewPatient({
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      email: patient.email,
-      phone: patient.phone,
-      age: '', // Not editable
-      gender: 'Male', // Not editable
-      password: '' // Not editable
-    });
-    setEditingPatientId(patient.id);
-    setIsEditingPatient(true);
-    setPatientSubTab('add');
   };
 
   const handleDeletePatient = async (id: number) => {
@@ -428,7 +388,6 @@ const AdminDashboard = () => {
       stats[spec] = (stats[spec] || 0) + 1;
     });
 
-    // Vibrant Palette for different slices
     const colors = ['#4f46e5', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
 
     return Object.keys(stats).map((key, index) => ({
@@ -446,7 +405,7 @@ const AdminDashboard = () => {
 
     appointmentsList.forEach(app => {
       const rawStatus = app.status ? app.status.toLowerCase() : 'pending';
-      if (rawStatus.includes('confirm') || rawStatus.includes('accept') || rawStatus.includes('schedul')) {
+      if (rawStatus.includes('confirm') || rawStatus.includes('accept') || rawStatus.includes('schedul') || rawStatus.includes('approved')) {
         confirmed++;
       }
       else if (rawStatus.includes('cancel') || rawStatus.includes('reject') || rawStatus.includes('decline')) {
@@ -502,6 +461,33 @@ const AdminDashboard = () => {
       default: return '';
     }
   };
+
+  // Helper for Status Badge Color
+  const getStatusColor = (status: string) => {
+    const s = status.toUpperCase();
+    if (s === 'APPROVED' || s === 'SCHEDULED' || s === 'CONFIRMED') return '#d1fae5'; // Green bg
+    if (s === 'REJECTED' || s === 'CANCELLED') return '#fee2e2'; // Red bg
+    return '#fef3c7'; // Yellow/Orange bg for Pending
+  };
+  const getStatusTextColor = (status: string) => {
+    const s = status.toUpperCase();
+    if (s === 'APPROVED' || s === 'SCHEDULED' || s === 'CONFIRMED') return '#065f46'; // Green text
+    if (s === 'REJECTED' || s === 'CANCELLED') return '#991b1b'; // Red text
+    return '#92400e'; // Yellow/Orange text
+  };
+
+  // Filtered Appointments
+  const filteredAppointments = useMemo(() => {
+    return appointmentsList.filter(app => {
+      if (appointmentFilter === 'ALL') return true;
+      const s = app.status.toUpperCase();
+      if (appointmentFilter === 'PENDING') return s === 'PENDING';
+      if (appointmentFilter === 'APPROVED') return s === 'APPROVED' || s === 'SCHEDULED' || s === 'CONFIRMED';
+      if (appointmentFilter === 'REJECTED') return s === 'REJECTED' || s === 'CANCELLED';
+      return true;
+    });
+  }, [appointmentsList, appointmentFilter]);
+
 
   return (
     <div className="dashboard-layout">
@@ -593,20 +579,14 @@ const AdminDashboard = () => {
 
                   {/* Charts Section */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '25px', marginBottom: '40px' }}>
-
-                    {/* Chart 1: Doctor Specialization */}
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <h4 style={{ marginBottom: '15px', color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>Doctor Specializations</h4>
                       <EnhancedDonutChart data={specializationStats} />
                     </div>
-
-                    {/* Chart 2: Appointment Status */}
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <h4 style={{ marginBottom: '15px', color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>Appointments Status</h4>
                       <EnhancedBarChart data={appointmentStats} color="#3b82f6" />
                     </div>
-
-                    {/* Chart 3: Patient Growth (Dynamic) */}
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       <h4 style={{ marginBottom: '15px', color: '#374151', fontSize: '1.1rem', fontWeight: '600' }}>Patient Growth Trend</h4>
                       <EnhancedLineChart
@@ -615,9 +595,7 @@ const AdminDashboard = () => {
                         color="#10b981"
                       />
                     </div>
-
                   </div>
-
                 </section>
               </div>
 
@@ -720,15 +698,8 @@ const AdminDashboard = () => {
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
-                    <button className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} onClick={() => {
-                      setPatientSubTab(patientSubTab === 'add' ? 'view' : 'add');
-                      if (patientSubTab === 'add') {
-                        // Reset when closing add/edit view
-                        setIsEditingPatient(false);
-                        setNewPatient({ firstName: '', lastName: '', email: '', phone: '', age: '', gender: 'Male', password: '' });
-                      }
-                    }}>
-                      <PlusIcon /> {patientSubTab === 'add' ? (isEditingPatient ? 'Cancel Edit' : 'View Patients') : 'Add Patient'}
+                    <button className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} onClick={() => setPatientSubTab(patientSubTab === 'add' ? 'view' : 'add')}>
+                      <PlusIcon /> {patientSubTab === 'add' ? 'View Patients' : 'Add Patient'}
                     </button>
                   </div>
 
@@ -778,9 +749,6 @@ const AdminDashboard = () => {
                                 <tr key={p.id}>
                                   <td>{p.id}</td><td>{p.firstName} {p.lastName}</td><td>{p.email}</td><td>{p.phone}</td>
                                   <td>
-                                    <button onClick={() => startEditPatient(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#063ca8', marginRight: '10px' }}>
-                                      <EditIcon width="18" height="18" />
-                                    </button>
                                     <button onClick={() => handleDeletePatient(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545' }}>
                                       <TrashIcon width="18" height="18" />
                                     </button>
@@ -795,7 +763,7 @@ const AdminDashboard = () => {
                       {/* Add Form */}
                       <div className="slider-slide">
                         <div className="form-container">
-                          <h3>{isEditingPatient ? 'Update Patient Details' : 'Register New Patient'}</h3>
+                          <h3>Register New Patient</h3>
                           <form className="admin-form">
                             <div className="form-row">
                               <div className="form-group"><label>First Name</label><input type="text" value={newPatient.firstName} onChange={e => setNewPatient({ ...newPatient, firstName: e.target.value })} /></div>
@@ -805,24 +773,20 @@ const AdminDashboard = () => {
                               <div className="form-group"><label>Email</label><input type="email" value={newPatient.email} onChange={e => setNewPatient({ ...newPatient, email: e.target.value })} /></div>
                               <div className="form-group"><label>Phone</label><input type="text" value={newPatient.phone} onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })} /></div>
                             </div>
-                            {!isEditingPatient && (
-                              <>
-                                <div className="form-row">
-                                  <div className="form-group"><label>Age</label><input type="number" value={newPatient.age} onChange={e => setNewPatient({ ...newPatient, age: e.target.value })} /></div>
-                                  <div className="form-group"><label>Gender</label>
-                                    <select value={newPatient.gender} onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}>
-                                      <option value="Male">Male</option>
-                                      <option value="Female">Female</option>
-                                      <option value="Other">Other</option>
-                                    </select>
-                                  </div>
-                                </div>
-                                <div className="form-row">
-                                  <div className="form-group"><label>Password</label><input type="password" value={newPatient.password} onChange={e => setNewPatient({ ...newPatient, password: e.target.value })} /></div>
-                                </div>
-                              </>
-                            )}
-                            <button type="button" className="save-btn" onClick={handleAddPatient}>{isEditingPatient ? 'Update Patient' : 'Save Patient'}</button>
+                            <div className="form-row">
+                              <div className="form-group"><label>Age</label><input type="number" value={newPatient.age} onChange={e => setNewPatient({ ...newPatient, age: e.target.value })} /></div>
+                              <div className="form-group"><label>Gender</label>
+                                <select value={newPatient.gender} onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}>
+                                  <option value="Male">Male</option>
+                                  <option value="Female">Female</option>
+                                  <option value="Other">Other</option>
+                                </select>
+                              </div>
+                            </div>
+                            <div className="form-row">
+                              <div className="form-group"><label>Password</label><input type="password" value={newPatient.password} onChange={e => setNewPatient({ ...newPatient, password: e.target.value })} /></div>
+                            </div>
+                            <button type="button" className="save-btn" onClick={handleAddPatient}>Save Patient</button>
                           </form>
                         </div>
                       </div>
@@ -832,16 +796,90 @@ const AdminDashboard = () => {
                 </section>
               </div>
 
-              {/* --- ALL APPOINTMENTS --- */}
+              {/* --- ALL APPOINTMENTS (REVAMPED) --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="table-container">
+                    {/* Status Tabs */}
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>
+                      {['ALL', 'PENDING', 'APPROVED', 'REJECTED'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => setAppointmentFilter(status as any)}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '20px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            backgroundColor: appointmentFilter === status ? '#063ca8' : '#f3f4f6',
+                            color: appointmentFilter === status ? '#fff' : '#4b5563',
+                            fontWeight: '600',
+                            fontSize: '0.85rem',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {status === 'APPROVED' ? 'Approved' : status.charAt(0) + status.slice(1).toLowerCase()}
+                        </button>
+                      ))}
+                    </div>
+
                     <table className="data-table">
-                      <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Patient Name</th>
+                          <th>Doctor Name</th>
+                          <th>Specialization</th>
+                          <th>Date & Time</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
                       <tbody>
-                        {appointmentsList.map((a) => (
-                          <tr key={a.id}><td>{a.id}</td><td>{a.date}</td><td>{a.time}</td><td>{a.status}</td></tr>
-                        ))}
+                        {filteredAppointments.length > 0 ? (
+                          filteredAppointments.map((a) => (
+                            <tr key={a.id}>
+                              <td>#{a.id}</td>
+                              <td style={{ fontWeight: '500' }}>
+                                {a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : <span style={{ color: '#999', fontStyle: 'italic' }}>Unknown</span>}
+                              </td>
+                              <td>
+                                {a.doctor ? `Dr. ${a.doctor.name}` : <span style={{ color: '#999', fontStyle: 'italic' }}>Unknown</span>}
+                              </td>
+                              <td>
+                                {a.doctor ? (
+                                  <span style={{ fontSize: '0.85rem', padding: '2px 8px', borderRadius: '4px', backgroundColor: '#f0f9ff', color: '#0369a1', border: '1px solid #bae6fd' }}>
+                                    {a.doctor.specialization}
+                                  </span>
+                                ) : '-'}
+                              </td>
+                              <td>
+                                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                  <span style={{ fontSize: '0.9rem' }}>{a.date}</span>
+                                  <span style={{ fontSize: '0.8rem', color: '#666' }}>{a.time}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <span style={{
+                                  padding: '4px 10px',
+                                  borderRadius: '12px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 'bold',
+                                  backgroundColor: getStatusColor(a.status),
+                                  color: getStatusTextColor(a.status),
+                                  textTransform: 'uppercase'
+                                }}>
+                                  {a.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={6} style={{ textAlign: 'center', padding: '30px', color: '#888' }}>
+                              No appointments found for this category.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>

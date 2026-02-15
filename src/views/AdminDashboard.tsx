@@ -530,21 +530,21 @@ const AdminDashboard = () => {
 
                   {/* Top Stats Cards */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-                    <div className="stat-card">
+                    <div className="stat-card" onClick={() => { setActiveTab('patients'); setPatientSubTab('view'); }} style={{ cursor: 'pointer', position: 'relative', zIndex: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3>Total Patients</h3>
                         <UsersIcon />
                       </div>
                       <p>{patientsList.length}</p>
                     </div>
-                    <div className="stat-card">
+                    <div className="stat-card" onClick={() => { setActiveTab('doctors'); setDoctorSubTab('view'); }} style={{ cursor: 'pointer', position: 'relative', zIndex: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3>Doctors</h3>
                         <DoctorIcon />
                       </div>
                       <p>{doctorsList.length}</p>
                     </div>
-                    <div className="stat-card">
+                    <div className="stat-card" onClick={() => setActiveTab('appointments')} style={{ cursor: 'pointer', position: 'relative', zIndex: 10 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <h3>Appointments</h3>
                         <CalendarIcon />

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon, TrashIcon } from '../components/Icons.tsx';
+import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon, TrashIcon, EditIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts';
 
 // types
@@ -266,6 +266,10 @@ const AdminDashboard = () => {
   const [patientSearchType, setPatientSearchType] = useState<'id' | 'name' | 'email' | 'phone'>('id');
   const [patientSearchQuery, setPatientSearchQuery] = useState('');
 
+  // Editing State
+  const [isEditingPatient, setIsEditingPatient] = useState(false);
+  const [editingPatientId, setEditingPatientId] = useState<number | null>(null);
+
   // Doctor Form State 
   const [newDoctor, setNewDoctor] = useState<Doctor>({
     name: '', specialization: '', email: '', phone: '', experience: '', password: ''
@@ -347,19 +351,53 @@ const AdminDashboard = () => {
 
   const handleAddPatient = async () => {
     try {
-      if (!newPatient.firstName || !newPatient.email || !newPatient.password) {
+      if (!newPatient.firstName || !newPatient.email) {
         alert("Please fill in required fields!");
         return;
       }
-      await api.post('/auth/register/patient', newPatient);
-      alert("Patient Added Successfully!");
+
+      if (isEditingPatient && editingPatientId) {
+        // UPDATE LOGIC
+        const updatePayload = {
+          firstName: newPatient.firstName,
+          lastName: newPatient.lastName,
+          email: newPatient.email,
+          phone: newPatient.phone
+        };
+
+        await api.put(`/patients/${editingPatientId}`, updatePayload);
+        alert("Patient Updated Successfully!");
+      } else {
+        // CREATE LOGIC
+        if (!newPatient.password) { alert("Password is required for new patients!"); return; }
+        await api.post('/auth/register/patient', newPatient);
+        alert("Patient Added Successfully!");
+      }
+
       setNewPatient({ firstName: '', lastName: '', email: '', phone: '', age: '', gender: 'Male', password: '' });
+      setIsEditingPatient(false);
+      setEditingPatientId(null);
       fetchPatients();
       setPatientSubTab('view');
     } catch (error) {
-      console.error("Error adding patient:", error);
-      alert("Failed to add patient!");
+      console.error("Error saving patient:", error);
+      alert("Failed to save patient!");
     }
+  };
+
+  const startEditPatient = (patient: Patient) => {
+    setNewPatient({
+      firstName: patient.firstName,
+      lastName: patient.lastName,
+      email: patient.email,
+      phone: patient.phone,
+      age: '', // Not editable
+      gender: 'Male', // Not editable
+      password: '' // Not editable
+    });
+    setEditingPatientId(patient.id);
+    setIsEditingPatient(true);
+    setPatientSubTab('add');
   };
 
   const handleDeletePatient = async (id: number) => {
@@ -682,8 +720,15 @@ const AdminDashboard = () => {
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
-                    <button className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} onClick={() => setPatientSubTab(patientSubTab === 'add' ? 'view' : 'add')}>
-                      <PlusIcon /> {patientSubTab === 'add' ? 'View Patients' : 'Add Patient'}
+                    <button className={`action-btn ${patientSubTab === 'add' ? 'active' : ''}`} onClick={() => {
+                      setPatientSubTab(patientSubTab === 'add' ? 'view' : 'add');
+                      if (patientSubTab === 'add') {
+                        // Reset when closing add/edit view
+                        setIsEditingPatient(false);
+                        setNewPatient({ firstName: '', lastName: '', email: '', phone: '', age: '', gender: 'Male', password: '' });
+                      }
+                    }}>
+                      <PlusIcon /> {patientSubTab === 'add' ? (isEditingPatient ? 'Cancel Edit' : 'View Patients') : 'Add Patient'}
                     </button>
                   </div>
 
@@ -733,6 +778,9 @@ const AdminDashboard = () => {
                                 <tr key={p.id}>
                                   <td>{p.id}</td><td>{p.firstName} {p.lastName}</td><td>{p.email}</td><td>{p.phone}</td>
                                   <td>
+                                    <button onClick={() => startEditPatient(p)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#063ca8', marginRight: '10px' }}>
+                                      <EditIcon width="18" height="18" />
+                                    </button>
                                     <button onClick={() => handleDeletePatient(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc3545' }}>
                                       <TrashIcon width="18" height="18" />
                                     </button>
@@ -747,7 +795,7 @@ const AdminDashboard = () => {
                       {/* Add Form */}
                       <div className="slider-slide">
                         <div className="form-container">
-                          <h3>Register New Patient</h3>
+                          <h3>{isEditingPatient ? 'Update Patient Details' : 'Register New Patient'}</h3>
                           <form className="admin-form">
                             <div className="form-row">
                               <div className="form-group"><label>First Name</label><input type="text" value={newPatient.firstName} onChange={e => setNewPatient({ ...newPatient, firstName: e.target.value })} /></div>
@@ -757,20 +805,24 @@ const AdminDashboard = () => {
                               <div className="form-group"><label>Email</label><input type="email" value={newPatient.email} onChange={e => setNewPatient({ ...newPatient, email: e.target.value })} /></div>
                               <div className="form-group"><label>Phone</label><input type="text" value={newPatient.phone} onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })} /></div>
                             </div>
-                            <div className="form-row">
-                              <div className="form-group"><label>Age</label><input type="number" value={newPatient.age} onChange={e => setNewPatient({ ...newPatient, age: e.target.value })} /></div>
-                              <div className="form-group"><label>Gender</label>
-                                <select value={newPatient.gender} onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}>
-                                  <option value="Male">Male</option>
-                                  <option value="Female">Female</option>
-                                  <option value="Other">Other</option>
-                                </select>
-                              </div>
-                            </div>
-                            <div className="form-row">
-                              <div className="form-group"><label>Password</label><input type="password" value={newPatient.password} onChange={e => setNewPatient({ ...newPatient, password: e.target.value })} /></div>
-                            </div>
-                            <button type="button" className="save-btn" onClick={handleAddPatient}>Save Patient</button>
+                            {!isEditingPatient && (
+                              <>
+                                <div className="form-row">
+                                  <div className="form-group"><label>Age</label><input type="number" value={newPatient.age} onChange={e => setNewPatient({ ...newPatient, age: e.target.value })} /></div>
+                                  <div className="form-group"><label>Gender</label>
+                                    <select value={newPatient.gender} onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}>
+                                      <option value="Male">Male</option>
+                                      <option value="Female">Female</option>
+                                      <option value="Other">Other</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div className="form-row">
+                                  <div className="form-group"><label>Password</label><input type="password" value={newPatient.password} onChange={e => setNewPatient({ ...newPatient, password: e.target.value })} /></div>
+                                </div>
+                              </>
+                            )}
+                            <button type="button" className="save-btn" onClick={handleAddPatient}>{isEditingPatient ? 'Update Patient' : 'Save Patient'}</button>
                           </form>
                         </div>
                       </div>

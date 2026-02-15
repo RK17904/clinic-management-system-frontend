@@ -65,6 +65,7 @@ const DoctorDashboard = () => {
 
   // Current Patient State
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
+  const [currentAppointmentId, setCurrentAppointmentId] = useState<number | null>(null);
   const [consultationSearchType, setConsultationSearchType] = useState<'id' | 'name' | 'email' | 'phone'>('id');
   const [consultationSearchQuery, setConsultationSearchQuery] = useState('');
   const [consultationError, setConsultationError] = useState<string | null>(null);
@@ -519,6 +520,7 @@ const DoctorDashboard = () => {
 
   const handleTreatNow = (appointment: Appointment) => {
     if (appointment.patient) {
+      setCurrentAppointmentId(appointment.id);
       startConsultation(appointment.patient);
     } else {
       alert("Patient details not found for this appointment.");
@@ -532,14 +534,27 @@ const DoctorDashboard = () => {
     }
 
     try {
+      // 1. Save Medical Record
       await api.post('/medical-records', newRecord);
+
+      // 2. Mark Appointment as COMPLETED (New Logic)
+      if (currentAppointmentId) {
+        await api.put(`/appointments/${currentAppointmentId}/status?status=COMPLETED`);
+        console.log(`Appointment ${currentAppointmentId} marked as COMPLETED`);
+      }
+
       alert("Consultation Finished & Record Saved!");
+
+      // 3. Reset States & Refresh Data
       setCurrentPatient(null);
+      setCurrentAppointmentId(null); // Clear ID
       resetForms();
-      setActiveTab('patients');
-      fetchData();
-    } catch {
-      alert("Error Saving Record!");
+      setActiveTab('appointments'); // Go back to list
+      fetchData(); // Refresh list to remove completed item
+
+    } catch (error) {
+      console.error(error);
+      alert("Error Saving Record or Updating Status!");
     }
   };
 
@@ -887,31 +902,33 @@ const DoctorDashboard = () => {
                           <table className="data-table">
                             <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>
-                              {appointmentsList.map(a => (
-                                <tr key={a.id}>
-                                  <td>{a.id}</td>
-                                  <td>{a.date}</td>
-                                  <td>{a.time}</td>
-                                  <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
-                                  <td>
-                                    <span style={{ fontWeight: 'bold', color: a.status.toUpperCase() === 'PENDING' ? 'orange' : a.status.toUpperCase() === 'APPROVED' ? 'green' : 'red' }}>
-                                      {a.status}
-                                    </span>
-                                  </td>
-                                  <td>
-                                    {a.status.toUpperCase() === 'PENDING' && (
-                                      <>
-                                        <button style={{ ...btnStyle, background: '#28a745' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
-                                        <button style={{ ...btnStyle, background: '#dc3545' }} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
-                                      </>
-                                    )}
-                                    {a.status.toUpperCase() === 'APPROVED' && (
-                                      <button className="treat-now-btn" onClick={() => handleTreatNow(a)}>Treat Now</button>
-                                    )}
+                              {appointmentsList
+                                .filter(a => a.status !== 'COMPLETED' && a.status !== 'REJECTED' && a.status !== 'Cancelled')
+                                .map(a => (
+                                  <tr key={a.id}>
+                                    <td>{a.id}</td>
+                                    <td>{a.date}</td>
+                                    <td>{a.time}</td>
+                                    <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
+                                    <td>
+                                      <span style={{ fontWeight: 'bold', color: a.status.toUpperCase() === 'PENDING' ? 'orange' : a.status.toUpperCase() === 'APPROVED' ? 'green' : 'red' }}>
+                                        {a.status}
+                                      </span>
+                                    </td>
+                                    <td>
+                                      {a.status.toUpperCase() === 'PENDING' && (
+                                        <>
+                                          <button style={{ ...btnStyle, background: '#28a745' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
+                                          <button style={{ ...btnStyle, background: '#dc3545' }} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
+                                        </>
+                                      )}
+                                      {a.status.toUpperCase() === 'APPROVED' && (
+                                        <button className="treat-now-btn" onClick={() => handleTreatNow(a)}>Treat Now</button>
+                                      )}
 
-                                  </td>
-                                </tr>
-                              ))}
+                                    </td>
+                                  </tr>
+                                ))}
                             </tbody>
                           </table>
                         </div>

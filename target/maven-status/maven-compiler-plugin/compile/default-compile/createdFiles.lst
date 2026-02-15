@@ -6,6 +6,7 @@ com\example\Clinic_Management_System\repository\MedicalRecordRepositary.class
 com\example\Clinic_Management_System\service\DoctorService.class
 com\example\Clinic_Management_System\controller\PatientController.class
 com\example\Clinic_Management_System\model\MedicalRecord.class
+com\example\Clinic_Management_System\service\EmailService.class
 com\example\Clinic_Management_System\model\Admin.class
 com\example\Clinic_Management_System\service\AppointmentService.class
 com\example\Clinic_Management_System\model\Billing.class
@@ -14,12 +15,14 @@ com\example\Clinic_Management_System\repository\PatientRepositary.class
 com\example\Clinic_Management_System\service\MedicalRecordService.class
 com\example\Clinic_Management_System\repository\AdminRepository.class
 com\example\Clinic_Management_System\controller\AppointmentController.class
+com\example\Clinic_Management_System\service\impl\RosterServiceImpl.class
 com\example\Clinic_Management_System\controller\BillingController.class
 com\example\Clinic_Management_System\service\impl\PatientServiceImpl.class
 com\example\Clinic_Management_System\ClinicManagementSystemApplication.class
 com\example\Clinic_Management_System\service\impl\BillingServiceImpl.class
 com\example\Clinic_Management_System\service\impl\AdminServiceImpl.class
 com\example\Clinic_Management_System\service\impl\MedicalRecordServiceImpl.class
+com\example\Clinic_Management_System\dto\AppointmentRequest.class
 com\example\Clinic_Management_System\model\Roster.class
 com\example\Clinic_Management_System\service\CustomUserDetailsService.class
 com\example\Clinic_Management_System\repository\DoctorRepo.class
@@ -33,6 +36,7 @@ com\example\Clinic_Management_System\model\Patient.class
 com\example\Clinic_Management_System\controller\MedicalRecordController.class
 com\example\Clinic_Management_System\config\SecurityConfig.class
 com\example\Clinic_Management_System\model\Doctor.class
+com\example\Clinic_Management_System\service\impl\EmailServiceImpl.class
 com\example\Clinic_Management_System\model\Appointment.class
 com\example\Clinic_Management_System\repository\AppointmentRepositary.class
 com\example\Clinic_Management_System\repository\BillingRepository.class

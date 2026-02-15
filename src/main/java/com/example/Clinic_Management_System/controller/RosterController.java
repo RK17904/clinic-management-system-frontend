@@ -8,7 +8,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/rosters")
-@CrossOrigin(origins = "http://localhost:5173") 
+@CrossOrigin(origins = "*") // Frontend එකට ඉඩ දෙනවා
 public class RosterController {
 
     @Autowired
@@ -20,7 +20,7 @@ public class RosterController {
     }
 
     @GetMapping("/doctor/{doctorId}")
-    public List<Roster> getRoster(@PathVariable Long doctorId) { // මෙතන P අකුර ලොකු විය යුතුයි
+    public List<Roster> getRoster(@PathVariable Long doctorId) {
         return rosterService.getRosterByDoctor(doctorId);
     }
 }

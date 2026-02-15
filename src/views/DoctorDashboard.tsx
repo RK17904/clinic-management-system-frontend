@@ -66,6 +66,7 @@ const DoctorDashboard = () => {
   // Current Patient State
   const [currentPatient, setCurrentPatient] = useState<Patient | null>(null);
   const [currentAppointmentId, setCurrentAppointmentId] = useState<number | null>(null);
+  const [historyLimit, setHistoryLimit] = useState<number>(5);
   const [consultationSearchType, setConsultationSearchType] = useState<'id' | 'name' | 'email' | 'phone'>('id');
   const [consultationSearchQuery, setConsultationSearchQuery] = useState('');
   const [consultationError, setConsultationError] = useState<string | null>(null);
@@ -507,6 +508,7 @@ const DoctorDashboard = () => {
   const startConsultation = (patient: Patient) => {
     setCurrentPatient(patient);
     setActiveTab('currentPatient');
+    setHistoryLimit(5);
     // Pre-fill record with patient info
     setNewRecord({
       patientId: patient.id?.toString() || '',
@@ -772,6 +774,67 @@ const DoctorDashboard = () => {
                             onChange={(e) => setNewRecord({ ...newRecord, treatment: e.target.value })}
                           />
                           <button className="finish-btn" onClick={finishConsultation}>Finish Consultation & Save Record</button>
+                        </div>
+
+                        {/* --- PATIENT HISTORY SECTION (Viva Ready - Using Classes) --- */}
+                        <div className="history-section-container">
+                          <h3 className="history-title">Previous Medical History</h3>
+
+                          <div className="history-list">
+                            {recordsList
+                              // 1. Filter by current patient
+                              .filter(r => String(r.patient?.id || r.patientId) === String(currentPatient.id))
+                              // 2. Sort by Date (Newest first)
+                              .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime())
+                              // 3. Slice based on limit (Starts at 5, increases by 10)
+                              .slice(0, historyLimit)
+                              .map((rec, idx) => (
+                                <div key={rec.id || idx} className="history-card">
+                                  {/* Header: Date & ID */}
+                                  <div className="history-header">
+                                    <span className="history-date">📅 {rec.recordDate}</span>
+                                    <span className="history-id-badge">ID: #{rec.id}</span>
+                                  </div>
+
+                                  {/* Details */}
+                                  <div className="history-details">
+                                    <div>
+                                      <span className="detail-label">Diagnosis:</span>
+                                      {rec.diagnosis}
+                                    </div>
+
+                                    <div>
+                                      <span className="detail-label">Treatment:</span>
+                                      {rec.treatment}
+                                    </div>
+
+                                    {rec.notes && (
+                                      <div style={{ fontSize: '0.9rem', color: '#666', marginTop: '5px' }}>
+                                        <span className="detail-label">Note:</span> {rec.notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))
+                            }
+
+                            {/* Message if empty */}
+                            {recordsList.filter(r => String(r.patient?.id || r.patientId) === String(currentPatient.id)).length === 0 && (
+                              <div className="no-history-msg">No previous medical history found.</div>
+                            )}
+                          </div>
+
+                          {/* View More Button */}
+                          {recordsList.filter(r => String(r.patient?.id || r.patientId) === String(currentPatient.id)).length > historyLimit && (
+                            <div className="view-more-container">
+                              <button
+                                className="view-more-btn"
+                                onClick={() => setHistoryLimit(prev => prev + 10)}
+                              >
+                                View More History (+10)
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </>
                     ) : (

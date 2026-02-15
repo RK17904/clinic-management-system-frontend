@@ -2014,3 +2014,98 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   background-color: #0056b3;
   /* Darker Blue */
 }
+/* --- PATIENT HISTORY SECTION (Added for Doctor Dashboard) --- */
+
+.history-section-container {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #e0e0e0;
+  width: 100%;
+}
+
+.history-title {
+  color: #063ca8;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
+.history-card {
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  border: 1px solid #f0f0f0;
+  border-left: 5px solid #063ca8; /* Blue Accent Border */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.history-card:hover {
+  transform: translateX(5px); /* Slight movement on hover */
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 5px;
+}
+
+.history-date {
+  font-weight: bold;
+  color: #333;
+}
+
+.history-id-badge {
+  font-size: 0.8rem;
+  color: #666;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.history-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.detail-label {
+  font-weight: bold;
+  color: #063ca8;
+  margin-right: 5px;
+}
+
+.view-more-container {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.view-more-btn {
+  background: white;
+  border: 2px solid #063ca8;
+  color: #063ca8;
+  padding: 8px 25px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.view-more-btn:hover {
+  background: #063ca8;
+  color: white;
+}
+
+.no-history-msg {
+  text-align: center;
+  padding: 20px;
+  color: #888;
+  font-style: italic;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+

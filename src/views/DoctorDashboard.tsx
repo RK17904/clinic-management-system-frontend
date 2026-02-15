@@ -80,6 +80,7 @@ const DoctorDashboard = () => {
 
   // Walk-in Patient Search State
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchTab, setSearchTab] = useState('name');
 
   // Roster States
   const [rosterData, setRosterData] = useState<RosterEntry[]>([]); // For Roster Management Tab
@@ -301,26 +302,27 @@ const DoctorDashboard = () => {
 
   const saveRoster = async () => {
     try {
-      // Filter out 'OFF' days if you only want to save active shifts, 
-      // or save everything if backend handles it.
-      // Here we map frontend structure to backend expected structure
+      // FIX: Map ALL statuses including 'OFF'. 
+      // Do NOT filter out 'Off' days, as we need to update the database if a doctor changes from Duty -> Off.
       const rosterPayload = rosterData.map(r => ({
         date: r.date,
         shiftStatus: r.status === 'OFF' ? 'Off' : r.status === 'DUTY' ? 'Full Duty' : r.status === 'HALFDAY-MORNING' ? 'Morning' : 'Evening',
         doctor: { id: doctorId }
-      })).filter(r => r.shiftStatus !== 'Off'); // Only sending active duties
+      }));
 
-      // Sending one by one or bulk depending on backend. 
-      // Assuming loop for safety based on previous context
+      console.log("Sending Roster Update:", rosterPayload);
+
+      // Send requests sequentially to ensure data integrity
       for (const rosterItem of rosterPayload) {
         await api.post('/rosters', rosterItem);
       }
 
-      console.log("Saving Roster payload:", rosterPayload);
       alert("Roster Updated Successfully!");
-      fetchData(); // Refresh to see changes in dashboard
+
+      // Refresh the dashboard UI to reflect new colors immediately
+      fetchData();
     } catch (error) {
-      console.error(error);
+      console.error("Error saving roster:", error);
       alert("Failed to save roster.");
     }
   };
@@ -412,7 +414,7 @@ const DoctorDashboard = () => {
               patientId: currentPatient.id.toString(),
               doctorId: doctorId,
               date: new Date().toISOString().split('T')[0],
-              time: new Date().toLocaleTimeString('en-GB', { hour12: false }).substring(0, 5),
+              time: new Date().toLocaleTimeString('en-GB', { hour12: false }).substring(0, 5) + ':00',
               status: "COMPLETED",
               notes: "Walk-in consultation (Auto-generated)"
             };
@@ -1172,44 +1174,73 @@ const DoctorDashboard = () => {
                       <div className="slider-slide">
                         <div className="form-container">
 
-                          {/* Walk-in Patient Search Bar */}
-                          <div style={{ marginBottom: '15px', background: '#e3f2fd', padding: '10px', borderRadius: '8px', border: '1px solid #bbdefb' }}>
-                            <label style={{ fontSize: '0.9rem', color: '#063ca8', fontWeight: 'bold' }}>Find Patient for Bill:</label>
-                            <input
-                              type="text"
-                              placeholder="Type Name or Phone..."
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              style={{ width: '100%', padding: '8px', marginTop: '5px', borderRadius: '4px', border: '1px solid #ccc' }}
-                            />
+                          {/* --- ADVANCED TABBED SEARCH FOR BILLING --- */}
+                          <div className="advanced-search-container" style={{ marginBottom: '25px', background: '#f8f9fa', padding: '15px', borderRadius: '10px', border: '1px solid #dee2e6' }}>
+                            <p style={{ fontWeight: '600', color: '#063ca8', marginBottom: '10px' }}>Find Patient for Billing:</p>
 
-                            {/* Dropdown Results */}
-                            {searchTerm && (
-                              <div style={{ maxHeight: '150px', overflowY: 'auto', background: 'white', border: '1px solid #ccc', marginTop: '5px', borderRadius: '4px', position: 'absolute', width: '85%', zIndex: 100 }}>
-                                {patientsList
-                                  .filter(p =>
-                                    p.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                    p.phone.includes(searchTerm) ||
-                                    String(p.id).includes(searchTerm)
-                                  )
-                                  .map(p => (
-                                    <div
-                                      key={p.id}
-                                      onClick={() => {
-                                        // ACTION: Auto-fill Patient ID in Billing Form
-                                        setNewBill(prev => ({ ...prev, patientId: p.id?.toString() || '' }));
-                                        setSearchTerm(''); // Close dropdown
-                                      }}
-                                      style={{ padding: '8px', borderBottom: '1px solid #eee', cursor: 'pointer', fontSize: '0.9rem' }}
-                                      onMouseOver={(e) => (e.currentTarget.style.background = '#f1f1f1')}
-                                      onMouseOut={(e) => (e.currentTarget.style.background = 'white')}
-                                    >
-                                      <strong>{p.firstName} {p.lastName}</strong> (ID: {p.id})
-                                    </div>
-                                  ))
-                                }
-                              </div>
-                            )}
+                            {/* Tabs Header */}
+                            <div className="search-tabs" style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                              {['ID', 'Name', 'Phone', 'Email'].map((tab) => (
+                                <button
+                                  key={tab}
+                                  type="button"
+                                  onClick={() => setSearchTab(tab.toLowerCase())} // Ensure searchTab state exists
+                                  style={{
+                                    padding: '5px 12px',
+                                    fontSize: '0.8rem',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    backgroundColor: searchTab === tab.toLowerCase() ? '#063ca8' : '#e9ecef',
+                                    color: searchTab === tab.toLowerCase() ? '#fff' : '#333'
+                                  }}
+                                >
+                                  {tab}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* Input Area */}
+                            <div style={{ position: 'relative' }}>
+                              <input
+                                type="text"
+                                placeholder={`Search by ${searchTab}...`}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ccc' }}
+                              />
+
+                              {/* Dropdown Results */}
+                              {searchTerm && (
+                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, maxHeight: '200px', overflowY: 'auto', background: 'white', border: '1px solid #dee2e6', zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', borderRadius: '0 0 8px 8px' }}>
+                                  {patientsList
+                                    .filter(p => {
+                                      const val = searchTerm.toLowerCase();
+                                      if (searchTab === 'id') return String(p.id).includes(val);
+                                      if (searchTab === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(val);
+                                      if (searchTab === 'phone') return p.phone.includes(val);
+                                      if (searchTab === 'email') return p.email.toLowerCase().includes(val);
+                                      return false;
+                                    })
+                                    .map(p => (
+                                      <div
+                                        key={p.id}
+                                        onClick={() => {
+                                          setNewBill(prev => ({ ...prev, patientId: p.id?.toString() || '' }));
+                                          setSearchTerm('');
+                                        }}
+                                        style={{ padding: '10px', borderBottom: '1px solid #eee', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
+                                        onMouseOver={(e) => e.currentTarget.style.background = '#f1f5ff'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+                                      >
+                                        <span>{p.firstName} {p.lastName}</span>
+                                        <span style={{ color: '#063ca8', fontSize: '0.8rem' }}>ID: {p.id} | {p.phone}</span>
+                                      </div>
+                                    ))
+                                  }
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>

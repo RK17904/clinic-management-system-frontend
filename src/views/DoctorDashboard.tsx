@@ -77,6 +77,7 @@ const DoctorDashboard = () => {
   // Medical Records Explorer States
   const [recordSearchQuery, setRecordSearchQuery] = useState('');
   const [selectedHistoryPatient, setSelectedHistoryPatient] = useState<number | null>(null);
+  const [recordSearchTab, setRecordSearchTab] = useState('name'); // <--- Add this new line to handle tab selection.
 
   // Walk-in Patient Search State
   const [searchTerm, setSearchTerm] = useState('');
@@ -1082,13 +1083,39 @@ const DoctorDashboard = () => {
                       <>
                         <div className="records-nav-header">
                           <h3 className="history-title">Medical Records Explorer</h3>
-                          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+
+                            {/* --- NEW: Search Tabs --- */}
+                            <div className="search-tabs" style={{ display: 'flex', gap: '5px' }}>
+                              {['ID', 'Name', 'Phone', 'Email'].map((tab) => (
+                                <button
+                                  key={tab}
+                                  type="button"
+                                  onClick={() => setRecordSearchTab(tab.toLowerCase())}
+                                  style={{
+                                    padding: '5px 12px',
+                                    fontSize: '0.75rem',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    backgroundColor: recordSearchTab === tab.toLowerCase() ? '#063ca8' : '#e9ecef',
+                                    color: recordSearchTab === tab.toLowerCase() ? '#fff' : '#333'
+                                  }}
+                                >
+                                  {tab}
+                                </button>
+                              ))}
+                            </div>
+
+                            {/* --- Search Input --- */}
                             <div className="search-box-container" style={{ margin: 0 }}>
                               <input
                                 type="text"
-                                placeholder="Search Patient Name or ID..."
+                                placeholder={`Search by ${recordSearchTab}...`} // Dynamic Placeholder
                                 value={recordSearchQuery}
                                 onChange={(e) => setRecordSearchQuery(e.target.value)}
+                                style={{ width: '100%', padding: '8px' }}
                               />
                             </div>
                           </div>
@@ -1102,9 +1129,19 @@ const DoctorDashboard = () => {
                             <tbody>
                               {lastTenUniquePatients
                                 .filter(r => {
-                                  const fullName = `${r.patient?.firstName || ''} ${r.patient?.lastName || ''}`.toLowerCase();
-                                  return fullName.includes(recordSearchQuery.toLowerCase()) ||
-                                    String(r.patient?.id || r.patientId).includes(recordSearchQuery);
+                                  const query = recordSearchQuery.toLowerCase();
+                                  if (!query) return true; // Show all records if the search query is empty
+
+                                  const p = r.patient; // Access the Patient Object
+                                  if (!p) return false;
+
+                                  // Filtering logic based on the selected Tab
+                                  if (recordSearchTab === 'id') return String(p.id || r.patientId).includes(query);
+                                  if (recordSearchTab === 'name') return (p.firstName + ' ' + p.lastName).toLowerCase().includes(query);
+                                  if (recordSearchTab === 'phone') return p.phone.includes(query);
+                                  if (recordSearchTab === 'email') return p.email.toLowerCase().includes(query);
+
+                                  return false;
                                 })
                                 .map((r, i) => (
                                   <tr key={i}>

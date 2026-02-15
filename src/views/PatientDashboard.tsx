@@ -89,8 +89,8 @@ const HealthTipCarousel = () => {
 
   return (
     <>
-      <div 
-        key={currentIndex} 
+      <div
+        key={currentIndex}
         className="health-tip-card"
         style={{
           background: tip.gradient
@@ -117,7 +117,6 @@ const PatientDashboard = () => {
   const [myAppointments, setMyAppointments] = useState<Appointment[]>([]);
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [myRecords, setMyRecords] = useState<MedicalRecord[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // STATES for Booking 
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -128,7 +127,7 @@ const PatientDashboard = () => {
     time: '',
     notes: ''
   });
-  
+
   // Filtering State
   const [filterSpecialty, setFilterSpecialty] = useState<string>('');
 
@@ -188,7 +187,6 @@ const PatientDashboard = () => {
       setPatient(parsedPatient);
 
       try {
-        setLoading(true);
         const appRes = await api.get('/appointments');
 
         // 1. Store ALL appointments for availability checking
@@ -209,8 +207,6 @@ const PatientDashboard = () => {
 
       } catch (err) {
         console.error("Error fetching patient data:", err);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -233,7 +229,7 @@ const PatientDashboard = () => {
   };
 
   // --- SEPARATION LOGIC ---
-  
+
   // Upcoming = Future Date (or Today) AND Active Status (Not Cancelled/Completed)
   const upcomingAppointments = myAppointments.filter(appt => {
     const isInactive = ['Cancelled', 'Rejected', 'REJECTED', 'COMPLETED'].includes(appt.status);
@@ -305,7 +301,7 @@ const PatientDashboard = () => {
         doctorId: newBooking.doctorId.toString(),
         date: newBooking.date,
         time: newBooking.time + ":00",
-        appointmentTime: combinedAppointmentTime, 
+        appointmentTime: combinedAppointmentTime,
         notes: newBooking.notes,
         status: "Pending"
       };
@@ -313,7 +309,7 @@ const PatientDashboard = () => {
       console.log("Sending Payload:", payload);
 
       await api.post('/appointments', payload);
-      
+
       // Success Feedback
       setFeedback({ message: "Appointment Request Sent Successfully!", type: 'success' });
 
@@ -328,10 +324,10 @@ const PatientDashboard = () => {
 
     } catch (error: any) {
       console.error(error);
-      const errorMsg = error.response && error.response.data 
+      const errorMsg = error.response && error.response.data
         ? (typeof error.response.data === 'string' ? error.response.data : error.response.data.message)
         : "Booking Failed! Please try again.";
-        
+
       setFeedback({ message: "Booking Failed: " + errorMsg, type: 'error' });
     }
   };
@@ -341,8 +337,8 @@ const PatientDashboard = () => {
   // Helper for Status Color
   const getStatusStyle = (status: string) => {
     const s = status.toUpperCase();
-    if(s === 'PENDING') return { bg: '#FFF3CD', color: '#856404' };
-    if(s === 'APPROVED' || s === 'CONFIRMED' || s === 'SCHEDULED' || s === 'COMPLETED') return { bg: '#D1E7DD', color: '#0F5132' };
+    if (s === 'PENDING') return { bg: '#FFF3CD', color: '#856404' };
+    if (s === 'APPROVED' || s === 'CONFIRMED' || s === 'SCHEDULED' || s === 'COMPLETED') return { bg: '#D1E7DD', color: '#0F5132' };
     return { bg: '#F8D7DA', color: '#721C24' }; // Rejected/Cancelled
   };
 
@@ -426,68 +422,68 @@ const PatientDashboard = () => {
 
                   {/* 2. Main Content Split */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '25px' }}>
-                    
+
                     {/* Left Col: Next Appointment Highlight */}
                     <div className="next-appointment-card">
-                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                          <h3 style={{ margin: 0, color: '#0056b3' }}>📅 Next Appointment</h3>
-                          {upcomingAppointments.length > 0 && (
-                            <span style={{ background: '#e6f0ff', color: '#0056b3', padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>Confirmed</span>
-                          )}
-                       </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <h3 style={{ margin: 0, color: '#0056b3' }}>📅 Next Appointment</h3>
+                        {upcomingAppointments.length > 0 && (
+                          <span style={{ background: '#e6f0ff', color: '#0056b3', padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>Confirmed</span>
+                        )}
+                      </div>
 
-                       {upcomingAppointments.length > 0 ? (
-                         <div>
-                            <div style={{ marginBottom: '15px' }}>
-                               <h2 style={{ margin: '0 0 5px 0', fontSize: '1.4rem' }}>{upcomingAppointments[0].doctor?.name}</h2>
-                               <p style={{ margin: 0, color: '#666' }}>{upcomingAppointments[0].doctor?.specialization}</p>
-                            </div>
-                            
-                            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                              <div style={{ background: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', flex: 1 }}>
-                                <small style={{ color: '#888', display: 'block', marginBottom: '4px' }}>Date</small>
-                                <strong>{upcomingAppointments[0].date}</strong>
-                              </div>
-                              <div style={{ background: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', flex: 1 }}>
-                                <small style={{ color: '#888', display: 'block', marginBottom: '4px' }}>Time</small>
-                                <strong>{upcomingAppointments[0].time}</strong>
-                              </div>
-                            </div>
+                      {upcomingAppointments.length > 0 ? (
+                        <div>
+                          <div style={{ marginBottom: '15px' }}>
+                            <h2 style={{ margin: '0 0 5px 0', fontSize: '1.4rem' }}>{upcomingAppointments[0].doctor?.name}</h2>
+                            <p style={{ margin: 0, color: '#666' }}>{upcomingAppointments[0].doctor?.specialization}</p>
+                          </div>
 
-                            <button 
-                              onClick={() => setActiveTab('appointments')}
-                              style={{ width: '100%', padding: '12px', background: '#0056b3', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-                            >
-                              Manage Appointment
-                            </button>
-                         </div>
-                       ) : (
-                         <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                           <p style={{ color: '#888', marginBottom: '20px' }}>No upcoming appointments scheduled.</p>
-                           <button 
-                              onClick={() => { setActiveTab('appointments'); setShowBookingForm(true); }}
-                              style={{ padding: '10px 20px', background: '#0056b3', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-                           >
-                              Book Now
-                           </button>
-                         </div>
-                       )}
+                          <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+                            <div style={{ background: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', flex: 1 }}>
+                              <small style={{ color: '#888', display: 'block', marginBottom: '4px' }}>Date</small>
+                              <strong>{upcomingAppointments[0].date}</strong>
+                            </div>
+                            <div style={{ background: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', flex: 1 }}>
+                              <small style={{ color: '#888', display: 'block', marginBottom: '4px' }}>Time</small>
+                              <strong>{upcomingAppointments[0].time}</strong>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => setActiveTab('appointments')}
+                            style={{ width: '100%', padding: '12px', background: '#0056b3', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                          >
+                            Manage Appointment
+                          </button>
+                        </div>
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                          <p style={{ color: '#888', marginBottom: '20px' }}>No upcoming appointments scheduled.</p>
+                          <button
+                            onClick={() => { setActiveTab('appointments'); setShowBookingForm(true); }}
+                            style={{ padding: '10px 20px', background: '#0056b3', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                          >
+                            Book Now
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Right Col: Profile & Health Tips */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                       {/* Profile Mini Card */}
-                       <div className="profile-mini-card">
-                          <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>My Profile</h4>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px', fontSize: '0.95rem' }}>
-                             <span style={{ color: '#888' }}>Email:</span> <span>{patient.email}</span>
-                             <span style={{ color: '#888' }}>Phone:</span> <span>{patient.phone}</span>
-                             <span style={{ color: '#888' }}>Address:</span> <span>{patient.address}</span>
-                          </div>
-                       </div>
+                      {/* Profile Mini Card */}
+                      <div className="profile-mini-card">
+                        <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>My Profile</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px', fontSize: '0.95rem' }}>
+                          <span style={{ color: '#888' }}>Email:</span> <span>{patient.email}</span>
+                          <span style={{ color: '#888' }}>Phone:</span> <span>{patient.phone}</span>
+                          <span style={{ color: '#888' }}>Address:</span> <span>{patient.address}</span>
+                        </div>
+                      </div>
 
-                       {/* Auto-Swapping Health Tip Banner */}
-                       <HealthTipCarousel />
+                      {/* Auto-Swapping Health Tip Banner */}
+                      <HealthTipCarousel />
                     </div>
 
                   </div>
@@ -511,13 +507,13 @@ const PatientDashboard = () => {
                       {showBookingForm ? 'Cancel Booking' : <><PlusIcon /> Book New Appointment</>}
                     </button>
                   </div>
-                  
+
                   {/* FEEDBACK BANNER */}
                   {feedback && (
                     <div className={`feedback-banner ${feedback.type === 'success' ? 'feedback-success' : 'feedback-error'}`}>
                       <span style={{ fontWeight: 500 }}>{feedback.message}</span>
-                      <button 
-                        onClick={() => setFeedback(null)} 
+                      <button
+                        onClick={() => setFeedback(null)}
                         className="btn-close-feedback"
                       >
                         &times;
@@ -532,23 +528,23 @@ const PatientDashboard = () => {
                         <h4 className="card-title mb-4 text-primary" style={{ color: '#0056b3', marginBottom: '15px' }}>📅 Book New Appointment</h4>
 
                         <div className="booking-grid">
-                          
+
                           {/* Filter Controls (Row 1) */}
                           <div className="filter-container">
                             <div className="filter-row">
-                                <div className="filter-group">
-                                    <label className="filter-label">Filter by Specialty</label>
-                                    <select
-                                        className="booking-select"
-                                        value={filterSpecialty}
-                                        onChange={(e) => setFilterSpecialty(e.target.value)}
-                                    >
-                                        <option value="">All Specialties</option>
-                                        {uniqueSpecialties.map(spec => (
-                                        <option key={spec} value={spec}>{spec}</option>
-                                        ))}
-                                    </select>
-                                </div>
+                              <div className="filter-group">
+                                <label className="filter-label">Filter by Specialty</label>
+                                <select
+                                  className="booking-select"
+                                  value={filterSpecialty}
+                                  onChange={(e) => setFilterSpecialty(e.target.value)}
+                                >
+                                  <option value="">All Specialties</option>
+                                  {uniqueSpecialties.map(spec => (
+                                    <option key={spec} value={spec}>{spec}</option>
+                                  ))}
+                                </select>
+                              </div>
                             </div>
                           </div>
 
@@ -559,13 +555,13 @@ const PatientDashboard = () => {
                               className="booking-select"
                               value={newBooking.doctorId}
                               onChange={(e) => {
-                                setNewBooking({ ...newBooking, doctorId: e.target.value, time: '' }); 
+                                setNewBooking({ ...newBooking, doctorId: e.target.value, time: '' });
                               }}
                             >
                               <option value="">-- Choose a Specialist --</option>
                               {filteredAndSortedDoctors.length > 0 ? (
                                 filteredAndSortedDoctors.map(d => (
-                                    <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
+                                  <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
                                 ))
                               ) : (
                                 <option disabled>No doctors found matching filters</option>
@@ -576,10 +572,10 @@ const PatientDashboard = () => {
                           {/* Custom Inline Calendar - Full Width */}
                           <div className="grid-col-full">
                             <label className="form-label-bold">Select Date</label>
-                            
+
                             <div className="inline-calendar">
                               <div className="calendar-nav">
-                                <button 
+                                <button
                                   onClick={() => handleMonthChange(-1)}
                                   type="button"
                                   className="calendar-nav-btn"
@@ -589,7 +585,7 @@ const PatientDashboard = () => {
                                 <span className="calendar-month-title">
                                   {calendarView.toLocaleString('default', { month: 'long', year: 'numeric' })}
                                 </span>
-                                <button 
+                                <button
                                   onClick={() => handleMonthChange(1)}
                                   type="button"
                                   className="calendar-nav-btn"
@@ -620,7 +616,7 @@ const PatientDashboard = () => {
                                   const month = String(calendarView.getMonth() + 1).padStart(2, '0');
                                   const dStr = String(day).padStart(2, '0');
                                   const dateStr = `${year}-${month}-${dStr}`;
-                                  
+
                                   const isSelected = newBooking.date === dateStr;
                                   const isToday = dateStr === today;
                                   const isPast = dateStr < today;
@@ -643,12 +639,12 @@ const PatientDashboard = () => {
                                 })}
                               </div>
                             </div>
-                            
+
                             {/* Selected Date Indicator */}
                             {newBooking.date && (
-                                <div style={{ marginTop: '10px', textAlign: 'right', fontSize: '0.9rem', color: '#0056b3', fontWeight: 'bold' }}>
-                                    Selected: {newBooking.date}
-                                </div>
+                              <div style={{ marginTop: '10px', textAlign: 'right', fontSize: '0.9rem', color: '#0056b3', fontWeight: 'bold' }}>
+                                Selected: {newBooking.date}
+                              </div>
                             )}
                           </div>
 
@@ -699,7 +695,7 @@ const PatientDashboard = () => {
                             <button
                               className="btn-book-confirm"
                               onClick={handleBookAppointment}
-                              disabled={!newBooking.time} 
+                              disabled={!newBooking.time}
                             >
                               Confirm Booking
                             </button>
@@ -753,7 +749,7 @@ const PatientDashboard = () => {
 
                   {/* History Table */}
                   <h4 style={{ color: '#666', marginBottom: '10px' }}>Appointment History</h4>
-                  <div className="table-container" style={{opacity: 0.8}}>
+                  <div className="table-container" style={{ opacity: 0.8 }}>
                     <table className="data-table">
                       <thead>
                         <tr>
@@ -768,14 +764,14 @@ const PatientDashboard = () => {
                           <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No Appointment History</td></tr>
                         ) : (
                           historyAppointments.map(appt => {
-                            
+
                             // LOGIC: If date is in past AND was approved/scheduled/confirmed -> Show as COMPLETED
                             let displayStatus = appt.status;
                             const isPast = appt.date < today;
                             const isApproved = ['APPROVED', 'CONFIRMED', 'SCHEDULED'].includes(appt.status.toUpperCase());
-                            
+
                             if (isPast && isApproved) {
-                                displayStatus = 'COMPLETED';
+                              displayStatus = 'COMPLETED';
                             }
 
                             const style = getStatusStyle(displayStatus);

@@ -88,26 +88,23 @@ const HealthTipCarousel = () => {
   const tip = tips[currentIndex];
 
   return (
-    <div style={{
-      background: tip.gradient,
-      padding: '25px',
-      borderRadius: '16px',
-      color: '#555',
-      boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '20px',
-      transition: 'background 0.5s ease',
-      minHeight: '130px' // Fix height to prevent layout jumps
-    }}>
-      <div style={{ fontSize: '2.5rem' }}>{tip.icon}</div>
-      <div>
-        <h4 style={{ margin: '0 0 5px 0', color: '#333' }}>{tip.title}</h4>
-        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.4' }}>
-          {tip.text}
-        </p>
+    <>
+      <div 
+        key={currentIndex} 
+        className="health-tip-card"
+        style={{
+          background: tip.gradient
+        }}
+      >
+        <div style={{ fontSize: '2.5rem' }}>{tip.icon}</div>
+        <div>
+          <h4 style={{ margin: '0 0 5px 0', color: '#333' }}>{tip.title}</h4>
+          <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.4' }}>
+            {tip.text}
+          </p>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -132,6 +129,9 @@ const PatientDashboard = () => {
     notes: ''
   });
   
+  // Filtering State
+  const [filterSpecialty, setFilterSpecialty] = useState<string>('');
+
   // Calendar View State (for the custom date picker)
   const [calendarView, setCalendarView] = useState(new Date());
 
@@ -247,6 +247,27 @@ const PatientDashboard = () => {
     const isPast = appt.date < today;
     return isInactive || isPast;
   });
+
+  // --- FILTER & SORT LOGIC ---
+  const uniqueSpecialties = useMemo(() => {
+    const specs = new Set(doctors.map(d => d.specialization).filter(Boolean));
+    return Array.from(specs).sort();
+  }, [doctors]);
+
+  const filteredAndSortedDoctors = useMemo(() => {
+    let result = [...doctors];
+
+    // Filter by Specialty
+    if (filterSpecialty) {
+      result = result.filter(d => d.specialization === filterSpecialty);
+    }
+
+    // Always Sort A-Z by default for consistency
+    result.sort((a, b) => a.name.localeCompare(b.name));
+
+    return result;
+  }, [doctors, filterSpecialty]);
+
 
   // --- CUSTOM CALENDAR LOGIC ---
   const daysInMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -402,14 +423,12 @@ const PatientDashboard = () => {
               {/* --- DASHBOARD TAB (Redesigned) --- */}
               <div className="main-slider-slide">
                 <div className="dashboard-content p-4" style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                  
-                  {/* Removed Vitals Section as per request */}
 
                   {/* 2. Main Content Split */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '25px' }}>
                     
                     {/* Left Col: Next Appointment Highlight */}
-                    <div style={{ background: 'white', borderRadius: '16px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                    <div className="next-appointment-card">
                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                           <h3 style={{ margin: 0, color: '#0056b3' }}>📅 Next Appointment</h3>
                           {upcomingAppointments.length > 0 && (
@@ -458,7 +477,7 @@ const PatientDashboard = () => {
                     {/* Right Col: Profile & Health Tips */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                        {/* Profile Mini Card */}
-                       <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                       <div className="profile-mini-card">
                           <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>My Profile</h4>
                           <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px', fontSize: '0.95rem' }}>
                              <span style={{ color: '#888' }}>Email:</span> <span>{patient.email}</span>
@@ -495,22 +514,11 @@ const PatientDashboard = () => {
                   
                   {/* FEEDBACK BANNER */}
                   {feedback && (
-                    <div style={{
-                      padding: '12px 16px',
-                      marginBottom: '20px',
-                      borderRadius: '8px',
-                      backgroundColor: feedback.type === 'success' ? '#d4edda' : '#f8d7da',
-                      color: feedback.type === 'success' ? '#155724' : '#721c24',
-                      border: `1px solid ${feedback.type === 'success' ? '#c3e6cb' : '#f5c6cb'}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                    }}>
+                    <div className={`feedback-banner ${feedback.type === 'success' ? 'feedback-success' : 'feedback-error'}`}>
                       <span style={{ fontWeight: 500 }}>{feedback.message}</span>
                       <button 
                         onClick={() => setFeedback(null)} 
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', opacity: 0.7 }}
+                        className="btn-close-feedback"
                       >
                         &times;
                       </button>
@@ -519,69 +527,87 @@ const PatientDashboard = () => {
 
                   {/* BOOKING FORM */}
                   {showBookingForm && (
-                    <div className="card shadow-sm mb-4 booking-form-card bg-light border-0" style={{ background: '#f8f9fa', padding: '20px', borderRadius: '10px', marginBottom: '20px' }}>
+                    <div className="booking-form-card">
                       <div className="card-body p-4">
                         <h4 className="card-title mb-4 text-primary" style={{ color: '#0056b3', marginBottom: '15px' }}>📅 Book New Appointment</h4>
 
-                        <div className="row g-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                        <div className="booking-grid">
                           
+                          {/* Filter Controls (Row 1) */}
+                          <div className="filter-container">
+                            <div className="filter-row">
+                                <div className="filter-group">
+                                    <label className="filter-label">Filter by Specialty</label>
+                                    <select
+                                        className="booking-select"
+                                        value={filterSpecialty}
+                                        onChange={(e) => setFilterSpecialty(e.target.value)}
+                                    >
+                                        <option value="">All Specialties</option>
+                                        {uniqueSpecialties.map(spec => (
+                                        <option key={spec} value={spec}>{spec}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                          </div>
+
                           {/* Doctor Select - Full Width */}
-                          <div className="col-md-12" style={{ gridColumn: '1 / -1' }}>
-                            <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Select Doctor</label>
+                          <div className="grid-col-full">
+                            <label className="form-label-bold">Select Doctor</label>
                             <select
-                              className="form-select"
+                              className="booking-select"
                               value={newBooking.doctorId}
                               onChange={(e) => {
                                 setNewBooking({ ...newBooking, doctorId: e.target.value, time: '' }); 
                               }}
-                              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '1rem' }}
                             >
                               <option value="">-- Choose a Specialist --</option>
-                              {doctors.map(d => (
-                                <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
-                              ))}
+                              {filteredAndSortedDoctors.length > 0 ? (
+                                filteredAndSortedDoctors.map(d => (
+                                    <option key={d.id} value={d.id}>{d.name} ({d.specialization})</option>
+                                ))
+                              ) : (
+                                <option disabled>No doctors found matching filters</option>
+                              )}
                             </select>
                           </div>
 
                           {/* Custom Inline Calendar - Full Width */}
-                          <div className="col-md-12" style={{ gridColumn: '1 / -1' }}>
-                            <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Select Date</label>
+                          <div className="grid-col-full">
+                            <label className="form-label-bold">Select Date</label>
                             
-                            <div style={{ 
-                              background: 'white', 
-                              borderRadius: '12px', 
-                              border: '1px solid #eee', 
-                              padding: '20px',
-                              boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
-                            }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                            <div className="inline-calendar">
+                              <div className="calendar-nav">
                                 <button 
                                   onClick={() => handleMonthChange(-1)}
                                   type="button"
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#0056b3', padding: '5px' }}
+                                  className="calendar-nav-btn"
                                 >
                                   &lt; Prev
                                 </button>
-                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#333' }}>
+                                <span className="calendar-month-title">
                                   {calendarView.toLocaleString('default', { month: 'long', year: 'numeric' })}
                                 </span>
                                 <button 
                                   onClick={() => handleMonthChange(1)}
                                   type="button"
-                                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: '#0056b3', padding: '5px' }}
+                                  className="calendar-nav-btn"
                                 >
                                   Next &gt;
                                 </button>
                               </div>
 
-                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px', textAlign: 'center' }}>
+                              <div className="calendar-grid-header">
                                 {/* Weekday Headers */}
                                 {weekDays.map(day => (
-                                  <div key={day} style={{ fontWeight: 'bold', color: '#888', fontSize: '0.9rem', marginBottom: '5px' }}>
+                                  <div key={day}>
                                     {day}
                                   </div>
                                 ))}
+                              </div>
 
+                              <div className="calendar-grid-days">
                                 {/* Empty Slots for Start of Month */}
                                 {Array.from({ length: startDay }).map((_, i) => (
                                   <div key={`empty-${i}`} />
@@ -599,22 +625,17 @@ const PatientDashboard = () => {
                                   const isToday = dateStr === today;
                                   const isPast = dateStr < today;
 
+                                  let btnClass = "calendar-day-btn";
+                                  if (isSelected) btnClass += " selected";
+                                  else if (isToday) btnClass += " today";
+
                                   return (
                                     <button
                                       key={day}
                                       type="button"
                                       disabled={isPast}
                                       onClick={() => handleDateClick(day)}
-                                      style={{
-                                        padding: '10px 0',
-                                        background: isSelected ? '#0056b3' : isToday ? '#e6f0ff' : 'transparent',
-                                        color: isSelected ? 'white' : isPast ? '#ccc' : '#333',
-                                        border: isToday && !isSelected ? '1px solid #0056b3' : 'none',
-                                        borderRadius: '8px',
-                                        cursor: isPast ? 'not-allowed' : 'pointer',
-                                        fontWeight: isSelected || isToday ? 'bold' : 'normal',
-                                        transition: 'background 0.2s'
-                                      }}
+                                      className={btnClass}
                                     >
                                       {day}
                                     </button>
@@ -633,34 +654,24 @@ const PatientDashboard = () => {
 
                           {/* Time Slot Selection Grid - Only shows when Doctor & Date are selected */}
                           {newBooking.doctorId && newBooking.date && (
-                            <div className="col-12" style={{ gridColumn: '1 / -1' }}>
-                              <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Available Time Slots</label>
-                              <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                                gap: '10px'
-                              }}>
+                            <div className="grid-col-full">
+                              <label className="form-label-bold">Available Time Slots</label>
+                              <div className="time-slot-grid">
                                 {timeSlots.map(slot => {
                                   const booked = isSlotBooked(slot);
                                   const isSelected = newBooking.time === slot;
+                                  let slotClass = "time-slot-btn";
+                                  if (booked) slotClass += " booked";
+                                  else if (isSelected) slotClass += " selected";
+                                  else slotClass += " available";
+
                                   return (
                                     <button
                                       key={slot}
                                       type="button"
                                       disabled={booked}
                                       onClick={() => setNewBooking({ ...newBooking, time: slot })}
-                                      style={{
-                                        padding: '10px 5px',
-                                        borderRadius: '5px',
-                                        border: 'none',
-                                        cursor: booked ? 'not-allowed' : 'pointer',
-                                        fontWeight: 'bold',
-                                        fontSize: '0.9rem',
-                                        backgroundColor: booked ? '#ffcccc' : isSelected ? '#0056b3' : '#d4edda',
-                                        color: booked ? '#cc0000' : isSelected ? 'white' : '#155724',
-                                        opacity: booked ? 0.7 : 1,
-                                        boxShadow: isSelected ? '0 0 5px rgba(0,86,179,0.5)' : 'none'
-                                      }}
+                                      className={slotClass}
                                       title={booked ? "Already Booked" : "Available"}
                                     >
                                       {slot}
@@ -672,29 +683,23 @@ const PatientDashboard = () => {
                           )}
 
                           {/* Reason / Notes */}
-                          <div className="col-12" style={{ gridColumn: '1 / -1' }}>
-                            <label className="form-label fw-bold" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Reason for Visit</label>
+                          <div className="grid-col-full">
+                            <label className="form-label-bold">Reason for Visit</label>
                             <input
                               type="text"
-                              className="form-control"
+                              className="booking-input"
                               placeholder="e.g. Annual checkup, Flu symptoms..."
                               value={newBooking.notes}
                               onChange={e => setNewBooking({ ...newBooking, notes: e.target.value })}
-                              style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}
                             />
                           </div>
 
                           {/* Confirm Button */}
-                          <div className="col-12 text-end mt-4" style={{ gridColumn: '1 / -1', textAlign: 'right' }}>
+                          <div className="grid-col-full" style={{ textAlign: 'right', marginTop: '1rem' }}>
                             <button
-                              className="btn btn-success fw-bold px-4 py-2"
+                              className="btn-book-confirm"
                               onClick={handleBookAppointment}
                               disabled={!newBooking.time} 
-                              style={{
-                                backgroundColor: !newBooking.time ? '#ccc' : '#28a745',
-                                border: 'none', color: 'white', padding: '10px 20px', borderRadius: '5px', fontWeight: 'bold',
-                                cursor: !newBooking.time ? 'not-allowed' : 'pointer'
-                              }}
                             >
                               Confirm Booking
                             </button>

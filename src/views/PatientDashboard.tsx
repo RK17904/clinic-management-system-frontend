@@ -45,6 +45,72 @@ interface MedicalRecord {
   patient: Patient;
 }
 
+// --- MODERN UI COMPONENTS (Internal) ---
+
+const HealthTipCarousel = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const tips = [
+    {
+      icon: '🍎',
+      title: 'Eat Balanced',
+      text: 'Incorporate fruits and vegetables into every meal for better immunity.',
+      gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)'
+    },
+    {
+      icon: '💧',
+      title: 'Stay Hydrated',
+      text: 'Drink at least 8 glasses of water daily to keep your energy levels high.',
+      gradient: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+    },
+    {
+      icon: '🏃',
+      title: 'Get Moving',
+      text: 'A 30-minute walk today can improve your heart health and mood.',
+      gradient: 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)'
+    },
+    {
+      icon: '🧠',
+      title: 'Mindfulness',
+      text: 'Take 5 minutes to practice deep breathing to reduce stress.',
+      gradient: 'linear-gradient(135deg, #fddb92 0%, #d1fdff 100%)'
+    }
+  ];
+
+  // Auto-swap tips every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % tips.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [tips.length]);
+
+  const tip = tips[currentIndex];
+
+  return (
+    <div style={{
+      background: tip.gradient,
+      padding: '25px',
+      borderRadius: '16px',
+      color: '#555',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '20px',
+      transition: 'background 0.5s ease',
+      minHeight: '130px' // Fix height to prevent layout jumps
+    }}>
+      <div style={{ fontSize: '2.5rem' }}>{tip.icon}</div>
+      <div>
+        <h4 style={{ margin: '0 0 5px 0', color: '#333' }}>{tip.title}</h4>
+        <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: '1.4' }}>
+          {tip.text}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const PatientDashboard = () => {
   const navigate = useNavigate();
 
@@ -319,7 +385,13 @@ const PatientDashboard = () => {
         padding: '20px'
       }}>
         <header className="dashboard-header">
-          <h1>Welcome, {patient.firstName} {patient.lastName} 👋</h1>
+          {/* Enhanced Header with Date */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h1>Welcome, {patient.firstName} {patient.lastName} 👋</h1>
+            <p style={{ color: '#666', fontSize: '0.9rem', margin: 0 }}>
+              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            </p>
+          </div>
         </header>
 
         <div className="dashboard-content-wrapper" style={{ padding: 0, position: 'relative' }}>
@@ -327,21 +399,78 @@ const PatientDashboard = () => {
           <div className="main-slider-viewport">
             <div className={`main-slider-track pos-${activeTab === 'dashboard' ? 'dashboard' : activeTab === 'appointments' ? 'doctors' : 'patients'}`}>
 
-              {/* DASHBOARD */}
+              {/* --- DASHBOARD TAB (Redesigned) --- */}
               <div className="main-slider-slide">
-                <div className="dashboard-content p-4">
-                  <div className="stat-card profile-card" style={{ borderLeft: '5px solid #0056b3' }}>
-                    <h3>My Profile</h3>
-                    <div>
-                      <p><strong>Email:</strong> {patient.email}</p>
-                      <p><strong>Phone:</strong> {patient.phone}</p>
-                      <p><strong>Age:</strong> {patient.age}</p>
-                      <p><strong>Address:</strong> {patient.address}</p>
+                <div className="dashboard-content p-4" style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                  
+                  {/* Removed Vitals Section as per request */}
+
+                  {/* 2. Main Content Split */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '25px' }}>
+                    
+                    {/* Left Col: Next Appointment Highlight */}
+                    <div style={{ background: 'white', borderRadius: '16px', padding: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                          <h3 style={{ margin: 0, color: '#0056b3' }}>📅 Next Appointment</h3>
+                          {upcomingAppointments.length > 0 && (
+                            <span style={{ background: '#e6f0ff', color: '#0056b3', padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold' }}>Confirmed</span>
+                          )}
+                       </div>
+
+                       {upcomingAppointments.length > 0 ? (
+                         <div>
+                            <div style={{ marginBottom: '15px' }}>
+                               <h2 style={{ margin: '0 0 5px 0', fontSize: '1.4rem' }}>{upcomingAppointments[0].doctor?.name}</h2>
+                               <p style={{ margin: 0, color: '#666' }}>{upcomingAppointments[0].doctor?.specialization}</p>
+                            </div>
+                            
+                            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+                              <div style={{ background: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', flex: 1 }}>
+                                <small style={{ color: '#888', display: 'block', marginBottom: '4px' }}>Date</small>
+                                <strong>{upcomingAppointments[0].date}</strong>
+                              </div>
+                              <div style={{ background: '#f8f9fa', padding: '10px 15px', borderRadius: '8px', flex: 1 }}>
+                                <small style={{ color: '#888', display: 'block', marginBottom: '4px' }}>Time</small>
+                                <strong>{upcomingAppointments[0].time}</strong>
+                              </div>
+                            </div>
+
+                            <button 
+                              onClick={() => setActiveTab('appointments')}
+                              style={{ width: '100%', padding: '12px', background: '#0056b3', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                            >
+                              Manage Appointment
+                            </button>
+                         </div>
+                       ) : (
+                         <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                           <p style={{ color: '#888', marginBottom: '20px' }}>No upcoming appointments scheduled.</p>
+                           <button 
+                              onClick={() => { setActiveTab('appointments'); setShowBookingForm(true); }}
+                              style={{ padding: '10px 20px', background: '#0056b3', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                           >
+                              Book Now
+                           </button>
+                         </div>
+                       )}
                     </div>
-                  </div>
-                  <div className="stat-card">
-                    <h3>Upcoming Appointments</h3>
-                    <p>{upcomingAppointments.length}</p>
+
+                    {/* Right Col: Profile & Health Tips */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                       {/* Profile Mini Card */}
+                       <div style={{ background: 'white', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+                          <h4 style={{ margin: '0 0 15px 0', color: '#333' }}>My Profile</h4>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px 20px', fontSize: '0.95rem' }}>
+                             <span style={{ color: '#888' }}>Email:</span> <span>{patient.email}</span>
+                             <span style={{ color: '#888' }}>Phone:</span> <span>{patient.phone}</span>
+                             <span style={{ color: '#888' }}>Address:</span> <span>{patient.address}</span>
+                          </div>
+                       </div>
+
+                       {/* Auto-Swapping Health Tip Banner */}
+                       <HealthTipCarousel />
+                    </div>
+
                   </div>
                 </div>
               </div>

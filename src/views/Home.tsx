@@ -457,7 +457,7 @@ const Home = () => {
             <div className="contact-item"><h4>Phone</h4><p style={{color: '#9ca3af'}}>+94 11 234 5678</p></div>
             <div className="contact-item"><h4>Address</h4><p style={{color: '#9ca3af'}}>Kandy road, Dalugama, Kelaniya.</p></div>
           </div>
-          <div className="footer-copy">&copy; 2025 Health Care+. All rights reserved.</div>
+          <div className="footer-copy">&copy; 2026 Health Care+. All rights reserved.</div>
         </div>
       </section>
 

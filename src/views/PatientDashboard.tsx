@@ -118,6 +118,9 @@ const PatientDashboard = () => {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [myRecords, setMyRecords] = useState<MedicalRecord[]>([]);
 
+  // Clock State
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   // Place this at the very top inside your function
   const [visibleCount, setVisibleCount] = useState(5);
 
@@ -152,6 +155,14 @@ const PatientDashboard = () => {
       return () => clearTimeout(timer);
     }
   }, [feedback]);
+
+  // Clock Timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Get Today's Date String (Local Time) to prevent timezone bugs
   const getTodayString = () => {
@@ -410,12 +421,17 @@ const PatientDashboard = () => {
         padding: '20px'
       }}>
         <header className="dashboard-header">
-          {/* Enhanced Header with Date */}
+          {/* Enhanced Header with Date & Time */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h1>Welcome, {patient.firstName} {patient.lastName} 👋</h1>
-            <p style={{ color: '#666', fontSize: '0.9rem', margin: 0 }}>
-              {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ color: '#666', fontSize: '0.9rem', margin: 0, fontWeight: '600' }}>
+                {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              </p>
+              <p style={{ color: '#063ca8', fontSize: '1.2rem', margin: '5px 0 0 0', fontWeight: 'bold' }}>
+                {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </p>
+            </div>
           </div>
         </header>
 

@@ -21,7 +21,7 @@ interface Appointment {
   date: string;
   time: string;
   status: string;
-  notes?: string; // Added notes field for "Reason for Visit"
+  notes?: string;
   patient: Patient;
 }
 
@@ -79,19 +79,20 @@ const DoctorDashboard = () => {
   const [recordSearchQuery, setRecordSearchQuery] = useState('');
   const [selectedHistoryPatient, setSelectedHistoryPatient] = useState<number | null>(null);
 
-  // Walk-in Patient Search State
+
+  // Billing / Patient Search State
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTab, setSearchTab] = useState('name');
 
   // Patient Detail Modal State
   const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
-  
+
   // Expanded Appointment State for Dropdown
   const [expandedAppointmentId, setExpandedAppointmentId] = useState<number | null>(null);
 
   // Roster States
-  const [rosterData, setRosterData] = useState<RosterEntry[]>([]); // For Roster Management Tab
-  const [rosterEntries, setRosterEntries] = useState<any[]>([]); // For Dashboard Overview (Fetched from DB)
+  const [rosterData, setRosterData] = useState<RosterEntry[]>([]);
+  const [rosterEntries, setRosterEntries] = useState<any[]>([]);
 
   // Generate next 15 days for Dashboard View
   const next15Days = useMemo(() => {
@@ -110,7 +111,6 @@ const DoctorDashboard = () => {
     for (let i = 0; i < 30; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
-      // Format date manually to avoid timezone issues
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -144,6 +144,8 @@ const DoctorDashboard = () => {
   const [newPatient, setNewPatient] = useState<Patient>({ firstName: '', lastName: '', email: '', phone: '', address: '', age: '', gender: '' });
   const [newAppointment, setNewAppointment] = useState({ patientId: '', doctorId: '', date: '', time: '', notes: '' });
   const [newRecord, setNewRecord] = useState({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
+
+  // NOTE: appointmentId is optional in state because we might generate it automatically
   const [newBill, setNewBill] = useState({ patientId: '', appointmentId: '', amount: 0, paymentMethod: 'CASH', status: 'PAID' });
 
   const handleLogout = () => {
@@ -193,13 +195,9 @@ const DoctorDashboard = () => {
         try {
           const rosterResponse = await api.get(`/rosters/doctor/${doctorId}`);
           const fetchedRoster = rosterResponse.data;
-
-          // 1. Send data to small dashboard calendar
           setRosterEntries(fetchedRoster);
 
-          // 2. Fill "My Roster" table with DB data
-          const base30Days = generateNext30Days(); 
-
+          const base30Days = generateNext30Days();
           const mergedRoster = base30Days.map(localDay => {
             const found = fetchedRoster.find((dbEntry: any) => dbEntry.date === localDay.date);
 
@@ -209,15 +207,11 @@ const DoctorDashboard = () => {
               else if (found.shiftStatus === 'Morning') mappedStatus = 'HALFDAY-MORNING';
               else if (found.shiftStatus === 'Evening') mappedStatus = 'HALFDAY-EVENING';
               else mappedStatus = 'OFF';
-
-              return { ...localDay, status: mappedStatus }; 
+              return { ...localDay, status: mappedStatus };
             }
-            return localDay; 
+            return localDay;
           });
-
           setRosterData(mergedRoster);
-          console.log("Roster Synced Successfully:", mergedRoster);
-
         } catch (rosterError) {
           console.error("Error fetching roster:", rosterError);
         }
@@ -241,7 +235,6 @@ const DoctorDashboard = () => {
   const lastTenUniquePatients = useMemo(() => {
     const seenIds = new Set();
     const uniqueList: any[] = [];
-
     const sortedRecords = [...recordsList]
       .filter(r => String(r.doctor?.id || r.doctorId) === String(doctorId))
       .sort((a, b) => new Date(b.recordDate).getTime() - new Date(a.recordDate).getTime());
@@ -260,16 +253,13 @@ const DoctorDashboard = () => {
   // Calculate Stats
   const myTreatedPatients = useMemo(() => {
     if (!doctorId || !recordsList || recordsList.length === 0) return 0;
-
     const myRecords = recordsList.filter(r => {
       const recDocId = r.doctor?.id || r.doctorId;
       return String(recDocId) === String(doctorId);
     });
-
     const uniqueIds = new Set(myRecords.map(r =>
       String(r.patient?.id || r.patientId)
     ));
-
     return uniqueIds.size;
   }, [recordsList, doctorId]);
 
@@ -309,13 +299,9 @@ const DoctorDashboard = () => {
         shiftStatus: r.status === 'OFF' ? 'Off' : r.status === 'DUTY' ? 'Full Duty' : r.status === 'HALFDAY-MORNING' ? 'Morning' : 'Evening',
         doctor: { id: doctorId }
       }));
-
-      console.log("Sending Roster Update:", rosterPayload);
-
       for (const rosterItem of rosterPayload) {
         await api.post('/rosters', rosterItem);
       }
-
       alert("Roster Updated Successfully!");
       fetchData();
     } catch (error) {
@@ -377,7 +363,6 @@ const DoctorDashboard = () => {
 
   const handleStatusUpdate = async (id: number, status: string) => {
     if (!window.confirm(`Are you sure you want to ${status} this appointment?`)) return;
-
     try {
       await api.put(`/appointments/${id}/status?status=${status}`);
       alert(`Appointment ${status} Successfully!`);
@@ -395,6 +380,11 @@ const DoctorDashboard = () => {
         await api.put(`/medical-records/${editingId}`, newRecord);
         alert("Record Updated!");
       } else {
+        if (!doctorId) {
+          alert("Error: Doctor ID not found. Please log in again.");
+          return;
+        }
+
         let finalAppointmentId = null;
 
         if (currentPatient?.id) {
@@ -406,16 +396,14 @@ const DoctorDashboard = () => {
               date: new Date().toISOString().split('T')[0],
               time: new Date().toLocaleTimeString('en-GB', { hour12: false }).substring(0, 5) + ':00',
               status: "COMPLETED",
-              notes: "Walk-in consultation (Auto-generated)"
+              notes: "Walk-in consultation (Auto-generated)",
+              appointmentTime: `${new Date().toISOString().split('T')[0]}T${new Date().toLocaleTimeString('en-GB', { hour12: false }).substring(0, 5)}:00`
             };
-
             const apptResponse = await api.post('/appointments', walkInPayload);
-
             if (apptResponse.data && apptResponse.data.id) {
               finalAppointmentId = apptResponse.data.id;
               console.log("Walk-in Appointment Created via API. ID:", finalAppointmentId);
             }
-
           } catch (err) {
             console.error("Failed to generate walk-in appointment", err);
             alert("Notice: Could not auto-generate appointment. Bill will be created without an Appointment ID.");
@@ -441,38 +429,101 @@ const DoctorDashboard = () => {
           appointmentId: finalAppointmentId ? finalAppointmentId.toString() : '',
           amount: 2000,
           paymentMethod: 'Cash',
-          status: 'Pending'
+          status: 'PAID'
         });
       }
-      resetForms();
+      // Reset only record form, NOT the patient or bill forms
+      setNewRecord({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
       fetchData();
     } catch {
       alert("Error Saving Record!");
     }
   };
 
-  // ACTIONS: BILLING 
+  // --- 🔥 UPDATED: ACTIONS: BILLING WITH AUTO-APPOINTMENT CHECK ---
   const handleSaveBill = async () => {
     try {
+      // 1. Validation: Patient must be selected
+      if (!newBill.patientId) {
+        alert("Please select a Patient first!");
+        return;
+      }
+
+      if (!doctorId && !newBill.appointmentId && !isEditing) {
+        alert("Error: Doctor ID not found. Please log in again to generate appointments.");
+        return;
+      }
+
+      let finalAppointmentId = newBill.appointmentId; // Start with what's in the form (if any)
+
+      // 2. If NO Appointment ID is manually provided (and we are NOT editing), let's check or generate
+      if (!isEditing && !finalAppointmentId) {
+        console.log("No Appointment ID provided. Checking for existing appointment...");
+
+        const todayDate = new Date().toISOString().split('T')[0];
+
+        // Search for an existing appointment for this patient TODAY
+        const existingAppt = appointmentsList.find(a =>
+          String(a.patient?.id) === String(newBill.patientId) &&
+          a.date === todayDate &&
+          a.status !== 'REJECTED' && a.status !== 'Cancelled'
+        );
+
+        if (existingAppt) {
+          console.log("Found existing appointment for today:", existingAppt.id);
+          finalAppointmentId = existingAppt.id.toString();
+        } else {
+          // If NOT found, generate a new one automatically
+          console.log("No appointment found. Generating new Walk-in appointment...");
+          try {
+            const walkInPayload = {
+              patientId: newBill.patientId,
+              doctorId: doctorId,
+              date: todayDate,
+              time: new Date().toLocaleTimeString('en-GB', { hour12: false }).substring(0, 5) + ':00',
+              status: "COMPLETED",
+              notes: "Bill Generated without prior appointment (Auto-created)",
+              appointmentTime: `${todayDate}T${new Date().toLocaleTimeString('en-GB', { hour12: false }).substring(0, 5)}:00`
+            };
+
+            const apptRes = await api.post('/appointments', walkInPayload);
+            if (apptRes.data && apptRes.data.id) {
+              finalAppointmentId = apptRes.data.id.toString();
+              console.log("Auto-generated Appointment ID:", finalAppointmentId);
+            }
+          } catch (apptErr) {
+            console.error("Error creating auto-appointment:", apptErr);
+            alert("Could not generate an automatic appointment. The bill will be created without linking.");
+          }
+        }
+      }
+
+      // 3. Prepare the Bill Payload
       const payload = {
         amount: newBill.amount,
         paymentMethod: newBill.paymentMethod,
         status: newBill.status,
         paymentDate: new Date().toISOString().slice(0, 19),
-        appointment: { id: newBill.appointmentId }
+        appointment: { id: finalAppointmentId } // Use the determined ID
       };
 
+      // 4. Send API Request
       if (isEditing && editingId) {
         await api.put(`/billings/${editingId}`, payload);
         alert("Bill Updated!");
       } else {
         await api.post('/billings', payload);
-        alert("Bill Created!");
+        alert("Bill Created Successfully!");
       }
+
       resetForms();
       fetchData();
       setBillingSubTab('view');
-    } catch { alert("Error Saving Bill!"); }
+
+    } catch (error) {
+      console.error("Error Saving Bill:", error);
+      alert("Error Saving Bill!");
+    }
   };
 
   const handleDeleteBill = async (id: number) => {
@@ -701,9 +752,9 @@ const DoctorDashboard = () => {
               <div className="main-slider-slide">
                 <section className="dashboard-content">
                   {/* CLICKABLE STAT CARD: PATIENTS */}
-                  <div 
-                    className="stat-card" 
-                    onClick={() => setActiveTab('patients')} 
+                  <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('patients')}
                     style={{ backgroundColor: '#ffffffff', cursor: 'pointer' }}
                   >
                     <h3>My Treated Patients</h3>
@@ -712,9 +763,9 @@ const DoctorDashboard = () => {
                   </div>
 
                   {/* CLICKABLE STAT CARD: APPOINTMENTS */}
-                  <div 
-                    className="stat-card" 
-                    onClick={() => setActiveTab('appointments')} 
+                  <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('appointments')}
                     style={{ backgroundColor: '#ffffffff', cursor: 'pointer' }}
                   >
                     <h3>Appointments</h3>
@@ -1170,7 +1221,7 @@ const DoctorDashboard = () => {
                 </section>
               </div>
 
-              {/* BILLING TAB */}
+              {/* --- 🔥 BILLING TAB (UPDATED) --- */}
               <div className="main-slider-slide">
                 <section className="doctors-section">
                   <div className="action-buttons-container">
@@ -1181,18 +1232,37 @@ const DoctorDashboard = () => {
                     <div className={`slider-track ${billingSubTab === 'add' ? 'slide-left' : ''}`}>
                       <div className="slider-slide">
                         <div className="table-container">
+                          {/* UPDATED TABLE HEADERS: Patient ID First */}
                           <table className="data-table">
-                            <thead><tr><th>Bill ID</th><th>Appt ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
-                            <tbody>{billingsList.map(b => (<tr key={b.billId}><td>{b.billId}</td><td>{b.appointment ? b.appointment.id : 'N/A'}</td><td>Rs. {b.amount}</td><td>{b.status}</td><td><button style={{ ...btnStyle, background: '#007BFF' }} onClick={() => printBill(b)}>Print</button><button style={{ ...btnStyle, background: '#FFC107', color: 'black' }} onClick={() => startEditBill(b)}>Edit</button><button style={{ ...btnStyle, background: '#F44336' }} onClick={() => handleDeleteBill(b.billId)}>Delete</button></td></tr>))}</tbody>
+                            <thead><tr><th>Patient ID</th><th>Bill ID</th><th>Appt ID</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead>
+                            <tbody>
+                              {billingsList.map(b => (
+                                <tr key={b.billId}>
+                                  <td style={{ fontWeight: 'bold' }}>{b.appointment?.patient?.id || 'N/A'}</td>
+                                  <td>{b.billId}</td>
+                                  <td>{b.appointment ? b.appointment.id : 'N/A'}</td>
+                                  <td>Rs. {b.amount}</td>
+                                  <td>{b.status}</td>
+                                  <td>
+                                    <button style={{ ...btnStyle, background: '#007BFF' }} onClick={() => printBill(b)}>Print</button>
+                                    <button style={{ ...btnStyle, background: '#FFC107', color: 'black' }} onClick={() => startEditBill(b)}>Edit</button>
+                                    <button style={{ ...btnStyle, background: '#F44336' }} onClick={() => handleDeleteBill(b.billId)}>Delete</button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
                           </table>
                         </div>
                       </div>
                       <div className="slider-slide">
                         <div className="form-container">
 
-                          {/* --- ADVANCED TABBED SEARCH FOR BILLING --- */}
+                          {/* --- ADVANCED TABBED SEARCH FOR BILLING (Required to Select Patient First) --- */}
                           <div className="advanced-search-container" style={{ marginBottom: '25px', background: '#f8f9fa', padding: '15px', borderRadius: '10px', border: '1px solid #dee2e6' }}>
-                            <p style={{ fontWeight: '600', color: '#063ca8', marginBottom: '10px' }}>Find Patient for Billing:</p>
+                            <p style={{ fontWeight: '600', color: '#063ca8', marginBottom: '10px' }}>
+                              1. Select Patient for Billing:
+                              {newBill.patientId && <span style={{ color: 'green', marginLeft: '10px' }}>✓ Selected ID: {newBill.patientId}</span>}
+                            </p>
 
                             {/* Tabs Header */}
                             <div className="search-tabs" style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
@@ -1200,7 +1270,7 @@ const DoctorDashboard = () => {
                                 <button
                                   key={tab}
                                   type="button"
-                                  onClick={() => setSearchTab(tab.toLowerCase())} // Ensure searchTab state exists
+                                  onClick={() => setSearchTab(tab.toLowerCase())}
                                   style={{
                                     padding: '5px 12px',
                                     fontSize: '0.8rem',
@@ -1243,7 +1313,7 @@ const DoctorDashboard = () => {
                                         key={p.id}
                                         onClick={() => {
                                           setNewBill(prev => ({ ...prev, patientId: p.id?.toString() || '' }));
-                                          setSearchTerm('');
+                                          setSearchTerm(''); // Clear search on select
                                         }}
                                         style={{ padding: '10px', borderBottom: '1px solid #eee', cursor: 'pointer', display: 'flex', justifyContent: 'space-between' }}
                                         onMouseOver={(e) => e.currentTarget.style.background = '#f1f5ff'}
@@ -1259,9 +1329,42 @@ const DoctorDashboard = () => {
                             </div>
                           </div>
 
-                          <h3>{isEditing ? 'Edit Bill' : 'Create Bill'}</h3>
+                          {/* Selected Patient Display Block */}
+                          {newBill.patientId && (
+                            <div style={{
+                              padding: '15px',
+                              backgroundColor: '#e3f2fd',
+                              borderLeft: '5px solid #2196F3',
+                              borderRadius: '4px',
+                              marginBottom: '20px'
+                            }}>
+                              <h4 style={{ margin: '0 0 5px 0', color: '#0d47a1' }}>Selected Patient</h4>
+                              <div style={{ fontSize: '1rem' }}>
+                                <strong>Name: </strong>
+                                {(() => {
+                                  const p = patientsList.find(pt => String(pt.id) === String(newBill.patientId));
+                                  return p ? `${p.firstName} ${p.lastName}` : 'Unknown Patient';
+                                })()}
+                              </div>
+                              <div style={{ fontSize: '0.9rem', color: '#555' }}>
+                                <strong>ID: </strong> {newBill.patientId}
+                              </div>
+                            </div>
+                          )}
+
+                          <h3>{isEditing ? 'Edit Bill' : '2. Enter Bill Details'}</h3>
                           <form className="admin-form">
-                            <div className="form-group"><label>Appt ID</label><input type="number" value={newBill.appointmentId} onChange={e => setNewBill({ ...newBill, appointmentId: e.target.value })} /></div>
+                            {/* Appt ID input is hidden or optional now because it's auto-generated if missing */}
+                            <div className="form-group">
+                              <label>Appt ID (Auto-Generated if Empty)</label>
+                              <input
+                                type="number"
+                                value={newBill.appointmentId}
+                                onChange={e => setNewBill({ ...newBill, appointmentId: e.target.value })}
+                                placeholder="Optional"
+                                disabled={!isEditing} // Only allow manual edit if really needed, otherwise auto
+                              />
+                            </div>
                             <div className="form-group"><label>Amount</label><input type="number" value={newBill.amount} onChange={e => setNewBill({ ...newBill, amount: Number(e.target.value) })} /></div>
                             <div className="form-group"><label>Status</label><input type="text" value={newBill.status} onChange={e => setNewBill({ ...newBill, status: e.target.value })} /></div>
                             <button type="button" className="save-btn" onClick={handleSaveBill}>{isEditing ? 'Update' : 'Generate Bill'}</button>

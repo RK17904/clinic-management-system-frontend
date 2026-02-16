@@ -241,7 +241,10 @@ const PatientDashboard = () => {
       const isDateMatch = app.date === newBooking.date;
       const dbTime = app.time.substring(0, 5); // "09:00:00" -> "09:00"
       const isTimeMatch = dbTime === timeSlot;
-      const isStatusActive = app.status !== 'Cancelled' && app.status !== 'Rejected';
+
+      // Case insensitive check
+      const status = app.status.toUpperCase();
+      const isStatusActive = status !== 'CANCELLED' && status !== 'REJECTED';
 
       return isDoctorMatch && isDateMatch && isTimeMatch && isStatusActive;
     });
@@ -251,14 +254,16 @@ const PatientDashboard = () => {
 
   // Upcoming = Future Date (or Today) AND Active Status (Not Cancelled/Completed)
   const upcomingAppointments = myAppointments.filter(appt => {
-    const isInactive = ['Cancelled', 'Rejected', 'REJECTED', 'COMPLETED'].includes(appt.status);
+    const status = appt.status.toUpperCase();
+    const isInactive = ['CANCELLED', 'REJECTED', 'COMPLETED'].includes(status);
     const isFuture = appt.date >= today;
     return !isInactive && isFuture;
   });
 
   // History = Past Date OR Inactive Status
   const historyAppointments = myAppointments.filter(appt => {
-    const isInactive = ['Cancelled', 'Rejected', 'REJECTED', 'COMPLETED'].includes(appt.status);
+    const status = appt.status.toUpperCase();
+    const isInactive = ['CANCELLED', 'REJECTED', 'COMPLETED'].includes(status);
     const isPast = appt.date < today;
     return isInactive || isPast;
   });
@@ -322,7 +327,7 @@ const PatientDashboard = () => {
         time: newBooking.time + ":00",
         appointmentTime: combinedAppointmentTime,
         notes: newBooking.notes,
-        status: "Pending"
+        status: "PENDING" // Changed to uppercase for consistency
       };
 
       console.log("Sending Payload:", payload);

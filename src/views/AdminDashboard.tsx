@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { UserIcon, SignInIcon, DoctorIcon, PlusIcon, UsersIcon, CalendarIcon, SearchIcon, TrashIcon } from '../components/Icons.tsx';
 import api from '../api/axios.Config.ts';
 
-// --- INTERFACES ---
+// interfaces 
 interface Doctor {
   id?: number;
   name: string;

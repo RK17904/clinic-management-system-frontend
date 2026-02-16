@@ -85,7 +85,7 @@ const DoctorDashboard = () => {
 
   // Patient Detail Modal State
   const [viewingPatient, setViewingPatient] = useState<Patient | null>(null);
-  
+
   // Expanded Appointment State for Dropdown
   const [expandedAppointmentId, setExpandedAppointmentId] = useState<number | null>(null);
 
@@ -139,6 +139,9 @@ const DoctorDashboard = () => {
   // Edit Mode States
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+
+  // Appointment Filter State
+  const [appointmentFilter, setAppointmentFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
 
   // Forms State
   const [newPatient, setNewPatient] = useState<Patient>({ firstName: '', lastName: '', email: '', phone: '', address: '', age: '', gender: '' });
@@ -198,7 +201,7 @@ const DoctorDashboard = () => {
           setRosterEntries(fetchedRoster);
 
           // 2. Fill "My Roster" table with DB data
-          const base30Days = generateNext30Days(); 
+          const base30Days = generateNext30Days();
 
           const mergedRoster = base30Days.map(localDay => {
             const found = fetchedRoster.find((dbEntry: any) => dbEntry.date === localDay.date);
@@ -210,9 +213,9 @@ const DoctorDashboard = () => {
               else if (found.shiftStatus === 'Evening') mappedStatus = 'HALFDAY-EVENING';
               else mappedStatus = 'OFF';
 
-              return { ...localDay, status: mappedStatus }; 
+              return { ...localDay, status: mappedStatus };
             }
-            return localDay; 
+            return localDay;
           });
 
           setRosterData(mergedRoster);
@@ -288,6 +291,7 @@ const DoctorDashboard = () => {
     setNewAppointment({ patientId: '', doctorId: '', date: '', time: '', notes: '' });
     setNewRecord({ patientId: '', doctorId: '', diagnosis: '', treatment: '', notes: '', recordDate: '' });
     setNewBill({ patientId: '', appointmentId: '', amount: 0, paymentMethod: 'CASH', status: 'PAID' });
+    setAppointmentFilter('pending'); // Reset filter on form reset
   };
 
   // Toggle Dropdown Details
@@ -701,9 +705,9 @@ const DoctorDashboard = () => {
               <div className="main-slider-slide">
                 <section className="dashboard-content">
                   {/* CLICKABLE STAT CARD: PATIENTS */}
-                  <div 
-                    className="stat-card" 
-                    onClick={() => setActiveTab('patients')} 
+                  <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('patients')}
                     style={{ backgroundColor: '#ffffffff', cursor: 'pointer' }}
                   >
                     <h3>My Treated Patients</h3>
@@ -712,9 +716,9 @@ const DoctorDashboard = () => {
                   </div>
 
                   {/* CLICKABLE STAT CARD: APPOINTMENTS */}
-                  <div 
-                    className="stat-card" 
-                    onClick={() => setActiveTab('appointments')} 
+                  <div
+                    className="stat-card"
+                    onClick={() => setActiveTab('appointments')}
                     style={{ backgroundColor: '#ffffffff', cursor: 'pointer' }}
                   >
                     <h3>Appointments</h3>
@@ -1008,17 +1012,60 @@ const DoctorDashboard = () => {
                 <section className="doctors-section">
                   <div className="action-buttons-container">
                     <button className={`action-btn ${appointmentSubTab === 'view' ? 'active' : ''}`} onClick={() => { setAppointmentSubTab('view'); resetForms(); }}><ListIcon /> View List</button>
+                    {/* Removed Add Appointment button here if checking/managing existing ones only. Keeps it clean. */}
                   </div>
 
                   <div className="slider-viewport">
                     <div className={`slider-track ${appointmentSubTab === 'add' ? 'slide-left' : ''}`}>
                       <div className="slider-slide">
+
+                        {/* --- NEW SUB-TABS FOR APPOINTMENT STATUS --- */}
+                        <div className="appointment-tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px', paddingBottom: '10px', borderBottom: '1px solid #eee' }}>
+                          <button
+                            onClick={() => setAppointmentFilter('pending')}
+                            style={{
+                              padding: '8px 16px', borderRadius: '20px', border: 'none', fontWeight: 'bold', cursor: 'pointer',
+                              background: appointmentFilter === 'pending' ? '#ffc107' : '#f8f9fa',
+                              color: appointmentFilter === 'pending' ? '#000' : '#666'
+                            }}
+                          >
+                            Pending Requests ({appointmentsList.filter(a => a.status === 'PENDING').length})
+                          </button>
+
+                          <button
+                            onClick={() => setAppointmentFilter('approved')}
+                            style={{
+                              padding: '8px 16px', borderRadius: '20px', border: 'none', fontWeight: 'bold', cursor: 'pointer',
+                              background: appointmentFilter === 'approved' ? '#28a745' : '#f8f9fa',
+                              color: appointmentFilter === 'approved' ? '#fff' : '#666'
+                            }}
+                          >
+                            Approved / Scheduled ({appointmentsList.filter(a => ['APPROVED', 'SCHEDULED', 'CONFIRMED'].includes(a.status)).length})
+                          </button>
+
+                          <button
+                            onClick={() => setAppointmentFilter('rejected')}
+                            style={{
+                              padding: '8px 16px', borderRadius: '20px', border: 'none', fontWeight: 'bold', cursor: 'pointer',
+                              background: appointmentFilter === 'rejected' ? '#dc3545' : '#f8f9fa',
+                              color: appointmentFilter === 'rejected' ? '#fff' : '#666'
+                            }}
+                          >
+                            Rejected / Cancelled ({appointmentsList.filter(a => ['REJECTED', 'CANCELLED'].includes(a.status)).length})
+                          </button>
+                        </div>
+
                         <div className="table-container">
                           <table className="data-table">
                             <thead><tr><th>ID</th><th>Date</th><th>Time</th><th>Patient</th><th>Status</th><th>Actions</th></tr></thead>
                             <tbody>
                               {appointmentsList
-                                .filter(a => a.status !== 'COMPLETED' && a.status !== 'REJECTED' && a.status !== 'Cancelled')
+                                .filter(a => {
+                                  if (appointmentFilter === 'pending') return a.status === 'PENDING';
+                                  if (appointmentFilter === 'approved') return ['APPROVED', 'SCHEDULED', 'CONFIRMED'].includes(a.status);
+                                  if (appointmentFilter === 'rejected') return ['REJECTED', 'CANCELLED'].includes(a.status);
+                                  return false;
+                                })
                                 .map(a => (
                                   <Fragment key={a.id}>
                                     <tr>
@@ -1027,13 +1074,13 @@ const DoctorDashboard = () => {
                                       <td>{a.time}</td>
                                       <td>{a.patient ? a.patient.firstName + ' ' + a.patient.lastName : 'Unknown'}</td>
                                       <td>
-                                        <span style={{ fontWeight: 'bold', color: a.status.toUpperCase() === 'PENDING' ? 'orange' : a.status.toUpperCase() === 'APPROVED' ? 'green' : 'red' }}>
+                                        <span style={{ fontWeight: 'bold', color: a.status.toUpperCase() === 'PENDING' ? 'orange' : a.status.toUpperCase().includes('REJECT') || a.status.toUpperCase().includes('CANCEL') ? 'red' : 'green' }}>
                                           {a.status}
                                         </span>
                                       </td>
                                       <td>
                                         <button style={{ ...btnStyle, background: '#17a2b8' }} onClick={() => toggleAppointmentDetails(a.id)}>
-                                          {expandedAppointmentId === a.id ? 'Hide' : 'View'}
+                                          {expandedAppointmentId === a.id ? 'Hide' : 'Review'}
                                         </button>
                                       </td>
                                     </tr>
@@ -1043,21 +1090,33 @@ const DoctorDashboard = () => {
                                           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                             <div style={{ padding: '10px', background: '#fff', border: '1px solid #eee', borderRadius: '5px' }}>
                                               <strong>Reason for Visit:</strong> {a.notes || 'No reason provided by patient.'}
+                                              <br />
+                                              <small>Patient Contact: {a.patient?.phone} | {a.patient?.email}</small>
                                             </div>
                                             <div style={{ display: 'flex', gap: '10px', marginTop: '10px', alignItems: 'center' }}>
                                               <strong style={{ marginRight: '10px' }}>Actions:</strong>
+
                                               {/* Logic for Pending Appointments */}
-                                              {a.status.toUpperCase() === 'PENDING' && (
+                                              {appointmentFilter === 'pending' && (
                                                 <>
-                                                  <button style={{ ...btnStyle, background: '#28a745' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Accept</button>
+                                                  <button style={{ ...btnStyle, background: '#28a745' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Approve</button>
                                                   <button style={{ ...btnStyle, background: '#dc3545' }} onClick={() => handleStatusUpdate(a.id, 'REJECTED')}>Reject</button>
                                                 </>
                                               )}
+
                                               {/* Logic for Approved Appointments */}
-                                              {a.status.toUpperCase() === 'APPROVED' && (
+                                              {appointmentFilter === 'approved' && (
                                                 <>
                                                   <button style={{ ...btnStyle, background: '#007bff' }} onClick={() => startConsultation(a.patient)}>Start Consultation</button>
-                                                  <button style={{ ...btnStyle, background: '#6c757d' }} onClick={() => handleViewPatientDetails(a.patient)}>View Patient Profile</button>
+                                                  <button style={{ ...btnStyle, background: '#ffc107', color: 'black' }} onClick={() => handleStatusUpdate(a.id, 'CANCELLED')}>Cancel Appointment</button>
+                                                  <button style={{ ...btnStyle, background: '#6c757d' }} onClick={() => handleViewPatientDetails(a.patient)}>View Profile</button>
+                                                </>
+                                              )}
+
+                                              {/* Logic for Rejected/Cancelled Appointments */}
+                                              {appointmentFilter === 'rejected' && (
+                                                <>
+                                                  <button style={{ ...btnStyle, background: '#fd7e14' }} onClick={() => handleStatusUpdate(a.id, 'APPROVED')}>Re-Approve </button>
                                                 </>
                                               )}
                                             </div>
@@ -1067,6 +1126,14 @@ const DoctorDashboard = () => {
                                     )}
                                   </Fragment>
                                 ))}
+                              {appointmentsList.filter(a => {
+                                if (appointmentFilter === 'pending') return a.status === 'PENDING';
+                                if (appointmentFilter === 'approved') return ['APPROVED', 'SCHEDULED', 'CONFIRMED'].includes(a.status);
+                                if (appointmentFilter === 'rejected') return ['REJECTED', 'CANCELLED'].includes(a.status);
+                                return false;
+                              }).length === 0 && (
+                                  <tr><td colSpan={6} style={{ textAlign: 'center', padding: '20px', color: '#888' }}>No appointments found in this category.</td></tr>
+                                )}
                             </tbody>
                           </table>
                         </div>

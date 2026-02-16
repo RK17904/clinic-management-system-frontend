@@ -358,7 +358,7 @@ const PatientDashboard = () => {
     const s = status.toUpperCase();
     if (s === 'PENDING') return { bg: '#FFF3CD', color: '#856404' };
     if (s === 'APPROVED' || s === 'CONFIRMED' || s === 'SCHEDULED' || s === 'COMPLETED') return { bg: '#D1E7DD', color: '#0F5132' };
-    return { bg: '#F8D7DA', color: '#721C24' }; // Rejected/Cancelled
+    return { bg: '#F8D7DA', color: '#721C24' }; // Rejected
   };
 
   // Calendar render helpers

@@ -249,19 +249,22 @@ const DoctorDashboard = () => {
     }
   }, [activeTab, doctorId]);
 
-  // --- FILTERED APPOINTMENTS LOGIC (FIXED) ---
-  const filteredAppointments = useMemo(() => {
+  // --- 1. BASE LIST: All appointments belonging to THIS doctor (regardless of status) ---
+  const myDoctorAppointments = useMemo(() => {
     return appointmentsList.filter(a => {
-      // 1. Filter by Doctor Ownership (CRITICAL FIX)
-      // Check if the appointment belongs to the logged-in doctor
       const docIdFromAppt = a.doctor?.id || a.doctorId;
-
       // If we have a logged-in doctorId, we must match it.
       if (doctorId && docIdFromAppt && String(docIdFromAppt) !== String(doctorId)) {
         return false;
       }
+      return true;
+    });
+  }, [appointmentsList, doctorId]);
 
-      // 2. Filter by Status (Case Insensitive FIX)
+  // --- 2. FILTERED VIEW: Appointments filtered by the active TAB (Pending/Approved/Rejected) ---
+  const filteredAppointments = useMemo(() => {
+    return myDoctorAppointments.filter(a => {
+      // Filter by Status (Case Insensitive FIX)
       const s = a.status ? a.status.toUpperCase() : '';
 
       if (appointmentFilter === 'pending') {
@@ -275,7 +278,7 @@ const DoctorDashboard = () => {
       }
       return false;
     });
-  }, [appointmentsList, appointmentFilter, doctorId]);
+  }, [myDoctorAppointments, appointmentFilter]);
 
 
   // Last 10 Unique Patients Logic
@@ -1061,7 +1064,7 @@ const DoctorDashboard = () => {
                               color: appointmentFilter === 'pending' ? '#000' : '#666'
                             }}
                           >
-                            Pending Requests ({filteredAppointments.filter(a => a.status.toUpperCase() === 'PENDING').length})
+                            Pending Requests ({myDoctorAppointments.filter(a => (a.status || '').toUpperCase() === 'PENDING').length})
                           </button>
 
                           <button
@@ -1072,7 +1075,7 @@ const DoctorDashboard = () => {
                               color: appointmentFilter === 'approved' ? '#fff' : '#666'
                             }}
                           >
-                            Approved / Scheduled ({filteredAppointments.filter(a => ['APPROVED', 'SCHEDULED', 'CONFIRMED'].includes(a.status.toUpperCase())).length})
+                            Approved / Scheduled ({myDoctorAppointments.filter(a => ['APPROVED', 'SCHEDULED', 'CONFIRMED'].includes((a.status || '').toUpperCase())).length})
                           </button>
 
                           <button
@@ -1083,7 +1086,7 @@ const DoctorDashboard = () => {
                               color: appointmentFilter === 'rejected' ? '#fff' : '#666'
                             }}
                           >
-                            Rejected / Cancelled ({filteredAppointments.filter(a => ['REJECTED', 'CANCELLED'].includes(a.status.toUpperCase())).length})
+                            Rejected / Cancelled ({myDoctorAppointments.filter(a => ['REJECTED', 'CANCELLED'].includes((a.status || '').toUpperCase())).length})
                           </button>
                         </div>
 
